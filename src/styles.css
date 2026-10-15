@@ -1,0 +1,110 @@
+@import "tailwindcss";
+@import "@fontsource/schibsted-grotesk/latin-400.css";
+@import "@fontsource/schibsted-grotesk/latin-500.css";
+@import "@fontsource/schibsted-grotesk/latin-700.css";
+@import "@fontsource/schibsted-grotesk/latin-800.css";
+@import "@fontsource/martian-mono/latin-400.css";
+@import "@fontsource/martian-mono/latin-600.css";
+
+/*
+  Palette: azulejo cobalt on cool paper. Amber "highlighter" marks anything that needs the
+  person's eyes. The printed-receipt surface (.receipt-paper) is the one bold element.
+*/
+@theme {
+  --font-sans: "Schibsted Grotesk", system-ui, sans-serif;
+  --font-receipt: "Martian Mono", ui-monospace, monospace;
+
+  --color-cobalt: #1d4e9e;
+  --color-cobalt-deep: #133672;
+  --color-cobalt-soft: #dbe6f7;
+  --color-ground: #eef2f7;
+  --color-paper: #ffffff;
+  --color-ink: #1a2233;
+  --color-ink-soft: #4a5568;
+  --color-line: #d5dce6;
+  --color-marker: #ffd54a;
+  --color-marker-ink: #7a4a00;
+  --color-ok: #1f7a4d;
+  --color-ok-soft: #dcefe4;
+  --color-alert: #b3261e;
+  --color-alert-soft: #f9dedc;
+  /* Validated with the dataviz palette checker against paper (light) and #172234 (dark). */
+  --color-chart: #1d4e9e;
+
+  --radius-control: 0.75rem;
+  --radius-surface: 1.25rem;
+}
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+  /* No tabular figures: in Schibsted Grotesk they also widen the decimal comma ("16 ,75").
+     Columns of amounts are right-aligned instead; the receipt view uses a monospace face. */
+  html,
+  body {
+    background: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-ground: #0f1724;
+      --color-paper: #172234;
+      --color-ink: #e8edf5;
+      --color-ink-soft: #a9b4c6;
+      --color-line: #2c3a52;
+      --color-cobalt: #7aa7f0;
+      --color-cobalt-deep: #a9c6f7;
+      --color-cobalt-soft: #1b2d4d;
+      --color-marker: #6b5200;
+      --color-marker-ink: #ffe9a6;
+      --color-ok: #6fd3a0;
+      --color-ok-soft: #12382a;
+      --color-alert: #ffb4ab;
+      --color-alert-soft: #4a1a17;
+      --color-chart: #5f8fe2;
+    }
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-cobalt);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* The printed receipt: white thermal paper with a torn, zig-zag bottom edge. */
+  .receipt-paper {
+    position: relative;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-receipt);
+    font-size: 0.78rem;
+    line-height: 1.55;
+    padding: 1.25rem 1rem 1.75rem;
+    box-shadow: 0 1px 0 var(--color-line);
+    --tear: 10px;
+    mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / calc(var(--tear) * 2) var(--tear) repeat-x,
+      linear-gradient(#000 0 0) top / 100% calc(100% - var(--tear)) no-repeat;
+  }
+  .receipt-paper hr {
+    border: 0;
+    border-top: 1px dashed var(--color-line);
+    margin: 0.75rem 0;
+  }
+  /* Highlighter mark for values the person must check. Never colour alone: always with text/icon. */
+  .marker {
+    background: linear-gradient(transparent 35%, var(--color-marker) 35% 90%, transparent 90%);
+    color: var(--color-ink);
+  }
+}
