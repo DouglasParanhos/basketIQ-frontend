@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icons/icon.svg", "icons/apple-touch-icon.png"],
       manifest: {
-        name: "BasketIQ",
-        short_name: "BasketIQ",
+        name: "Super Mercado",
+        short_name: "Super Mercado",
         description: "As suas compras de supermercado, lidas a partir das notas.",
         lang: "pt-PT",
         start_url: "/",

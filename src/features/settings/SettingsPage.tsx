@@ -87,7 +87,7 @@ export function SettingsPage() {
             </div>
           )}
         </Surface>
-        <p className="text-center text-xs text-ink-soft">BasketIQ {__APP_VERSION__}</p>
+        <p className="text-center text-xs text-ink-soft">Super Mercado {__APP_VERSION__}</p>
       </div>
     </>
   );

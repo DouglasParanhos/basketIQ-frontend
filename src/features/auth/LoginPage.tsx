@@ -34,7 +34,7 @@ export function LoginPage() {
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-between px-6 pb-10 pt-16">
       <div>
         <div aria-hidden className="receipt-paper mb-10 max-w-64 -rotate-2">
-          <p className="text-center font-semibold">BASKETIQ</p>
+          <p className="text-center font-semibold">SUPER MERCADO</p>
           <hr />
           <p className="flex justify-between">
             <span>LEITE MEIO GORDO</span>
@@ -58,7 +58,7 @@ export function LoginPage() {
           As suas notas de supermercado, organizadas.
         </h1>
         <p className="mt-4 max-w-sm text-lg leading-relaxed text-ink-soft">
-          Fotografe ou envie a nota do Continente, Pingo Doce, Lidl ou Auchan. O BasketIQ lê os produtos e mostra quanto gasta, onde e
+          Fotografe ou envie a nota do Continente, Pingo Doce, Lidl ou Auchan. O Super Mercado lê os produtos e mostra quanto gasta, onde e
           como mudam os preços.
         </p>
       </div>
