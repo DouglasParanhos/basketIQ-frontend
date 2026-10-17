@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-15
 
-**Status**: Implemented (sem testes de UI)
+**Status**: Implemented (testes de UI só para a vista de configuração)
 
 **Input**: Especificação Funcional §2.2, §10; Especificação Técnica §10, §11. Backend: `../Backend/specs/007-operador-admin`.
 
@@ -28,6 +28,14 @@ tentativas, código de erro) e reprocessa jobs falhados. Nunca vê o conteúdo d
 
 1. **Given** um período, **When** o operador abre "Métricas", **Then** vê uploads concluídos, tempo mediano até confirmação, linhas sem alteração, duplicados, utilizadores ativos, notas por supermercado, erros por tipo, rotas, custo externo e p95. — Funcional §10 — backend `tests/api/test_admin.py::test_admin_metrics_and_merchant_config`
 2. **Given** um supermercado, **When** o operador altera limiar, limiar por campo, tolerância ou ativo, **Then** a regra é guardada e validada (0,5–1). — RF-admin — backend `tests/api/test_admin.py::test_admin_metrics_and_merchant_config`
+
+---
+
+### User Story 3 - Ver a configuração do produto (Priority: P3)
+
+**Acceptance Scenarios**:
+
+1. **Given** o ficheiro `config/app-config.yaml` do backend, **When** o operador abre "Configuração", **Then** vê o valor carregado de cada chave (`APP_NAME_FOR_CUSTOMER`, `LLM_ENABLED`), só em leitura, com a indicação de que a alteração se faz no ficheiro. — CFG-02 — `src/config/appConfig.test.tsx › operator configuration view (CFG-02) › shows each key of the file, read-only`; backend `tests/api/test_config.py::test_admin_config_shows_every_key_to_operators_only`
 
 ### Edge Cases
 

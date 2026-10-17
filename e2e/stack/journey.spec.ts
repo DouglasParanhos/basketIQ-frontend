@@ -95,6 +95,18 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   await expect(page).toHaveURL(/\/login/);
 });
 
+test("CFG-02: name, title and manifest come from the backend's config/app-config.yaml", async ({ page, request }) => {
+  const config = await request.get("/v1/config");
+  expect(await config.json()).toEqual({ app_name: "Super Mercado" });
+  const manifest = await request.get("/v1/config/manifest.webmanifest");
+  expect(manifest.headers()["content-type"]).toContain("application/manifest+json");
+  expect((await manifest.json()).name).toBe("Super Mercado");
+
+  await page.goto("/login");
+  await expect(page).toHaveTitle("Super Mercado");
+  await expect(page.getByText(/O Super Mercado lê os produtos/)).toBeVisible();
+});
+
 test("F-03: cancelling at the identity provider returns to sign-in with a message", async ({ page }) => {
   await page.goto("/v1/auth/callback?error=access_denied&state=x");
   await expect(page).toHaveURL(/\/login\?error=cancelled/);

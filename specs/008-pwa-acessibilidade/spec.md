@@ -34,7 +34,7 @@
 
 **Acceptance Scenarios**:
 
-1. **Given** um navegador compatível, **When** a pessoa instala, **Then** a aplicação abre em modo standalone com ícones 192/512 e maskable. — §8 — build `vite-plugin-pwa` (manifest gerado); [NEEDS CLARIFICATION: sem teste automatizado de instalação/Lighthouse PWA]
+1. **Given** um navegador compatível, **When** a pessoa instala, **Then** a aplicação abre em modo standalone com ícones 192/512 e maskable e com o nome configurado no backend (`APP_NAME_FOR_CUSTOMER`). O manifesto não é gerado no build: é servido por `GET /v1/config/manifest.webmanifest` (`<link rel="manifest">` em `index.html`; `manifest: false` em `vite.config.ts`). — §8, CFG-02 — `e2e/mock/ui.spec.ts › customer-facing name (CFG-02) › title, login and manifest follow the name served by the backend`; `e2e/stack/journey.spec.ts › CFG-02: name, title and manifest come from the backend's config/app-config.yaml`; [NEEDS CLARIFICATION: sem teste automatizado de instalação/Lighthouse PWA]
 2. **Given** o service worker, **When** a aplicação usa a API, **Then** nenhuma resposta `/v1/**` é guardada em cache. — Técnica §8 — configuração `navigateFallbackDenylist` e `runtimeCaching: []` em `vite.config.ts`; [NEEDS CLARIFICATION: falta teste que inspecione a cache do service worker]
 
 ### Edge Cases
@@ -42,6 +42,9 @@
 - Testes Playwright bloqueiam o service worker para não mascarar pedidos.
 - `prefers-reduced-motion` anula animações.
 - O conversor HEIC (1,3 MB) não entra no precache: só é descarregado quando é preciso.
+- O título estático de `index.html` ("Super Mercado") é só um valor por omissão até a aplicação ler o nome de `GET /v1/config`; se o backend estiver em baixo, mantém-se.
+- O manifesto precisa do backend: sem rede ou com a API em baixo, o navegador mantém o último manifesto que obteve.
+- `short_name` é igual ao nome; nomes com mais de ~12 caracteres podem aparecer truncados no ecrã inicial.
 
 ## Requirements *(mandatory)*
 

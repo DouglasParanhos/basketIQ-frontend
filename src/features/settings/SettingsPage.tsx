@@ -3,11 +3,13 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { api, unwrap } from "../../api/client";
 import { Button, Notice, PageHeader, Surface } from "../../components/ui";
+import { useAppName } from "../../config/appConfig";
 import { formatDate } from "../../lib/format";
 import { useLogout, useMe } from "../auth/session";
 
 export function SettingsPage() {
   const { data: me } = useMe();
+  const appName = useAppName();
   const logout = useLogout();
   const qc = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -87,7 +89,7 @@ export function SettingsPage() {
             </div>
           )}
         </Surface>
-        <p className="text-center text-xs text-ink-soft">Super Mercado {__APP_VERSION__}</p>
+        <p className="text-center text-xs text-ink-soft">{appName} {__APP_VERSION__}</p>
       </div>
     </>
   );

@@ -4,6 +4,7 @@ import { createBrowserRouter, isRouteErrorResponse, Outlet, RouterProvider, useR
 import { ApiError, setSessionExpiredHandler } from "./api/client";
 import { AppShell } from "./components/AppShell";
 import { Notice, Spinner } from "./components/ui";
+import { DocumentTitle } from "./config/appConfig";
 import { LoginPage } from "./features/auth/LoginPage";
 import { RequireSession } from "./features/auth/session";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
@@ -90,6 +91,7 @@ export function App() {
   setSessionExpiredHandler(() => sessionLost(new ApiError(401, undefined)));
   return (
     <QueryClientProvider client={client}>
+      <DocumentTitle />
       <RouterProvider router={router} />
     </QueryClientProvider>
   );

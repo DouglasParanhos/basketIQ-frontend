@@ -4,6 +4,40 @@
  */
 
 export interface paths {
+    "/v1/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Customer-facing configuration (no sign-in needed) */
+        get: operations["public_config_v1_config_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/config/manifest.webmanifest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Web app manifest with the configured product name */
+        get: operations["manifest_v1_config_manifest_webmanifest_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/login": {
         parameters: {
             query?: never;
@@ -357,6 +391,23 @@ export interface paths {
         };
         /** Product Metrics */
         get: operations["product_metrics_v1_admin_metrics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Values loaded from config/app-config.yaml */
+        get: operations["product_config_v1_admin_config_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -814,6 +865,16 @@ export interface components {
             /** Insufficient Data */
             insufficient_data: boolean;
         };
+        /**
+         * ProductConfigOut
+         * @description Read-only view of config/app-config.yaml (one field per key in the file).
+         */
+        ProductConfigOut: {
+            /** App Name For Customer */
+            app_name_for_customer: string;
+            /** Llm Enabled */
+            llm_enabled: boolean;
+        };
         /** ProductInfo */
         ProductInfo: {
             /** Id */
@@ -860,6 +921,11 @@ export interface components {
             spent_cents: number;
             /** Last Purchase At */
             last_purchase_at: string | null;
+        };
+        /** PublicConfigOut */
+        PublicConfigOut: {
+            /** App Name */
+            app_name: string;
         };
         /** ReceiptOut */
         ReceiptOut: {
@@ -1125,6 +1191,46 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    public_config_v1_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicConfigOut"];
+                };
+            };
+        };
+    };
+    manifest_v1_config_manifest_webmanifest_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     login_v1_auth_login_get: {
         parameters: {
             query?: never;
@@ -2261,6 +2367,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    product_config_v1_admin_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductConfigOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
         };

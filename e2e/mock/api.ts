@@ -6,6 +6,8 @@ export interface FakeState {
   consented: boolean;
   receipts: Record<string, unknown>[];
   empty: boolean;
+  /** APP_NAME_FOR_CUSTOMER as served by GET /v1/config. */
+  appName: string;
 }
 
 const me = (s: FakeState) => ({
@@ -135,7 +137,14 @@ const summary = {
 };
 
 export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): Promise<FakeState> {
-  const state: FakeState = { signedIn: true, consented: true, receipts: [reviewReceipt], empty: false, ...overrides };
+  const state: FakeState = {
+    signedIn: true,
+    consented: true,
+    receipts: [reviewReceipt],
+    empty: false,
+    appName: "Super Mercado",
+    ...overrides,
+  };
   const json = (route: Route, body: unknown, status = 200) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
   const unauth = (route: Route) => json(route, { code: "unauthenticated", message: "Sessão necessária.", request_id: "r" }, 401);
 
@@ -143,6 +152,14 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     const url = new URL(route.request().url());
     const path = url.pathname;
     const method = route.request().method();
+    // Public configuration: available without a session (the login screen needs it).
+    if (path === "/v1/config") return json(route, { app_name: state.appName });
+    if (path === "/v1/config/manifest.webmanifest") {
+      return route.fulfill({
+        contentType: "application/manifest+json",
+        body: JSON.stringify({ name: state.appName, short_name: state.appName, start_url: "/", display: "standalone" }),
+      });
+    }
     if (!state.signedIn && !path.startsWith("/v1/auth/")) return unauth(route);
     if (path === "/v1/auth/refresh") return unauth(route);
     if (path === "/v1/me" && method === "GET") return json(route, me(state));

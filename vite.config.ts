@@ -13,23 +13,9 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["icons/icon.svg", "icons/apple-touch-icon.png"],
-      manifest: {
-        name: "Super Mercado",
-        short_name: "Super Mercado",
-        description: "As suas compras de supermercado, lidas a partir das notas.",
-        lang: "pt-PT",
-        start_url: "/",
-        scope: "/",
-        display: "standalone",
-        orientation: "portrait",
-        background_color: "#EEF2F7",
-        theme_color: "#1D4E9E",
-        icons: [
-          { src: "icons/icon-192.png", sizes: "192x192", type: "image/png" },
-          { src: "icons/icon-512.png", sizes: "512x512", type: "image/png" },
-          { src: "icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-        ],
-      },
+      // The manifest is served by the backend (GET /v1/config/manifest.webmanifest) so the installed
+      // app name follows APP_NAME_FOR_CUSTOMER in Backend/config/app-config.yaml.
+      manifest: false,
       workbox: {
         navigateFallback: "/index.html",
         // API responses hold personal data: never cached by the service worker.

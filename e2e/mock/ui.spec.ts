@@ -73,6 +73,26 @@ test.describe("small screens (plano de testes §11)", () => {
   });
 });
 
+test.describe("customer-facing name (CFG-02)", () => {
+  test("title, login and manifest follow the name served by the backend", async ({ page }) => {
+    await fakeApi(page, { signedIn: false, appName: "Mercado do Zé" });
+    await page.goto("/login");
+    await expect(page).toHaveTitle("Mercado do Zé");
+    await expect(page.getByText(/O Mercado do Zé lê os produtos/)).toBeVisible();
+    await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href", "/v1/config/manifest.webmanifest");
+    // Fetched from the page, like the browser does (page.request would bypass the fake API).
+    const manifest = await page.evaluate(() => fetch("/v1/config/manifest.webmanifest").then((r) => r.json()));
+    expect(manifest.name).toBe("Mercado do Zé");
+  });
+
+  test("default name is Super Mercado", async ({ page }) => {
+    await fakeApi(page);
+    await page.goto("/definicoes");
+    await expect(page).toHaveTitle("Super Mercado");
+    await expect(page.getByText(/^Super Mercado /)).toBeVisible();
+  });
+});
+
 test.describe("flows with a fake API", () => {
   test("F-01: first access asks for privacy consent, then shows the dashboard", async ({ page }) => {
     await fakeApi(page, { consented: false });

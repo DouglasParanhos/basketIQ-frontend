@@ -18,7 +18,23 @@ Specification: `../Documentation/`. Feature specs and acceptance criteria with t
 | `/adicionar` | Camera (`capture=environment`), image (JPEG/PNG/HEIC) or PDF; crop/rotate; optional merchant; SHA-256 duplicate check; upload with progress and resumable retry |
 | `/produtos`, `/produtos/:id` | Search; weighted average price with explicit basis (per unit / kg / l), min/max, history, comparison between supermarkets |
 | `/definicoes` | Account, sign-out, privacy, account deletion |
-| `/operador` | Admin only: failed jobs and reprocessing, product metrics, per-merchant rules |
+| `/operador` | Admin only: failed jobs and reprocessing, product metrics, per-merchant rules, read-only view of the product configuration |
+
+## Product name and configuration
+
+Customers see **"Super Mercado"**; BasketIQ is only the project name (repos, packages, docs).
+The customer-facing name is **not** set in this repository. It is `APP_NAME_FOR_CUSTOMER` in
+`../Backend/config/app-config.yaml`, the single source of product decisions and feature flags
+(see the Backend README). The app reads it at runtime:
+
+- `GET /v1/config` (public) feeds the login screen, the settings footer and `document.title`
+  (`src/config/appConfig.tsx`: `useAppName()`, `DocumentTitle`);
+- the installed-app name comes from the manifest served by the backend, `GET /v1/config/manifest.webmanifest`
+  (`<link rel="manifest">` in `index.html`; the build does not generate a manifest);
+- `"Super Mercado"` in `appConfig.tsx` and in the `<title>` of `index.html` is only a fallback for the
+  moment before the answer arrives or if the request fails.
+
+To rename the product: edit the file in the backend and restart the API; no frontend rebuild.
 
 Design: azulejo cobalt on cool paper; the review screen is drawn as a thermal receipt
 (Martian Mono, torn edge) — the one bold element. Fonts are self-hosted (no third-party requests).
@@ -40,7 +56,7 @@ Sign in locally through the mock OIDC server: type any user name (`admin` gets t
 
 ```bash
 pnpm lint && pnpm typecheck
-pnpm test                         # vitest + Testing Library + MSW (39 tests)
+pnpm test                         # vitest + Testing Library + MSW (45 tests)
 pnpm e2e:mock                     # Playwright, API faked with page.route: axe (WCAG 2.2 AA),
                                   # light + dark, 320–820 px without horizontal scroll, flows
 pnpm e2e --project=stack          # full stack: mock OIDC login → upload PDF/photo → worker

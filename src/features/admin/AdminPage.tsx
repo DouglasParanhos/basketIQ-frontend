@@ -9,6 +9,7 @@ const TABS = [
   { id: "metrics", label: "Métricas" },
   { id: "jobs", label: "Processamento" },
   { id: "merchants", label: "Supermercados" },
+  { id: "config", label: "Configuração" },
 ] as const;
 
 export default function AdminPage() {
@@ -17,7 +18,7 @@ export default function AdminPage() {
     <>
       <PageHeader title="Operador" />
       <p className="-mt-2 mb-4 text-sm text-ink-soft">Dados técnicos e agregados. O conteúdo das notas não é visível aqui.</p>
-      <div role="tablist" aria-label="Secções do operador" className="mb-4 flex gap-2">
+      <div role="tablist" aria-label="Secções do operador" className="mb-4 flex flex-wrap gap-2">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -36,6 +37,7 @@ export default function AdminPage() {
         {tab === "metrics" && <Metrics />}
         {tab === "jobs" && <Jobs />}
         {tab === "merchants" && <Merchants />}
+        {tab === "config" && <ProductConfig />}
       </div>
     </>
   );
@@ -176,6 +178,36 @@ function Jobs() {
         ))}
       </ul>
     </div>
+  );
+}
+
+/** Read-only view of Backend/config/app-config.yaml: keys are shown exactly as written in the file. */
+function ProductConfig() {
+  const q = useQuery({
+    queryKey: ["admin", "config"],
+    queryFn: async () => unwrap(await api.GET("/v1/admin/config")),
+  });
+  if (q.isLoading) return <Spinner />;
+  if (q.error) return <Notice tone="error">{q.error.message}</Notice>;
+  const c = q.data!;
+  const rows: [string, string][] = [
+    ["APP_NAME_FOR_CUSTOMER", c.app_name_for_customer],
+    ["LLM_ENABLED", c.llm_enabled ? "true" : "false"],
+  ];
+  return (
+    <Surface>
+      <dl>
+        {rows.map(([key, value]) => (
+          <div key={key} className="flex flex-wrap justify-between gap-x-4 border-b border-line py-2 text-sm last:border-0">
+            <dt className="font-receipt text-xs text-ink-soft">{key}</dt>
+            <dd className="font-semibold">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-3 text-xs text-ink-soft">
+        Só leitura. Para alterar, edite config/app-config.yaml no backend e reinicie a API e o worker.
+      </p>
+    </Surface>
   );
 }
 

@@ -7,11 +7,14 @@
     <meta name="description" content="As suas compras de supermercado, lidas a partir das notas." />
     <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <!-- Served by the backend so the installed-app name follows APP_NAME_FOR_CUSTOMER. -->
+    <link rel="manifest" href="/v1/config/manifest.webmanifest" />
+    <!-- Fallback only: the app replaces it with the name from GET /v1/config. -->
     <title>Super Mercado</title>
   </head>
   <body>
     <div id="root"></div>
-    <noscript>O Super Mercado precisa de JavaScript para funcionar.</noscript>
+    <noscript>Esta aplicação precisa de JavaScript para funcionar.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

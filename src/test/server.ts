@@ -6,6 +6,7 @@ export const API = "http://localhost:3000";
 
 /** Default happy-path API; tests override per case with server.use(...). */
 export const server = setupServer(
+  http.get(`${API}/v1/config`, () => HttpResponse.json({ app_name: "Super Mercado" })),
   http.get(`${API}/v1/me`, () => HttpResponse.json(me)),
   http.get(`${API}/v1/receipts`, () => HttpResponse.json({ items: [{ id: "r1", status: "CONFIRMED", merchant: "LIDL", purchase_at: null, total_cents: 100, line_count: 1, overall_confidence: 1, needs_action: false, created_at: "2026-09-01T00:00:00Z" }], next_cursor: null })),
   http.get(`${API}/v1/receipts/:id`, () => HttpResponse.json(receipt())),
