@@ -36,9 +36,12 @@ The customer-facing name is **not** set in this repository. It is `APP_NAME_FOR_
 
 To rename the product: edit the file in the backend and restart the API; no frontend rebuild.
 
-Design: azulejo cobalt on cool paper; the review screen is drawn as a thermal receipt
-(Martian Mono, torn edge) — the one bold element. Fonts are self-hosted (no third-party requests).
-Chart colours are validated for light and dark surfaces.
+Design: Super Mercado brand pack (deep teal, gold highlighter, mint; Nunito Sans). The review screen is
+drawn as a thermal receipt (Martian Mono, torn edge) — the one bold element. Fonts are self-hosted (no
+third-party requests). Tokens are in `src/styles.css`; the brand pack has no dark palette, so the dark
+values are derived. Text/background pairs are kept at >= 4.5:1 (graphics and focus ring >= 3:1); the
+brand's vivid green is never used for text. App icons: `node scripts/make_icons.mjs` regenerates
+`public/icons/` from the brand icon (needs Playwright's Chromium).
 
 ## Develop
 

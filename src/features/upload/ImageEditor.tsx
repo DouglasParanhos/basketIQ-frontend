@@ -57,7 +57,7 @@ export function ImageEditor({ src, onChange }: { src: string; onChange: (edit: E
           {ASPECTS.map((a) => (
             <label
               key={a.label}
-              className="cursor-pointer rounded-full px-3 py-2 text-sm font-medium ring-1 ring-line has-checked:bg-cobalt has-checked:text-white has-checked:ring-cobalt"
+              className="cursor-pointer rounded-full px-3 py-2 text-sm font-medium ring-1 ring-line has-checked:bg-brand has-checked:text-white has-checked:ring-brand"
             >
               <input type="radio" name="aspect" className="sr-only" checked={aspect === a.value} onChange={() => setAspect(a.value)} />
               {a.label}
@@ -67,7 +67,7 @@ export function ImageEditor({ src, onChange }: { src: string; onChange: (edit: E
       </div>
       <label className="flex items-center gap-3 text-sm text-ink-soft">
         Zoom
-        <input type="range" min={1} max={4} step={0.05} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="flex-1 accent-cobalt" />
+        <input type="range" min={1} max={4} step={0.05} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="flex-1 accent-brand" />
       </label>
     </div>
   );

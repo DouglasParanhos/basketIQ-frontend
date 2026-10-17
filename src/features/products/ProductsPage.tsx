@@ -38,7 +38,7 @@ export default function ProductsPage() {
       <ul className="flex flex-col gap-2">
         {query.data?.map((p) => (
           <li key={p.id}>
-            <Link to={`/produtos/${p.id}`} className="flex items-center justify-between gap-3 rounded-surface bg-paper p-4 hover:ring-1 hover:ring-cobalt">
+            <Link to={`/produtos/${p.id}`} className="flex items-center justify-between gap-3 rounded-surface bg-paper p-4 hover:ring-1 hover:ring-brand">
               <span className="min-w-0">
                 <span className="block truncate font-semibold">{p.name}</span>
                 <span className="text-sm text-ink-soft">

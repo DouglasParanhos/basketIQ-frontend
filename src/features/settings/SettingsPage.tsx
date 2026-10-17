@@ -43,7 +43,7 @@ export function SettingsPage() {
             Política aceite a {formatDate(me.privacy_accepted_at)}. Os ficheiros originais das notas são apagados 30 dias depois de
             confirmar cada compra.
           </p>
-          <Link to="/privacidade" className="mt-3 inline-flex min-h-11 items-center font-semibold text-cobalt underline">
+          <Link to="/privacidade" className="mt-3 inline-flex min-h-11 items-center font-semibold text-brand underline">
             Ler a política de privacidade
           </Link>
         </Surface>
@@ -52,7 +52,7 @@ export function SettingsPage() {
           <Surface>
             <h2 className="font-bold">Operação</h2>
             <p className="mt-1 text-sm text-ink-soft">Falhas de processamento, métricas e regras por supermercado.</p>
-            <Link to="/operador" className="mt-3 inline-flex min-h-11 items-center font-semibold text-cobalt underline">
+            <Link to="/operador" className="mt-3 inline-flex min-h-11 items-center font-semibold text-brand underline">
               Abrir painel do operador
             </Link>
           </Surface>

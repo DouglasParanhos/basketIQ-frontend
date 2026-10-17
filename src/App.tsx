@@ -28,7 +28,7 @@ function RouteError() {
       : "Ocorreu um erro inesperado.";
   return (
     <main className="mx-auto max-w-md p-6">
-      <Notice tone="error" title="Não foi possível mostrar esta página" action={<a className="font-semibold text-cobalt underline" href="/">Voltar ao resumo</a>}>
+      <Notice tone="error" title="Não foi possível mostrar esta página" action={<a className="font-semibold text-brand underline" href="/">Voltar ao resumo</a>}>
         {message}
       </Notice>
     </main>

@@ -108,7 +108,7 @@ export function AddPage() {
               type="button"
               onClick={() => inputs.current[id]?.click()}
               className={`flex min-h-20 items-center gap-4 rounded-surface p-4 text-left ${
-                i === 0 ? "bg-cobalt text-white dark:text-ground" : "bg-paper text-ink ring-1 ring-inset ring-line"
+                i === 0 ? "bg-brand text-white dark:text-ground" : "bg-paper text-ink ring-1 ring-inset ring-line"
               }`}
             >
               <Icon aria-hidden className="size-7 shrink-0" />
@@ -171,7 +171,7 @@ export function AddPage() {
                 <span>A enviar</span>
                 <span>{Math.round(upload.progress * 100)} %</span>
               </div>
-              <progress className="h-2 w-full accent-cobalt" max={1} value={upload.progress} aria-label="Progresso do envio" />
+              <progress className="h-2 w-full accent-brand" max={1} value={upload.progress} aria-label="Progresso do envio" />
             </div>
           )}
 
@@ -185,7 +185,7 @@ export function AddPage() {
                     Guardar nova versão
                   </Button>
                   {upload.duplicate && (
-                    <Link className="inline-flex min-h-12 items-center px-2 font-semibold text-cobalt underline" to={`/compras/${upload.duplicate.receipt_id}`}>
+                    <Link className="inline-flex min-h-12 items-center px-2 font-semibold text-brand underline" to={`/compras/${upload.duplicate.receipt_id}`}>
                       Ver a compra existente
                     </Link>
                   )}

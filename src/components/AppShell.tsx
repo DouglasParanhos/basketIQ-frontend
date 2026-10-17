@@ -27,7 +27,7 @@ export function AppShell() {
                 className={({ isActive }) =>
                   [
                     "flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium",
-                    isActive ? "text-cobalt" : "text-ink-soft",
+                    isActive ? "text-brand" : "text-ink-soft",
                   ].join(" ")
                 }
               >
@@ -36,8 +36,8 @@ export function AppShell() {
                     <span
                       className={
                         primary
-                          ? "grid size-11 place-items-center rounded-full bg-cobalt text-white shadow-md dark:text-ground"
-                          : `grid h-8 w-14 place-items-center rounded-full ${isActive ? "bg-cobalt-soft" : ""}`
+                          ? "grid size-11 place-items-center rounded-full bg-brand text-white shadow-md dark:text-ground"
+                          : `grid h-8 w-14 place-items-center rounded-full ${isActive ? "bg-brand-soft" : ""}`
                       }
                     >
                       <Icon aria-hidden className="size-5" />

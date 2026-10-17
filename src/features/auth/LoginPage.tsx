@@ -1,4 +1,5 @@
 import { Navigate, useSearchParams } from "react-router";
+import { BrandMark } from "../../components/BrandMark";
 import { Notice, Spinner } from "../../components/ui";
 import { useAppName } from "../../config/appConfig";
 import { useMe } from "./session";
@@ -35,8 +36,12 @@ export function LoginPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-between px-6 pb-10 pt-16">
       <div>
+        <div className="mb-8 flex items-center gap-3">
+          <BrandMark className="h-12 w-auto" />
+          <span className="text-2xl font-extrabold tracking-tight text-brand">{appName}</span>
+        </div>
         <div aria-hidden className="receipt-paper mb-10 max-w-64 -rotate-2">
-          <p className="text-center font-semibold uppercase">{appName}</p>
+          <p className="text-center font-semibold uppercase">Nota de compra</p>
           <hr />
           <p className="flex justify-between">
             <span>LEITE MEIO GORDO</span>
@@ -69,7 +74,7 @@ export function LoginPage() {
         {/* Full-page navigation: the OAuth flow is handled by the API (BFF). */}
         <a
           href="/v1/auth/login"
-          className="inline-flex min-h-14 items-center justify-center gap-3 rounded-control bg-cobalt px-5 text-lg font-semibold text-white hover:bg-cobalt-deep dark:text-ground"
+          className="inline-flex min-h-14 items-center justify-center gap-3 rounded-control bg-brand px-5 text-lg font-semibold text-white hover:bg-brand-deep dark:text-ground"
         >
           <span className="grid size-8 place-items-center rounded-full bg-white">
             <GoogleMark />
@@ -78,7 +83,7 @@ export function LoginPage() {
         </a>
         <p className="text-center text-sm text-ink-soft">
           Usamos apenas o seu nome e e-mail.{" "}
-          <a className="font-medium text-cobalt underline" href="/privacidade">
+          <a className="font-medium text-brand underline" href="/privacidade">
             Política de privacidade
           </a>
         </p>

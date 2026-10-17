@@ -34,7 +34,7 @@ export function ReceiptPage() {
   return (
     <>
       <header className="flex items-center gap-3 pb-4 pt-6">
-        <Link to="/compras" aria-label="Voltar às compras" className="grid size-11 place-items-center rounded-full hover:bg-cobalt-soft">
+        <Link to="/compras" aria-label="Voltar às compras" className="grid size-11 place-items-center rounded-full hover:bg-brand-soft">
           <ArrowLeft aria-hidden className="size-5" />
         </Link>
         <div className="min-w-0 flex-1">
@@ -92,7 +92,7 @@ function Processing({ receipt: r }: { receipt: Receipt }) {
             <span
               aria-hidden
               className={`grid size-8 place-items-center rounded-full text-sm font-bold ${
-                i < current ? "bg-ok-soft text-ok" : i === current ? "animate-pulse bg-cobalt text-white dark:text-ground" : "bg-ground text-ink-soft"
+                i < current ? "bg-ok-soft text-ok" : i === current ? "animate-pulse bg-brand text-white dark:text-ground" : "bg-ground text-ink-soft"
               }`}
             >
               {i + 1}
@@ -169,7 +169,7 @@ function DuplicateChoice({ receipt: r }: { receipt: Receipt }) {
       }
     >
       Já existe uma compra no mesmo supermercado, à mesma hora e com o mesmo total.{" "}
-      <Link className="font-semibold text-cobalt underline" to={`/compras/${r.duplicate_of_receipt_id}`}>
+      <Link className="font-semibold text-brand underline" to={`/compras/${r.duplicate_of_receipt_id}`}>
         Ver a outra compra
       </Link>
     </Notice>
@@ -204,7 +204,7 @@ function MerchantChoice({ receipt: r }: { receipt: Receipt }) {
           Ler novamente
         </Button>
       </div>
-      <button className="mt-3 text-sm font-semibold text-cobalt underline" onClick={() => send.mutate("UNSUPPORTED")}>
+      <button className="mt-3 text-sm font-semibold text-brand underline" onClick={() => send.mutate("UNSUPPORTED")}>
         É de outro supermercado (não suportado)
       </button>
     </Notice>

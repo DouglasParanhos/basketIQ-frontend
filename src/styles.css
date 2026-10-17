@@ -1,35 +1,40 @@
 @import "tailwindcss";
-@import "@fontsource/schibsted-grotesk/latin-400.css";
-@import "@fontsource/schibsted-grotesk/latin-500.css";
-@import "@fontsource/schibsted-grotesk/latin-700.css";
-@import "@fontsource/schibsted-grotesk/latin-800.css";
+@import "@fontsource/nunito-sans/latin-400.css";
+@import "@fontsource/nunito-sans/latin-500.css";
+@import "@fontsource/nunito-sans/latin-600.css";
+@import "@fontsource/nunito-sans/latin-700.css";
+@import "@fontsource/nunito-sans/latin-800.css";
 @import "@fontsource/martian-mono/latin-400.css";
 @import "@fontsource/martian-mono/latin-600.css";
 
 /*
-  Palette: azulejo cobalt on cool paper. Amber "highlighter" marks anything that needs the
-  person's eyes. The printed-receipt surface (.receipt-paper) is the one bold element.
+  Palette from the Super Mercado brand pack: deep teal (#075B50) is the brand colour, gold
+  (#FFC928) is the "highlighter" that marks anything needing the person's eyes, mint (#CDEFE0)
+  is the soft tint. The pack's vivid green (#12B76A) is only 2.6:1 on white, so it is never used
+  for text; the text/graphic greens below are darker. The pack has no dark palette: the dark
+  values are derived. Every text/background pair is checked at >= 4.5:1 (graphics and focus ring
+  >= 3:1). The printed-receipt surface (.receipt-paper) is the one bold element.
 */
 @theme {
-  --font-sans: "Schibsted Grotesk", system-ui, sans-serif;
+  --font-sans: "Nunito Sans", system-ui, sans-serif;
   --font-receipt: "Martian Mono", ui-monospace, monospace;
 
-  --color-cobalt: #1d4e9e;
-  --color-cobalt-deep: #133672;
-  --color-cobalt-soft: #dbe6f7;
-  --color-ground: #eef2f7;
+  --color-brand: #075b50;
+  --color-brand-deep: #04443b;
+  --color-brand-soft: #cdefe0;
+  --color-ground: #f1f8f5;
   --color-paper: #ffffff;
-  --color-ink: #1a2233;
-  --color-ink-soft: #4a5568;
-  --color-line: #d5dce6;
-  --color-marker: #ffd54a;
-  --color-marker-ink: #7a4a00;
-  --color-ok: #1f7a4d;
-  --color-ok-soft: #dcefe4;
+  --color-ink: #0e2b26;
+  --color-ink-soft: #44615b;
+  --color-line: #cfe0d8;
+  --color-marker: #ffc928;
+  --color-marker-ink: #5c3f00;
+  --color-ok: #067647;
+  --color-ok-soft: #d7f0e3;
   --color-alert: #b3261e;
   --color-alert-soft: #f9dedc;
-  /* Validated with the dataviz palette checker against paper (light) and #172234 (dark). */
-  --color-chart: #1d4e9e;
+  /* >= 3:1 against paper and ground (light) and against paper and ground (dark). */
+  --color-chart: #0b8a52;
 
   --radius-control: 0.75rem;
   --radius-surface: 1.25rem;
@@ -39,7 +44,7 @@
   :root {
     color-scheme: light dark;
   }
-  /* No tabular figures: in Schibsted Grotesk they also widen the decimal comma ("16 ,75").
+  /* No tabular figures: they can also widen the decimal comma ("16 ,75") in proportional faces.
      Columns of amounts are right-aligned instead; the receipt view uses a monospace face. */
   html,
   body {
@@ -50,25 +55,25 @@
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --color-ground: #0f1724;
-      --color-paper: #172234;
-      --color-ink: #e8edf5;
-      --color-ink-soft: #a9b4c6;
-      --color-line: #2c3a52;
-      --color-cobalt: #7aa7f0;
-      --color-cobalt-deep: #a9c6f7;
-      --color-cobalt-soft: #1b2d4d;
+      --color-ground: #07201c;
+      --color-paper: #0e2d28;
+      --color-ink: #e6f4ee;
+      --color-ink-soft: #9fc1b7;
+      --color-line: #1f4640;
+      --color-brand: #3dd68c;
+      --color-brand-deep: #7ce8b3;
+      --color-brand-soft: #0f3b32;
       --color-marker: #6b5200;
       --color-marker-ink: #ffe9a6;
       --color-ok: #6fd3a0;
-      --color-ok-soft: #12382a;
+      --color-ok-soft: #0e3b2b;
       --color-alert: #ffb4ab;
       --color-alert-soft: #4a1a17;
-      --color-chart: #5f8fe2;
+      --color-chart: #3dd68c;
     }
   }
   :focus-visible {
-    outline: 3px solid var(--color-cobalt);
+    outline: 3px solid var(--color-brand);
     outline-offset: 2px;
     border-radius: 6px;
   }

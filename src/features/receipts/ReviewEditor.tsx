@@ -204,9 +204,9 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
                     {line.product_name && line.product_name !== line.raw_description && (
                       <span className="font-sans text-xs text-ink-soft">Produto: {line.product_name}</span>
                     )}
-                    {line.touched.length > 0 && src && <span className="font-sans text-xs text-cobalt">Corrigido manualmente</span>}
+                    {line.touched.length > 0 && src && <span className="font-sans text-xs text-brand">Corrigido manualmente</span>}
                     {src?.manually_edited && line.touched.length === 0 && (
-                      <span className="font-sans text-xs text-cobalt">Corrigido manualmente</span>
+                      <span className="font-sans text-xs text-brand">Corrigido manualmente</span>
                     )}
                   </span>
                   <Pencil aria-hidden className="mt-1 size-4 shrink-0 text-ink-soft" />
@@ -234,7 +234,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
             setOpen(l.key);
             setDirty(true);
           }}
-          className="mt-2 inline-flex min-h-11 items-center gap-2 font-sans font-semibold text-cobalt"
+          className="mt-2 inline-flex min-h-11 items-center gap-2 font-sans font-semibold text-brand"
         >
           <Plus aria-hidden className="size-4" /> Adicionar linha
         </button>

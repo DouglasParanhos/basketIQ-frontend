@@ -25,7 +25,7 @@ export function PeriodPicker({ value, onChange }: { value: Period; onChange: (p:
                   : periodFor(kind, { y: Number(value.from.slice(0, 4)) || today.y, m0: Number(value.from.slice(5, 7)) - 1 || today.m0 }),
               )
             }
-            className="min-h-10 rounded-full text-sm font-semibold text-ink-soft aria-checked:bg-cobalt aria-checked:text-white dark:aria-checked:text-ground"
+            className="min-h-10 rounded-full text-sm font-semibold text-ink-soft aria-checked:bg-brand aria-checked:text-white dark:aria-checked:text-ground"
           >
             {label}
           </button>
@@ -56,13 +56,13 @@ export function PeriodPicker({ value, onChange }: { value: Period; onChange: (p:
         </div>
       ) : (
         <div className="flex items-center justify-between">
-          <button onClick={() => onChange(shiftPeriod(value, -1))} aria-label="Período anterior" className="grid size-11 place-items-center rounded-full hover:bg-cobalt-soft">
+          <button onClick={() => onChange(shiftPeriod(value, -1))} aria-label="Período anterior" className="grid size-11 place-items-center rounded-full hover:bg-brand-soft">
             <ChevronLeft aria-hidden className="size-5" />
           </button>
           <p className="text-lg font-bold first-letter:uppercase" aria-live="polite">
             {describePeriod(value)}
           </p>
-          <button onClick={() => onChange(shiftPeriod(value, 1))} aria-label="Período seguinte" className="grid size-11 place-items-center rounded-full hover:bg-cobalt-soft">
+          <button onClick={() => onChange(shiftPeriod(value, 1))} aria-label="Período seguinte" className="grid size-11 place-items-center rounded-full hover:bg-brand-soft">
             <ChevronRight aria-hidden className="size-5" />
           </button>
         </div>

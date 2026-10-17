@@ -56,4 +56,4 @@ distribuição por supermercado e produtos mais gastos/comprados.
 
 ## Assumptions
 
-- Gráficos de série única (cobalto); identidade dos supermercados por texto, sem paleta categórica.
+- Gráficos de série única (verde da marca); identidade dos supermercados por texto, sem paleta categórica.

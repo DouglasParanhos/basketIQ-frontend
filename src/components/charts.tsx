@@ -40,7 +40,7 @@ function TooltipBox({ title, children }: { title: string; children: ReactNode })
 
 /** Spending per day or month. Single series: no legend; the heading names it. */
 export function SpendBars({ points, title }: { points: Point[]; title: string }) {
-  const color = useToken("--color-chart", "#1d4e9e");
+  const color = useToken("--color-chart", "#0b8a52");
   return (
     <figure aria-label={title} className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -49,7 +49,7 @@ export function SpendBars({ points, title }: { points: Point[]; title: string })
           <XAxis dataKey="short" tick={AXIS} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={16} />
           <YAxis tick={AXIS} tickLine={false} axisLine={false} width={52} tickFormatter={euroTick} />
           <Tooltip
-            cursor={{ fill: "var(--color-cobalt-soft)" }}
+            cursor={{ fill: "var(--color-brand-soft)" }}
             content={({ active, payload }) =>
               active && payload?.[0] ? (
                 <TooltipBox title={(payload[0].payload as Point).label}>{formatCents((payload[0].payload as Point).cents)}</TooltipBox>
@@ -65,7 +65,7 @@ export function SpendBars({ points, title }: { points: Point[]; title: string })
 
 /** Unit price over time for one product. */
 export function PriceLine({ points, title, basis }: { points: (Point & { merchant: string })[]; title: string; basis: string }) {
-  const color = useToken("--color-chart", "#1d4e9e");
+  const color = useToken("--color-chart", "#0b8a52");
   return (
     <figure aria-label={title} className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -102,7 +102,7 @@ export function PriceLine({ points, title, basis }: { points: (Point & { merchan
 export function DataTable({ caption, head, rows }: { caption: string; head: string[]; rows: (string | number)[][] }) {
   return (
     <details className="mt-2 text-sm">
-      <summary className="inline-flex min-h-11 cursor-pointer items-center font-semibold text-cobalt">Ver como tabela</summary>
+      <summary className="inline-flex min-h-11 cursor-pointer items-center font-semibold text-brand">Ver como tabela</summary>
       <div className="max-h-72 overflow-auto">
         <table className="w-full">
           <caption className="sr-only">{caption}</caption>

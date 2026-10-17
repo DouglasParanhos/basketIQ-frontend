@@ -29,7 +29,7 @@ export default function ProductPage() {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex items-center gap-3 pt-6">
-        <Link to="/produtos" aria-label="Voltar aos produtos" className="grid size-11 place-items-center rounded-full hover:bg-cobalt-soft">
+        <Link to="/produtos" aria-label="Voltar aos produtos" className="grid size-11 place-items-center rounded-full hover:bg-brand-soft">
           <ArrowLeft aria-hidden className="size-5" />
         </Link>
         <h1 className="text-2xl font-extrabold leading-tight tracking-tight">{a.product.name}</h1>

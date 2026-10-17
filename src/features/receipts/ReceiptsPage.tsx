@@ -49,7 +49,7 @@ export function ReceiptsPage() {
             role="radio"
             aria-checked={f.id === filter.id}
             onClick={() => setParams(f.id === "todas" ? {} : { filtro: f.id })}
-            className="min-h-11 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line aria-checked:bg-cobalt aria-checked:text-white aria-checked:ring-cobalt dark:aria-checked:text-ground"
+            className="min-h-11 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line aria-checked:bg-brand aria-checked:text-white aria-checked:ring-brand dark:aria-checked:text-ground"
           >
             {f.label}
           </button>
@@ -85,7 +85,7 @@ export function ReceiptsPage() {
 function ReceiptRow({ receipt: r }: { receipt: Schemas["ReceiptSummaryOut"] }) {
   return (
     <li>
-      <Link to={`/compras/${r.id}`} className="flex items-center gap-3 rounded-surface bg-paper p-4 hover:ring-1 hover:ring-cobalt">
+      <Link to={`/compras/${r.id}`} className="flex items-center gap-3 rounded-surface bg-paper p-4 hover:ring-1 hover:ring-brand">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex items-baseline justify-between gap-3">
             <span className="truncate font-bold">{r.merchant ? merchantName(r.merchant) : "Nota em processamento"}</span>

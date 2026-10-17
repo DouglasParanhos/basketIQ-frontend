@@ -27,7 +27,7 @@ export default function AdminPage() {
             aria-controls={`panel-${t.id}`}
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
-            className="min-h-11 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line aria-selected:bg-cobalt aria-selected:text-white aria-selected:ring-cobalt dark:aria-selected:text-ground"
+            className="min-h-11 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line aria-selected:bg-brand aria-selected:text-white aria-selected:ring-brand dark:aria-selected:text-ground"
           >
             {t.label}
           </button>
@@ -276,7 +276,7 @@ function MerchantForm({ config }: { config: Schemas["MerchantConfigOut"] }) {
         <div className="flex items-center justify-between">
           <h2 className="font-bold">{merchantName(config.merchant)}</h2>
           <label className="flex min-h-11 items-center gap-2 text-sm">
-            <input type="checkbox" className="size-5 accent-cobalt" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
+            <input type="checkbox" className="size-5 accent-brand" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
             Ativo
           </label>
         </div>
@@ -285,7 +285,7 @@ function MerchantForm({ config }: { config: Schemas["MerchantConfigOut"] }) {
           <Field label="Tolerância dos totais (cêntimos)" inputMode="numeric" value={tolerance} onChange={(e) => setTolerance(e.target.value)} />
         </div>
         <details>
-          <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-cobalt">Limiar por campo</summary>
+          <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-brand">Limiar por campo</summary>
           <div className="grid grid-cols-2 gap-3 pt-2">
             {FIELDS.map((f) => (
               <Field

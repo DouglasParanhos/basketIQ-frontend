@@ -111,7 +111,7 @@ export function DashboardPage() {
                 ))}
             </Select>
             {product && (
-              <span className="inline-flex min-h-12 items-center gap-2 rounded-full bg-cobalt-soft pl-4 pr-1 text-sm font-semibold">
+              <span className="inline-flex min-h-12 items-center gap-2 rounded-full bg-brand-soft pl-4 pr-1 text-sm font-semibold">
                 {product.name}
                 <button
                   onClick={() => update({ produto: null, produto_nome: null })}
@@ -253,7 +253,7 @@ function Ranking({
                 <Link to={`/produtos/${p.product_id}`} className="flex min-h-7 items-center truncate font-semibold hover:underline">
                   {p.name}
                 </Link>
-                <button className="min-h-7 self-start text-xs font-medium text-cobalt" onClick={() => onProduct(p.product_id!, p.name)}>
+                <button className="min-h-7 self-start text-xs font-medium text-brand" onClick={() => onProduct(p.product_id!, p.name)}>
                   Filtrar resumo
                 </button>
               </span>

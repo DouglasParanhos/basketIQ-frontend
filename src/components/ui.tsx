@@ -7,9 +7,9 @@ import { STATUS, type ReceiptStatus } from "../lib/status";
 type Variant = "primary" | "secondary" | "quiet" | "danger" | "dangerQuiet";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-cobalt text-white hover:bg-cobalt-deep dark:text-ground",
-  secondary: "bg-paper text-cobalt ring-1 ring-inset ring-line hover:ring-cobalt",
-  quiet: "text-cobalt hover:bg-cobalt-soft",
+  primary: "bg-brand text-white hover:bg-brand-deep dark:text-ground",
+  secondary: "bg-paper text-brand ring-1 ring-inset ring-line hover:ring-brand",
+  quiet: "text-brand hover:bg-brand-soft",
   danger: "bg-alert text-white hover:opacity-90 dark:text-ground",
   dangerQuiet: "text-alert hover:bg-alert-soft",
 };
@@ -91,7 +91,7 @@ export function Select({
 }
 
 const NOTICE = {
-  info: { icon: Info, cls: "bg-cobalt-soft text-ink" },
+  info: { icon: Info, cls: "bg-brand-soft text-ink" },
   success: { icon: CheckCircle2, cls: "bg-ok-soft text-ink" },
   warning: { icon: AlertTriangle, cls: "bg-marker/40 text-ink" },
   error: { icon: OctagonAlert, cls: "bg-alert-soft text-ink" },
@@ -131,7 +131,7 @@ export function Spinner({ label = "A carregar…" }: { label?: string }) {
 }
 
 const TONE_CLASS = {
-  progress: "bg-cobalt-soft text-cobalt-deep",
+  progress: "bg-brand-soft text-brand-deep",
   attention: "bg-marker text-marker-ink",
   done: "bg-ok-soft text-ok",
   error: "bg-alert-soft text-alert",
