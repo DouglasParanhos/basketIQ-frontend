@@ -8,12 +8,15 @@
 @import "@fontsource/martian-mono/latin-600.css";
 
 /*
-  Palette from the Super Mercado brand pack: deep teal (#075B50) is the brand colour, gold
-  (#FFC928) is the "highlighter" that marks anything needing the person's eyes, mint (#CDEFE0)
-  is the soft tint. The pack's vivid green (#12B76A) is only 2.6:1 on white, so it is never used
-  for text; the text/graphic greens below are darker. The pack has no dark palette: the dark
-  values are derived. Every text/background pair is checked at >= 4.5:1 (graphics and focus ring
-  >= 3:1). The printed-receipt surface (.receipt-paper) is the one bold element.
+  Palette from the Super Mercado brand pack: deep teal is the brand colour, gold the "highlighter"
+  that marks anything needing the person's eyes, mint the soft tint. The pack's vivid green
+  (#12B76A) is 2.6:1 on white, so text and graphics use the darker greens below. The pack has no
+  dark palette: the dark values are derived. Text pairs are >= 4.5:1, graphics and focus ring
+  >= 3:1. The printed-receipt surface (.receipt-paper) is the one bold element.
+
+  Keep in sync by hand: --color-brand (light) = theme-color in index.html and in the backend
+  manifest (Backend/src/basketiq/api/routers/config.py); --color-ground (light) = the manifest's
+  background_color; the brand colours in scripts/make_icons.mjs and components/BrandMark.tsx.
 */
 @theme {
   --font-sans: "Nunito Sans", system-ui, sans-serif;
@@ -33,7 +36,7 @@
   --color-ok-soft: #d7f0e3;
   --color-alert: #b3261e;
   --color-alert-soft: #f9dedc;
-  /* >= 3:1 against paper and ground (light) and against paper and ground (dark). */
+  /* >= 3:1 against paper and ground, in both schemes. */
   --color-chart: #0b8a52;
 
   --radius-control: 0.75rem;
