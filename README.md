@@ -45,7 +45,7 @@ brand's vivid green is never used for text. App icons: `node scripts/make_icons.
 
 ## Develop
 
-Requirements: Node 22+, pnpm 9, the backend stack (`cd ../Backend && make up`).
+Requirements: Node 24+, pnpm 9, the backend stack (`cd ../Backend && make up`).
 
 ```bash
 pnpm install
