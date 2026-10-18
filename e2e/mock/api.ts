@@ -114,8 +114,6 @@ const summary = {
     purchases: 3,
     units: "6",
     articles: 5,
-    avg_price_per_unit_cents: 81,
-    avg_price_basis: "un",
     variation_pct: { total_spent: 12.5, purchases: 50, units: null },
     previous_period: { from: "2026-09-01", to: "2026-09-30", total_spent_cents: 40444, purchases: 2, units: "3" },
   },
@@ -173,6 +171,9 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     }
     if (path === "/v1/receipts/r1" && method === "GET") return json(route, reviewReceipt);
     if (path === "/v1/analytics/summary") return json(route, summary);
+    if (path === "/v1/analytics/consumption") {
+      return json(route, { filters: summary.filters, items: [{ product_id: "p1", name: "LEITE MEIO GORDO", purchases: 3, units: "4", units_per_month: 4.1, spent_cents: 33500, avg_interval_days: 14, first_purchase: "2026-10-02", last_purchase: "2026-10-30" }], empty: false });
+    }
     if (path === "/v1/products") return json(route, [{ id: "p1", name: "LEITE MEIO GORDO", unit_type: "un", lines: 3, spent_cents: 33500, last_purchase_at: "2026-10-20T10:00:00Z" }]);
     return json(route, { code: "not_found", message: "Não encontrado.", request_id: "r" }, 404);
   });

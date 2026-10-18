@@ -102,6 +102,27 @@ export function receipt(overrides: Partial<Receipt> = {}): Receipt {
   };
 }
 
+export function consumption(overrides: Partial<Schemas["ConsumptionOut"]> = {}): Schemas["ConsumptionOut"] {
+  return {
+    filters: { from: "2026-09-01", to: "2026-09-30", merchant: null, product_id: null },
+    items: [
+      {
+        product_id: "p1",
+        name: "LEITE MEIO GORDO",
+        purchases: 3,
+        units: "4",
+        units_per_month: 4.1,
+        spent_cents: 33500,
+        avg_interval_days: 14,
+        first_purchase: "2026-09-02",
+        last_purchase: "2026-09-30",
+      },
+    ],
+    empty: false,
+    ...overrides,
+  };
+}
+
 export function summary(overrides: Partial<Schemas["SummaryOut"]> = {}): Schemas["SummaryOut"] {
   return {
     filters: { from: "2026-09-01", to: "2026-09-30", merchant: null, product_id: null },
@@ -110,8 +131,6 @@ export function summary(overrides: Partial<Schemas["SummaryOut"]> = {}): Schemas
       purchases: 3,
       units: "6",
       articles: 5,
-      avg_price_per_unit_cents: 81,
-      avg_price_basis: "un",
       variation_pct: { total_spent: 12.5, purchases: 50, units: null },
       previous_period: { from: "2026-08-02", to: "2026-08-31", total_spent_cents: 40444, purchases: 2, units: "3" },
     },

@@ -2,7 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
-import { line, receipt, summary } from "../test/fixtures";
+import { consumption, line, receipt, summary } from "../test/fixtures";
 import { renderRoutes } from "../test/render";
 import { API, errorBody, server } from "../test/server";
 import { LoginPage } from "./auth/LoginPage";
@@ -301,6 +301,21 @@ describe("dashboard (RF-09, RF-11)", () => {
     renderRoutes(routes, "/?de=2026-09-01&ate=2026-09-30");
     await user.selectOptions(await screen.findByLabelText("Supermercado"), "LIDL");
     await waitFor(() => expect(seen).toContain("LIDL"));
+  });
+
+  it("shows how often and how much of each product is bought, and omits the block when empty", async () => {
+    renderRoutes(routes, "/?de=2026-09-01&ate=2026-09-30");
+    const section = (await screen.findByRole("heading", { name: /consumo habitual/i })).closest("section")!;
+    expect(within(section).getByRole("link", { name: "LEITE MEIO GORDO" })).toHaveAttribute("href", "/produtos/p1");
+    expect(within(section).getByText(/3 compras · a cada 14 dias/)).toBeInTheDocument();
+    expect(within(section).getByText("4,1 un./mês")).toBeInTheDocument();
+  });
+
+  it("hides the consumption block when there is nothing to show", async () => {
+    server.use(http.get(`${API}/v1/analytics/consumption`, () => HttpResponse.json(consumption({ items: [], empty: true }))));
+    renderRoutes(routes, "/?de=2026-09-01&ate=2026-09-30");
+    expect(await screen.findByText("455,00 €")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /consumo habitual/i })).not.toBeInTheDocument();
   });
 
   it("does not draw a misleading chart with insufficient data", async () => {

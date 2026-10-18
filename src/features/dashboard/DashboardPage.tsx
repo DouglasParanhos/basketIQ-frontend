@@ -50,6 +50,18 @@ function points(summary: Summary): Point[] {
 export function DashboardPage() {
   const { data: me } = useMe();
   const { period, merchant, product, update } = usePeriodParams();
+  const merchantFilter = (merchant ?? undefined) as Merchant | undefined;
+  // Fired next to the summary so the two requests run in parallel.
+  const consumption = useQuery({
+    queryKey: ["consumption", period.from, period.to, merchant],
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/v1/analytics/consumption", {
+          params: { query: { from: period.from, to: period.to, merchant: merchantFilter, limit: 5 } },
+        }),
+      ),
+    placeholderData: keepPreviousData,
+  });
   const query = useQuery({
     queryKey: ["summary", period.from, period.to, merchant, product?.id],
     queryFn: async () =>
@@ -59,7 +71,7 @@ export function DashboardPage() {
             query: {
               from: period.from,
               to: period.to,
-              merchant: (merchant ?? undefined) as Merchant | undefined,
+              merchant: merchantFilter,
               product_id: product?.id,
             },
           },
@@ -126,20 +138,49 @@ export function DashboardPage() {
 
           {query.isLoading && <Spinner />}
           {query.error && <Notice tone="error">{query.error.message}</Notice>}
-          {s && <SummaryView summary={s} period={period} onProduct={(id, name) => update({ produto: id, produto_nome: name })} stale={query.isPlaceholderData} />}
+          {s && <SummaryView summary={s} consumption={consumption.data} period={period} onProduct={(id, name) => update({ produto: id, produto_nome: name })} stale={query.isPlaceholderData} />}
         </>
       )}
     </div>
   );
 }
 
+function Consumption({ data }: { data: Schemas["ConsumptionOut"] | undefined }) {
+  if (!data || data.empty) return null;
+  return (
+    <section aria-labelledby="consumo" className="rounded-surface bg-paper p-4">
+      <h2 id="consumo" className="mb-2 font-bold">
+        Consumo habitual
+      </h2>
+      <ol className="flex flex-col">
+        {data.items.map((p) => (
+          <li key={p.product_id} className="flex items-center justify-between gap-3 border-b border-line py-2 text-sm last:border-0">
+            <span className="flex min-w-0 flex-col">
+              <Link to={`/produtos/${p.product_id}`} className="flex min-h-7 items-center truncate font-semibold hover:underline">
+                {p.name}
+              </Link>
+              <span className="text-xs text-ink-soft">
+                {p.purchases} {p.purchases === 1 ? "compra" : "compras"}
+                {p.avg_interval_days !== null && ` · a cada ${p.avg_interval_days.toLocaleString("pt-PT")} dias`}
+              </span>
+            </span>
+            <span className="amount shrink-0 font-semibold">{p.units_per_month.toLocaleString("pt-PT")} un./mês</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function SummaryView({
   summary: s,
+  consumption,
   period,
   onProduct,
   stale,
 }: {
   summary: Summary;
+  consumption: Schemas["ConsumptionOut"] | undefined;
   period: Period;
   onProduct: (id: string, name: string) => void;
   stale: boolean;
@@ -164,7 +205,7 @@ function SummaryView({
         <p className="mt-2 text-sm text-ink-soft">
           {variation ? `${variation} face a ${previousLabel} (${formatCents(s.cards.previous_period.total_spent_cents)})` : `Sem compras em ${previousLabel} para comparar.`}
         </p>
-        <dl className="mt-4 grid grid-cols-3 gap-3 border-t border-line pt-4">
+        <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-4">
           <div>
             <dt className="text-xs text-ink-soft">Compras</dt>
             <dd className="text-xl font-bold">{s.cards.purchases}</dd>
@@ -172,10 +213,6 @@ function SummaryView({
           <div>
             <dt className="text-xs text-ink-soft">Unidades</dt>
             <dd className="text-xl font-bold">{s.cards.units.replace(".", ",")}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-ink-soft">Preço médio por unidade</dt>
-            <dd className="text-xl font-bold">{formatCents(s.cards.avg_price_per_unit_cents)}</dd>
           </div>
         </dl>
       </section>
@@ -224,6 +261,7 @@ function SummaryView({
         <Ranking title="Mais gasto" items={s.top_products_by_value} value={(p) => formatCents(p.spent_cents)} onProduct={onProduct} />
         <Ranking title="Mais comprados" items={s.top_products_by_quantity} value={(p) => `${p.units.replace(".", ",")} un.`} onProduct={onProduct} />
       </div>
+      <Consumption data={consumption} />
       <p className="text-xs text-ink-soft">
         Só entram no resumo as compras confirmadas. Produtos vendidos ao peso contam como uma unidade.
       </p>

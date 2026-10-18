@@ -13,8 +13,9 @@
 ### User Story 1 - Ver o gasto do período (Priority: P1)
 
 O resumo mostra o gasto total do período (mês, trimestre, ano ou intervalo), a variação face ao
-período anterior equivalente, compras, unidades, preço médio por unidade, gasto por dia/mês,
-distribuição por supermercado e produtos mais gastos/comprados.
+período anterior equivalente, compras, unidades, gasto por dia/mês,
+distribuição por supermercado, produtos mais gastos/comprados e o consumo habitual (frequência e
+unidades por mês dos produtos mais comprados).
 
 **Acceptance Scenarios**:
 
@@ -22,6 +23,7 @@ distribuição por supermercado e produtos mais gastos/comprados.
 2. **Given** o mês de setembro de 2026, **When** é escolhido, **Then** só as compras desse mês entram no total. — F-18 — `e2e/stack/journey.spec.ts › journey: import, review, confirm, analyse, delete`; períodos: `src/lib/lib.test.ts › periods (F-18) › builds month, quarter and year ranges`, `… › moves across year boundaries`
 3. **Given** o filtro de supermercado, **When** é alterado, **Then** é enviado à API e todos os cartões e gráficos refletem o filtro. — F-19 — `src/features/features.test.tsx › dashboard (RF-09, RF-11) › F-19: the merchant filter is sent with the query`; `e2e/stack/journey.spec.ts › journey: import, review, confirm, analyse, delete` (45,39 € → 36,34 €)
 4. **Given** um produto no ranking, **When** toca "Filtrar resumo", **Then** o resumo combina período, supermercado e produto. — RF-11 — [NEEDS CLARIFICATION: combinação com produto sem teste de UI; agregação coberta no backend]
+5. **Given** compras repetidas de um produto, **When** abre o resumo, **Then** vê "Consumo habitual" com o nº de compras, o intervalo médio e as unidades por mês; sem dados, o bloco não aparece. — RF-09 — `src/features/features.test.tsx › dashboard (RF-09, RF-11) › shows how often and how much of each product is bought, and omits the block when empty`; `… › hides the consumption block when there is nothing to show`
 
 ---
 

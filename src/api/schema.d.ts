@@ -314,6 +314,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/analytics/consumption": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Purchase frequency and monthly rate per product */
+        get: operations["consumption_v1_analytics_consumption_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/products": {
         parameters: {
             query?: never;
@@ -509,12 +526,37 @@ export interface components {
             units: string;
             /** Articles */
             articles: number;
-            /** Avg Price Per Unit Cents */
-            avg_price_per_unit_cents: number | null;
-            /** Avg Price Basis */
-            avg_price_basis: string | null;
             variation_pct: components["schemas"]["VariationOut"];
             previous_period: components["schemas"]["PreviousPeriodOut"];
+        };
+        /** ConsumptionItem */
+        ConsumptionItem: {
+            /** Product Id */
+            product_id: string;
+            /** Name */
+            name: string | null;
+            /** Purchases */
+            purchases: number;
+            /** Units */
+            units: string;
+            /** Units Per Month */
+            units_per_month: number;
+            /** Spent Cents */
+            spent_cents: number;
+            /** Avg Interval Days */
+            avg_interval_days: number | null;
+            /** First Purchase */
+            first_purchase: string;
+            /** Last Purchase */
+            last_purchase: string;
+        };
+        /** ConsumptionOut */
+        ConsumptionOut: {
+            filters: components["schemas"]["SummaryFilters"];
+            /** Items */
+            items: components["schemas"]["ConsumptionItem"][];
+            /** Empty */
+            empty: boolean;
         };
         /** DeletionResult */
         DeletionResult: {
@@ -2167,6 +2209,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SummaryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    consumption_v1_analytics_consumption_get: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                merchant?: components["schemas"]["Merchant"] | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsumptionOut"];
                 };
             };
             /** @description Validation Error */
