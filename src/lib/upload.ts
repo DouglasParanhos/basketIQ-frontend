@@ -6,6 +6,8 @@ export const ACCEPTED_TYPES: Record<string, string> = {
   "image/heif": "heif",
 };
 export const MAX_BYTES = 15 * 1024 * 1024;
+/** Photos of one long receipt (the backend enforces the same limit). */
+export const MAX_PHOTOS = 6;
 
 /** Some browsers give HEIC files an empty type: infer it from the extension. */
 export function effectiveType(file: File): string {

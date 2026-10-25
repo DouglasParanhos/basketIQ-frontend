@@ -66,6 +66,8 @@ export function receipt(overrides: Partial<Receipt> = {}): Receipt {
     merchant_hint: null,
     purchase_at: "2026-09-15T12:30:00+01:00",
     receipt_ref: "FS 0001/0001",
+    store_label: "ESTRADA DA LUZ",
+    merchant_name: null,
     currency: "EUR",
     source_type: "IMAGE",
     totals: {
@@ -92,6 +94,7 @@ export function receipt(overrides: Partial<Receipt> = {}): Receipt {
     confirmed_at: null,
     confirmed_by: null,
     original_available: true,
+    photo_count: 1,
     original_expires_at: null,
     original_deleted_at: null,
     processing: { job_id: "j1", status: "SUCCEEDED", route: "LOCAL_OCR", attempts: 1 },

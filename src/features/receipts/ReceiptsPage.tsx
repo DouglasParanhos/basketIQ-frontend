@@ -88,9 +88,10 @@ function ReceiptRow({ receipt: r }: { receipt: Schemas["ReceiptSummaryOut"] }) {
       <Link to={`/compras/${r.id}`} className="flex items-center gap-3 rounded-surface bg-paper p-4 hover:ring-1 hover:ring-brand">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex items-baseline justify-between gap-3">
-            <span className="truncate font-bold">{r.merchant ? merchantName(r.merchant) : "Nota em processamento"}</span>
+            <span className="truncate font-bold">{r.merchant ? merchantName(r.merchant, r.merchant_name) : "Nota em processamento"}</span>
             <span className="amount shrink-0 font-bold">{formatCents(r.total_cents)}</span>
           </div>
+          {r.store_label && <span className="truncate text-sm text-ink-soft">{r.store_label}</span>}
           <div className="flex items-center justify-between gap-3 text-sm text-ink-soft">
             <span>{r.purchase_at ? formatDate(r.purchase_at) : `Enviada ${formatDateTime(r.created_at)}`}</span>
             <StatusBadge status={r.status} />

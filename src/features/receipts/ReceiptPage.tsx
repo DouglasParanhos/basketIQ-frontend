@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Home, Plus } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { ApiError, api, unwrap, type Schemas } from "../../api/client";
-import { Button, Notice, Select, Spinner, StatusBadge } from "../../components/ui";
-import { formatAmount, formatCents, formatDate, formatDateTime, formatQuantity, merchantName } from "../../lib/format";
+import { Button, LinkButton, Notice, Select, Spinner, StatusBadge } from "../../components/ui";
+import { formatAmount, formatCents, formatDate, formatDateTime, formatQuantity, MERCHANT_OPTIONS, merchantName } from "../../lib/format";
 import { EDITABLE, IN_PROGRESS } from "../../lib/status";
 import { ReviewEditor } from "./ReviewEditor";
 
@@ -38,7 +38,8 @@ export function ReceiptPage() {
           <ArrowLeft aria-hidden className="size-5" />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-extrabold tracking-tight">{r.merchant && r.merchant !== "UNKNOWN" ? merchantName(r.merchant) : "Nova compra"}</h1>
+          <h1 className="truncate text-2xl font-extrabold tracking-tight">{r.merchant_name || (r.merchant && r.merchant !== "UNKNOWN") ? merchantName(r.merchant, r.merchant_name) : "Nova compra"}</h1>
+          {r.store_label && <p className="truncate text-sm font-semibold text-ink-soft">{r.store_label}</p>}
           <p className="text-sm text-ink-soft">{r.purchase_at ? formatDateTime(r.purchase_at) : `Enviada ${formatDateTime(r.created_at)}`}</p>
         </div>
         <StatusBadge status={r.status} />
@@ -190,31 +191,34 @@ function MerchantChoice({ receipt: r }: { receipt: Receipt }) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["receipt", r.id] }),
   });
   return (
-    <Notice tone="warning" title="Não reconhecemos o supermercado">
-      <p>Escolha o supermercado para lermos a nota com as regras certas.</p>
+    <Notice tone="info" title="Não reconhecemos a loja">
+      <p>
+        Se for uma destas lojas, escolha-a para lermos a nota com as regras certas. Se não for, siga para a revisão
+        e indique o nome da loja.
+      </p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
-        <Select label="Supermercado" value={choice} onChange={(e) => setChoice(e.target.value)} className="flex-1">
+        <Select label="Loja" value={choice} onChange={(e) => setChoice(e.target.value)} className="flex-1">
           <option value="">Escolher…</option>
-          <option value="CONTINENTE">Continente</option>
-          <option value="PINGO_DOCE">Pingo Doce</option>
-          <option value="LIDL">Lidl</option>
-          <option value="AUCHAN">Auchan</option>
+          {MERCHANT_OPTIONS.map(([code, name]) => (
+            <option key={code} value={code}>
+              {name}
+            </option>
+          ))}
         </Select>
-        <Button disabled={!choice} busy={send.isPending && send.variables !== "UNSUPPORTED"} onClick={() => send.mutate(choice)}>
+        <Button variant="secondary" disabled={!choice} busy={send.isPending} onClick={() => send.mutate(choice)}>
           Ler novamente
         </Button>
       </div>
-      <button className="mt-3 text-sm font-semibold text-brand underline" onClick={() => send.mutate("UNSUPPORTED")}>
-        É de outro supermercado (não suportado)
-      </button>
     </Notice>
   );
 }
 
 function ConfirmedReceipt({ receipt: r }: { receipt: Receipt }) {
   return (
+    <>
     <article className="receipt-paper" aria-label="Nota da compra">
-      <p className="text-center font-semibold">{merchantName(r.merchant).toUpperCase()}</p>
+      <p className="text-center font-semibold">{merchantName(r.merchant, r.merchant_name).toUpperCase()}</p>
+      {r.store_label && <p className="text-center">{r.store_label}</p>}
       <p className="text-center text-ink-soft">{formatDate(r.purchase_at)}</p>
       {r.receipt_ref && <p className="text-center text-ink-soft">{r.receipt_ref}</p>}
       <hr />
@@ -261,6 +265,15 @@ function ConfirmedReceipt({ receipt: r }: { receipt: Receipt }) {
         {r.confirmed_by === "AUTO" ? "Confirmada automaticamente" : "Confirmada por si"} em {formatDate(r.confirmed_at)}
       </p>
     </article>
+    <div className="flex gap-3">
+      <LinkButton to="/" variant="secondary" className="flex-1">
+        <Home aria-hidden className="size-5" /> Início
+      </LinkButton>
+      <LinkButton to="/adicionar" className="flex-1">
+        <Plus aria-hidden className="size-5" /> Adicionar outra nota
+      </LinkButton>
+    </div>
+    </>
   );
 }
 
@@ -269,7 +282,8 @@ function ManageOriginal({ receipt: r }: { receipt: Receipt }) {
   const navigate = useNavigate();
   const [confirming, setConfirming] = useState<"receipt" | "original" | null>(null);
   const view = useMutation({
-    mutationFn: async () => unwrap(await api.GET("/v1/receipts/{receipt_id}/original", { params: { path: { receipt_id: r.id } } })),
+    mutationFn: async (photo: number) =>
+      unwrap(await api.GET("/v1/receipts/{receipt_id}/original", { params: { path: { receipt_id: r.id }, query: { photo } } })),
     onSuccess: (o) => window.open(o.url, "_blank", "noopener,noreferrer"),
   });
   const removeOriginal = useMutation({
@@ -309,9 +323,11 @@ function ManageOriginal({ receipt: r }: { receipt: Receipt }) {
       <div className="flex flex-wrap gap-2">
         {r.original_available && (
           <>
-            <Button variant="secondary" busy={view.isPending} onClick={() => view.mutate()}>
-              <ExternalLink aria-hidden className="size-4" /> Ver original
-            </Button>
+            {Array.from({ length: r.photo_count }, (_, i) => (
+              <Button key={i} variant="secondary" busy={view.isPending && view.variables === i + 1} onClick={() => view.mutate(i + 1)}>
+                <ExternalLink aria-hidden className="size-4" /> {r.photo_count > 1 ? `Ver foto ${i + 1}` : "Ver original"}
+              </Button>
+            ))}
             <Button variant="quiet" onClick={() => setConfirming("original")}>
               Apagar só o ficheiro
             </Button>

@@ -50,7 +50,8 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
   const qc = useQueryClient();
   const [lines, setLines] = useState<DraftLine[]>(() => receipt.lines.map(toDraft));
   const [open, setOpen] = useState<string | null>(null);
-  const [merchant, setMerchant] = useState(receipt.merchant && receipt.merchant !== "UNKNOWN" ? receipt.merchant : "");
+  const [merchant, setMerchant] = useState(receipt.merchant ?? "UNKNOWN");
+  const [storeName, setStoreName] = useState(receipt.merchant_name ?? "");
   const initial = lisbonParts(receipt.purchase_at);
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(initial.time);
@@ -73,7 +74,8 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
   const save = useMutation({
     mutationFn: async () => {
       const body: Schemas["ReceiptPatchIn"] = { version: receipt.version, lines: lines.map(toPatch) };
-      if (merchant && merchant !== receipt.merchant) body.merchant = merchant as Merchant;
+      if (merchant !== receipt.merchant) body.merchant = merchant as Merchant;
+      if (storeName.trim() !== (receipt.merchant_name ?? "")) body.merchant_name = storeName.trim();
       const iso = lisbonIso(date, time);
       if (iso && (date !== initial.date || time !== initial.time)) body.purchase_at = iso;
       if (printed !== receipt.totals.printed_total_cents && printed !== null) body.total_cents = printed;
@@ -114,7 +116,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
 
   const conflict = [save.error, confirm.error].find((e) => e instanceof ApiError && e.code === "version_conflict");
   const blocking = receipt.review_reasons.filter((r) =>
-    ["merchant_unknown", "date_missing", "quantity_pending", "line_total_missing", "no_lines"].includes(r.code ?? ""),
+    ["date_missing", "quantity_pending", "line_total_missing", "no_lines"].includes(r.code ?? ""),
   );
 
   return (
@@ -137,16 +139,22 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
 
       <article className="receipt-paper" aria-label="Nota da compra">
         <div className="flex flex-col gap-3 font-sans text-sm">
-          <Select label="Supermercado" value={merchant} onChange={(e) => (setMerchant(e.target.value), setDirty(true))}>
-            {!merchant && <option value="">Escolha o supermercado</option>}
-            {Object.entries(MERCHANT_NAMES)
-              .filter(([code]) => code !== "UNKNOWN")
-              .map(([code, name]) => (
-                <option key={code} value={code}>
-                  {name}
-                </option>
-              ))}
+          <Select label="Loja" value={merchant} onChange={(e) => (setMerchant(e.target.value), setDirty(true))}>
+            {Object.entries(MERCHANT_NAMES).map(([code, name]) => (
+              <option key={code} value={code}>
+                {name}
+              </option>
+            ))}
           </Select>
+          {merchant === "UNKNOWN" && (
+            <Field
+              label="Nome da loja"
+              value={storeName}
+              maxLength={80}
+              hint="Como aparece na nota, por exemplo «Frutaria do Zé»."
+              onChange={(e) => (setStoreName(e.target.value), setDirty(true))}
+            />
+          )}
           <div className="grid grid-cols-2 gap-3">
             <Field label="Data" type="date" value={date} onChange={(e) => (setDate(e.target.value), setDirty(true))} />
             <Field label="Hora" type="time" value={time} onChange={(e) => (setTime(e.target.value), setDirty(true))} />

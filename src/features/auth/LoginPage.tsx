@@ -65,7 +65,7 @@ export function LoginPage() {
           As suas notas de supermercado, organizadas.
         </h1>
         <p className="mt-4 max-w-sm text-lg leading-relaxed text-ink-soft">
-          Fotografe ou envie a nota do Continente, Pingo Doce, Lidl ou Auchan. O {appName} lê os produtos e mostra quanto gasta, onde e
+          Fotografe ou envie a nota de qualquer loja: Continente, Pingo Doce, Lidl, Auchan, Aldi, Mercadona, El Corte Inglés e outras. O {appName} lê os produtos e mostra quanto gasta, onde e
           como mudam os preços.
         </p>
       </div>

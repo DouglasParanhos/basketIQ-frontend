@@ -167,8 +167,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** New upload URL after a failed upload */
+        /** New upload URL after a failed upload (position 0 is the first photo) */
         post: operations["renew_upload_url_v1_receipts__receipt_id__upload_url_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/receipts/{receipt_id}/photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Another photo of a receipt too long for one */
+        post: operations["add_photo_v1_receipts__receipt_id__photos_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -612,6 +629,8 @@ export interface components {
             accepted_types: string[];
             /** Max Pdf Pages */
             max_pdf_pages: number;
+            /** Max Photos */
+            max_photos: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -737,7 +756,7 @@ export interface components {
          * Merchant
          * @enum {string}
          */
-        Merchant: "CONTINENTE" | "PINGO_DOCE" | "LIDL" | "AUCHAN" | "UNKNOWN";
+        Merchant: "CONTINENTE" | "PINGO_DOCE" | "LIDL" | "AUCHAN" | "ALDI" | "MERCADONA" | "EL_CORTE_INGLES" | "UNKNOWN";
         /** MerchantChoiceIn */
         MerchantChoiceIn: {
             /** Merchant */
@@ -809,6 +828,17 @@ export interface components {
             expires_in_seconds: number;
             /** Content Type */
             content_type: string;
+        };
+        /** PhotoAddIn */
+        PhotoAddIn: {
+            /** Filename */
+            filename: string;
+            /** Content Type */
+            content_type: string;
+            /** Size Bytes */
+            size_bytes: number;
+            /** Sha256 */
+            sha256: string;
         };
         /** PresignedUploadOut */
         PresignedUploadOut: {
@@ -982,10 +1012,14 @@ export interface components {
             merchant: string | null;
             /** Merchant Hint */
             merchant_hint: string | null;
+            /** Merchant Name */
+            merchant_name: string | null;
             /** Purchase At */
             purchase_at: string | null;
             /** Receipt Ref */
             receipt_ref: string | null;
+            /** Store Label */
+            store_label: string | null;
             /** Currency */
             currency: string;
             /** Source Type */
@@ -1017,6 +1051,8 @@ export interface components {
             confirmed_by: string | null;
             /** Original Available */
             original_available: boolean;
+            /** Photo Count */
+            photo_count: number;
             /** Original Expires At */
             original_expires_at: string | null;
             /** Original Deleted At */
@@ -1047,6 +1083,8 @@ export interface components {
             /** Version */
             version: number;
             merchant?: components["schemas"]["Merchant"] | null;
+            /** Merchant Name */
+            merchant_name?: string | null;
             /** Purchase At */
             purchase_at?: string | null;
             /** Total Cents */
@@ -1069,6 +1107,10 @@ export interface components {
             status: components["schemas"]["ReceiptStatus"];
             /** Merchant */
             merchant: string | null;
+            /** Merchant Name */
+            merchant_name: string | null;
+            /** Store Label */
+            store_label: string | null;
             /** Purchase At */
             purchase_at: string | null;
             /** Total Cents */
@@ -1502,7 +1544,9 @@ export interface operations {
     };
     renew_upload_url_v1_receipts__receipt_id__upload_url_post: {
         parameters: {
-            query?: never;
+            query?: {
+                position?: number;
+            };
             header?: never;
             path: {
                 receipt_id: string;
@@ -1554,6 +1598,77 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_photo_v1_receipts__receipt_id__photos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                receipt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhotoAddIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PresignedUploadOut"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
         };
@@ -2074,7 +2189,10 @@ export interface operations {
     };
     original_url_v1_receipts__receipt_id__original_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Photo number, counted from 1 */
+                photo?: number;
+            };
             header?: never;
             path: {
                 receipt_id: string;

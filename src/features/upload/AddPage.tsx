@@ -1,17 +1,19 @@
-import { Camera, FileText, ImageIcon, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ArrowDown, ArrowUp, Camera, FileText, ImageIcon, Plus, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button, Notice, PageHeader, Select, Surface } from "../../components/ui";
-import { formatCents, formatDate, merchantName } from "../../lib/format";
-import { effectiveType, validateFile } from "../../lib/upload";
+import { formatCents, formatDate, MERCHANT_OPTIONS, merchantName } from "../../lib/format";
+import { effectiveType, MAX_PHOTOS, validateFile } from "../../lib/upload";
 import { ImageEditor, renderEdit, type Edit } from "./ImageEditor";
-import { useUpload } from "./useUpload";
+import { useUpload, type UploadFile } from "./useUpload";
 
-interface Selected {
+interface Photo {
+  id: string;
   file: File;
   type: string;
   previewUrl: string | null;
   previewError: boolean;
+  edit: Edit;
 }
 
 const SOURCES = [
@@ -19,6 +21,8 @@ const SOURCES = [
   { id: "image", label: "Escolher imagem", hint: "JPEG, PNG ou HEIC", icon: ImageIcon, accept: "image/jpeg,image/png,image/heic,image/heif,.heic,.heif" },
   { id: "pdf", label: "Escolher PDF", hint: "Fatura em PDF da app ou do e-mail", icon: FileText, accept: "application/pdf,.pdf" },
 ] as const;
+
+const NO_EDIT: Edit = { rotation: 0, area: null, changed: false };
 
 async function previewFor(file: File, type: string): Promise<string | null> {
   if (type === "application/pdf") return null;
@@ -34,21 +38,31 @@ async function previewFor(file: File, type: string): Promise<string | null> {
 export function AddPage() {
   const navigate = useNavigate();
   const inputs = useRef<Record<string, HTMLInputElement | null>>({});
-  const [selected, setSelected] = useState<Selected | null>(null);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [merchant, setMerchant] = useState("");
-  const [edit, setEdit] = useState<Edit>({ rotation: 0, area: null, changed: false });
   const upload = useUpload();
+  const urls = useRef<string[]>([]);
+  urls.current = photos.flatMap((p) => (p.previewUrl ? [p.previewUrl] : []));
+  useEffect(() => () => urls.current.forEach((u) => URL.revokeObjectURL(u)), []);
 
-  useEffect(() => () => void (selected?.previewUrl && URL.revokeObjectURL(selected.previewUrl)), [selected]);
+  const active = photos.find((p) => p.id === activeId) ?? photos[0] ?? null;
+  const onEdit = useCallback(
+    (edit: Edit) => setPhotos((all) => all.map((p) => (p.id === activeId ? { ...p, edit } : p))),
+    [activeId],
+  );
 
   async function onPick(file: File | undefined) {
     if (!file) return;
-    const problem = validateFile(file);
+    const type = effectiveType(file);
+    const problem =
+      validateFile(file) ??
+      (photos.length > 0 && type === "application/pdf" ? "Só é possível juntar fotografias a uma fotografia." : null) ??
+      (photos.length >= MAX_PHOTOS ? `No máximo ${MAX_PHOTOS} fotos por nota.` : null);
     setFileError(problem);
     if (problem) return;
-    upload.reset();
-    const type = effectiveType(file);
+    upload.reset(); // a different selection is a different upload
     let previewUrl: string | null = null;
     let previewError = false;
     try {
@@ -56,25 +70,46 @@ export function AddPage() {
     } catch {
       previewError = true;
     }
-    setEdit({ rotation: 0, area: null, changed: false });
-    setSelected({ file, type, previewUrl, previewError });
+    const photo: Photo = { id: crypto.randomUUID(), file, type, previewUrl, previewError, edit: NO_EDIT };
+    setPhotos((all) => [...all, photo]);
+    setActiveId(photo.id);
+  }
+
+  function remove(id: string) {
+    const gone = photos.find((p) => p.id === id);
+    if (gone?.previewUrl) URL.revokeObjectURL(gone.previewUrl);
+    upload.reset();
+    setPhotos((all) => all.filter((p) => p.id !== id));
+  }
+
+  function move(id: string, by: -1 | 1) {
+    upload.reset();
+    setPhotos((all) => {
+      const from = all.findIndex((p) => p.id === id);
+      const to = from + by;
+      if (to < 0 || to >= all.length) return all;
+      const next = [...all];
+      [next[from], next[to]] = [next[to]!, next[from]!];
+      return next;
+    });
   }
 
   async function submit(allowDuplicate = false) {
-    if (!selected) return;
-    let blob: Blob = selected.file;
-    let name = selected.file.name;
-    let type = selected.type;
-    if (selected.previewUrl && edit.changed) {
-      blob = await renderEdit(selected.previewUrl, edit);
-      name = name.replace(/\.[^.]+$/, "") + ".jpg";
-      type = "image/jpeg";
+    if (photos.length === 0) return;
+    const files: UploadFile[] = [];
+    for (const p of photos) {
+      if (p.previewUrl && p.edit.changed) {
+        files.push({ blob: await renderEdit(p.previewUrl, p.edit), filename: p.file.name.replace(/\.[^.]+$/, "") + ".jpg", contentType: "image/jpeg" });
+      } else {
+        files.push({ blob: p.file, filename: p.file.name, contentType: p.type });
+      }
     }
-    const id = await upload.start(blob, name, type, merchant || null, allowDuplicate);
+    const id = await upload.start(files, merchant || null, allowDuplicate);
     if (id) navigate(`/compras/${id}`);
   }
 
   const busy = ["hashing", "uploading", "starting"].includes(upload.phase);
+  const canAddPhoto = photos.length > 0 && photos.every((p) => p.type !== "application/pdf") && photos.length < MAX_PHOTOS;
 
   return (
     <>
@@ -99,9 +134,9 @@ export function AddPage() {
         />
       ))}
 
-      {!selected && (
+      {photos.length === 0 && (
         <div className="flex flex-col gap-3">
-          <p className="pb-2 text-ink-soft">Uma nota de cada vez. Pode sair do ecrã enquanto é processada.</p>
+          <p className="pb-2 text-ink-soft">Uma nota de cada vez. Se for muito comprida, pode juntar várias fotos.</p>
           {SOURCES.map(({ id, label, hint, icon: Icon }, i) => (
             <button
               key={id}
@@ -125,7 +160,7 @@ export function AddPage() {
         </div>
       )}
 
-      {selected && (
+      {photos.length > 0 && active && (
         <form
           className="flex flex-col gap-4"
           onSubmit={(e) => {
@@ -133,42 +168,75 @@ export function AddPage() {
             void submit();
           }}
         >
-          <Surface className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate font-semibold">{selected.file.name}</p>
-              <p className="text-sm text-ink-soft">{(selected.file.size / 1024 / 1024).toLocaleString("pt-PT", { maximumFractionDigits: 1 })} MB</p>
-            </div>
-            <Button
-              type="button"
-              variant="quiet"
-              aria-label="Escolher outro ficheiro"
-              disabled={busy}
-              onClick={() => {
-                setSelected(null);
-                upload.reset();
-              }}
-            >
-              <X aria-hidden className="size-5" />
-            </Button>
-          </Surface>
+          <ul className="flex flex-col gap-2" aria-label="Fotos da nota">
+            {photos.map((p, i) => (
+              <li key={p.id}>
+                <Surface className={`flex items-center justify-between gap-2 ${p.id === active.id ? "ring-2 ring-brand" : ""}`}>
+                  <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setActiveId(p.id)} aria-current={p.id === active.id}>
+                    <p className="truncate font-semibold">{photos.length > 1 ? `Foto ${i + 1}: ${p.file.name}` : p.file.name}</p>
+                    <p className="text-sm text-ink-soft">{(p.file.size / 1024 / 1024).toLocaleString("pt-PT", { maximumFractionDigits: 1 })} MB</p>
+                  </button>
+                  {photos.length > 1 && (
+                    <>
+                      <Button type="button" variant="quiet" aria-label={`Subir a foto ${i + 1}`} disabled={busy || i === 0} onClick={() => move(p.id, -1)}>
+                        <ArrowUp aria-hidden className="size-5" />
+                      </Button>
+                      <Button type="button" variant="quiet" aria-label={`Descer a foto ${i + 1}`} disabled={busy || i === photos.length - 1} onClick={() => move(p.id, 1)}>
+                        <ArrowDown aria-hidden className="size-5" />
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    type="button"
+                    variant="quiet"
+                    aria-label={photos.length > 1 ? `Remover a foto ${i + 1}` : "Escolher outro ficheiro"}
+                    disabled={busy}
+                    onClick={() => remove(p.id)}
+                  >
+                    <X aria-hidden className="size-5" />
+                  </Button>
+                </Surface>
+              </li>
+            ))}
+          </ul>
 
-          {selected.previewUrl && <ImageEditor src={selected.previewUrl} onChange={setEdit} />}
-          {selected.previewError && (
+          {active.previewUrl && <ImageEditor key={active.id} src={active.previewUrl} onChange={onEdit} />}
+          {active.previewError && (
             <Notice tone="info">Não é possível pré-visualizar esta imagem neste navegador. Pode enviá-la na mesma.</Notice>
           )}
 
-          <Select label="Supermercado (opcional)" value={merchant} onChange={(e) => setMerchant(e.target.value)} disabled={busy}>
+          {canAddPhoto && (
+            <div className="flex flex-col gap-2 rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
+              <p className="font-semibold">Nota comprida? Tire mais fotos.</p>
+              <p className="text-sm text-ink-soft">
+                Em cada nova foto, deixe visíveis os 2 ou 3 últimos produtos da foto anterior: assim juntamos as fotos sem repetir nem
+                perder linhas.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="secondary" disabled={busy} onClick={() => inputs.current.camera?.click()}>
+                  <Camera aria-hidden className="size-5" /> Fotografar mais
+                </Button>
+                <Button type="button" variant="secondary" disabled={busy} onClick={() => inputs.current.image?.click()}>
+                  <Plus aria-hidden className="size-5" /> Escolher outra foto
+                </Button>
+              </div>
+              {fileError && <Notice tone="error">{fileError}</Notice>}
+            </div>
+          )}
+
+          <Select label="Loja (opcional)" value={merchant} onChange={(e) => setMerchant(e.target.value)} disabled={busy}>
             <option value="">Detetar automaticamente</option>
-            <option value="CONTINENTE">Continente</option>
-            <option value="PINGO_DOCE">Pingo Doce</option>
-            <option value="LIDL">Lidl</option>
-            <option value="AUCHAN">Auchan</option>
+            {MERCHANT_OPTIONS.map(([code, name]) => (
+              <option key={code} value={code}>
+                {name}
+              </option>
+            ))}
           </Select>
 
           {upload.phase === "uploading" && (
             <div>
               <div className="mb-1 flex justify-between text-sm">
-                <span>A enviar</span>
+                <span>{photos.length > 1 ? `A enviar a foto ${upload.photo + 1} de ${photos.length}` : "A enviar"}</span>
                 <span>{Math.round(upload.progress * 100)} %</span>
               </div>
               <progress className="h-2 w-full accent-brand" max={1} value={upload.progress} aria-label="Progresso do envio" />

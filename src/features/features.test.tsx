@@ -84,7 +84,7 @@ describe("add receipt (RF-02..RF-04)", () => {
     const user = userEvent.setup();
     renderRoutes(routes, "/adicionar");
     await pickFile(screen.getByTestId("input-pdf"), new File(["%PDF-1.4"], "fatura.pdf", { type: "application/pdf" }));
-    await user.selectOptions(await screen.findByLabelText(/supermercado/i), "LIDL");
+    await user.selectOptions(await screen.findByLabelText(/loja \(opcional\)/i), "LIDL");
     await user.click(screen.getByRole("button", { name: /enviar nota/i }));
     expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
     expect(calls).toEqual(["init:application/pdf:64:LIDL", "storage", "process"]);
@@ -119,6 +119,65 @@ describe("add receipt (RF-02..RF-04)", () => {
     await user.click(screen.getByRole("button", { name: /guardar nova versão/i }));
     expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
     expect(bodies.map((b) => b.allow_duplicate)).toEqual([false, true]);
+  });
+
+  describe("several photos of one long receipt (RF-03)", () => {
+    const jpg = (name: string, body = name) => new File([body], name, { type: "image/jpeg" });
+    const processed = { id: "j", status: "QUEUED", attempt_count: 0, processing_route: null, created_at: "x" };
+
+    it("F-31: sends the first photo, registers the others, uploads each one and processes once", async () => {
+      const calls: string[] = [];
+      server.use(
+        http.post(`${API}/v1/receipts/upload-init`, async ({ request }) => {
+          calls.push(`init:${((await request.json()) as { filename: string }).filename}`);
+          return HttpResponse.json(
+            { receipt_id: "r20", upload: { url: "http://storage.test/p0", fields: {}, expires_at: "x" }, requirements: { max_bytes: 1, accepted_types: [], max_pdf_pages: 5, max_photos: 6 } },
+            { status: 201 },
+          );
+        }),
+        http.post(`${API}/v1/receipts/r20/photos`, async ({ request }) => {
+          const body = (await request.json()) as { filename: string; sha256: string };
+          calls.push(`photo:${body.filename}:${body.sha256.length}`);
+          return HttpResponse.json({ url: "http://storage.test/p1", fields: {}, expires_at: "x" }, { status: 201 });
+        }),
+        http.post("http://storage.test/p0", () => (calls.push("storage:p0"), new HttpResponse(null, { status: 204 }))),
+        http.post("http://storage.test/p1", () => (calls.push("storage:p1"), new HttpResponse(null, { status: 204 }))),
+        http.post(`${API}/v1/receipts/r20/process`, () => (calls.push("process"), HttpResponse.json(processed, { status: 202 }))),
+      );
+      const user = userEvent.setup();
+      renderRoutes(routes, "/adicionar");
+      await pickFile(screen.getByTestId("input-image"), jpg("a.jpg"));
+      expect(await screen.findByText(/nota comprida\? tire mais fotos/i)).toBeInTheDocument();
+      expect(screen.getByText(/2 ou 3 últimos produtos/i)).toBeInTheDocument();
+      await pickFile(screen.getByTestId("input-image"), jpg("b.jpg"));
+      expect(await screen.findByText(/foto 2: b\.jpg/i)).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: /enviar nota/i }));
+      expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
+      expect(calls).toEqual(["init:a.jpg", "photo:b.jpg:64", "storage:p0", "storage:p1", "process"]);
+    });
+
+    it("F-31: the photos can be reordered and removed before sending", async () => {
+      const user = userEvent.setup();
+      renderRoutes(routes, "/adicionar");
+      await pickFile(screen.getByTestId("input-image"), jpg("a.jpg"));
+      await pickFile(screen.getByTestId("input-image"), jpg("b.jpg"));
+      await screen.findByText(/foto 2: b\.jpg/i);
+      await user.click(screen.getByRole("button", { name: /descer a foto 1/i }));
+      expect(await screen.findByText(/foto 1: b\.jpg/i)).toBeInTheDocument();
+      expect(screen.getByText(/foto 2: a\.jpg/i)).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: /remover a foto 1/i }));
+      expect(screen.queryByText(/foto \d: /i)).not.toBeInTheDocument(); // one photo left: no numbering
+      expect(screen.getByText("a.jpg")).toBeInTheDocument();
+    });
+
+    it("F-31: a PDF cannot be joined to a photo", async () => {
+      renderRoutes(routes, "/adicionar");
+      await pickFile(screen.getByTestId("input-image"), jpg("a.jpg"));
+      await screen.findByText(/nota comprida/i);
+      await pickFile(screen.getByTestId("input-pdf"), new File(["%PDF"], "f.pdf", { type: "application/pdf" }));
+      expect(await screen.findByText(/só é possível juntar fotografias/i)).toBeInTheDocument();
+      expect(screen.queryByText(/foto 2/i)).not.toBeInTheDocument();
+    });
   });
 
   it("F-24: a network failure keeps the receipt and resumes with a fresh upload URL", async () => {
@@ -187,6 +246,36 @@ describe("review (RF-07, F-11..F-15)", () => {
     expect(await screen.findAllByText(/corrigido manualmente/i)).not.toHaveLength(0);
   });
 
+  it("F-10: a store without a parser is named in the review, and can be confirmed", async () => {
+    let patch: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`${API}/v1/receipts/r1`, () =>
+        HttpResponse.json(
+          receipt({
+            merchant: "UNKNOWN",
+            merchant_name: "FRUTARIA DO ZE",
+            review_reasons: [{ code: "merchant_unknown", message: "Loja não reconhecida.", field: "merchant", line_index: null, details: {} }],
+          }),
+        ),
+      ),
+      http.patch(`${API}/v1/receipts/r1`, async ({ request }) => {
+        patch = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(receipt({ version: 4, merchant: "UNKNOWN", merchant_name: "Frutaria do Zé" }));
+      }),
+    );
+    const user = userEvent.setup();
+    renderRoutes(routes, "/compras/r1");
+    const name = await screen.findByLabelText("Nome da loja");
+    expect(name).toHaveValue("FRUTARIA DO ZE");
+    expect(screen.getByRole("button", { name: /^confirmar$/i })).toBeEnabled();
+    await user.clear(name);
+    await user.type(name, "Frutaria do Zé");
+    await user.click(screen.getByRole("button", { name: /^guardar$/i }));
+    await waitFor(() => expect(patch).not.toBeNull());
+    expect(patch).toMatchObject({ merchant_name: "Frutaria do Zé" });
+    expect(patch).not.toHaveProperty("merchant");
+  });
+
   it("F-14: adds and removes lines, recalculating the sum", async () => {
     let lines: unknown[] = [];
     server.use(
@@ -222,6 +311,9 @@ describe("review (RF-07, F-11..F-15)", () => {
     await user.click(await screen.findByRole("button", { name: /^confirmar$/i }));
     expect(await screen.findByText(/confirmada por si/i)).toBeInTheDocument();
     expect(confirmed).toEqual({ version: 3 });
+    expect(screen.getByRole("link", { name: /início/i })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: /adicionar outra nota/i })).toHaveAttribute("href", "/adicionar");
+    expect(screen.getAllByText("ESTRADA DA LUZ")).toHaveLength(2);
   });
 
   it("F-07: an invalid document shows the reason and what to do", async () => {
