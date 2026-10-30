@@ -17,7 +17,7 @@ Resultado esperado: tudo verde; testes existentes sem alterações de comportame
 
 ## Cenários manuais (com `corepack pnpm@9 dev` e o backend a correr; dados de teste sintéticos)
 
-**Pré-requisito:** a **T032 do backend** aplicada (migração `e5a8b3d1f2c7` na base de desenvolvimento) e a imagem da API reconstruída. Sem isso `GET /v1/me/profile` falha, a guarda deixa passar (US3.6) e o onboarding não aparece, o que pode passar por sucesso. Confirmar primeiro que `GET /v1/me/profile` responde 200 numa conta de teste.
+**Pré-requisito:** a **T032 do backend** aplicada (migração `e5a8b3d1f2c7` e, quando existir, a migração que marca as contas existentes como concluídas, na base de desenvolvimento) e a imagem da API reconstruída. **Depois da segunda migração, as contas que já estavam na base não veem o onboarding: para o cenário 1 usar um utilizador novo no servidor OIDC de teste.** Sem isso `GET /v1/me/profile` falha, a guarda deixa passar (US3.6) e o onboarding não aparece, o que pode passar por sucesso. Confirmar primeiro que `GET /v1/me/profile` responde 200 numa conta de teste.
 
 | # | Passos | Esperado |
 |---|---|---|
@@ -33,6 +33,7 @@ Resultado esperado: tudo verde; testes existentes sem alterações de comportame
 | 10 | Falhar o envio (parar o backend) e concluir | aviso com «Tentar de novo»; respostas mantidas; ao repetir não duplica |
 | 11 | Mudar a versão da política no backend e concluir | aviso com ligação para `/privacidade` |
 | 12 | Conta que já concluiu abre `/boas-vindas` | vai para `/` (alterar respostas: Perfil, spec 014) |
+| 12b | Conta que já existia antes do onboarding (marcada pela migração) abre `/` e `/boas-vindas` | `/` abre sem interrupção; `/boas-vindas` vai para `/`; a meta fica por definir |
 | 13 | Ferramentas do navegador › Armazenamento | nada em `localStorage` nem `sessionStorage` |
 | 13b | Abrir `/` com a resposta do perfil lenta | só o indicador de carregamento, sem barra de navegação nem Início |
 | 14 | Larguras 320, 375, 430 e 820 px, claro e escuro | sem scroll horizontal, alvos ≥ 44 px, axe sem violações |

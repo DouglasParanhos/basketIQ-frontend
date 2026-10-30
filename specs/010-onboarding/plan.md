@@ -59,6 +59,7 @@ Aplicadas à `spec.md`, a este plano, ao `research.md`, aos contratos e às tare
 | C1 | «Avançar» confirma o que o ecrã mostra; constituição do frontend 1.0.2, princípio III: «envia apenas os campos que a pessoa confirmou ou alterou» |
 | I3 | A guarda fica **acima** do AppShell: enquanto decide não aparece a barra de navegação (R14) |
 | E1 | «T032 aplicada e imagem da API reconstruída» é pré-requisito dos cenários manuais e da T024 (não se executa nesta ronda) |
+| P6 | Onboarding só para contas novas (abordagem A, 2026-10-30): o backend marca as contas existentes como concluídas numa migração de dados; o frontend não muda de lógica (R16) |
 
 Assumidos (por confirmar na revisão): o ecrã de onboarding não mostra a barra de navegação; `/operador` fica fora da guarda; o percurso não passa pelo URL (um recarregamento volta ao passo 1, US4.2).
 

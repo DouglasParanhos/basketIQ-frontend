@@ -92,3 +92,9 @@ Cada ponto resolve uma dúvida do contexto técnico ou da spec. As decisões da 
 - **`IconButton` em `ui.tsx`:** não se cria. O padrão já existe em quatro ficheiros que esta spec não reescreve; fica para quando as specs 012 e 013 os tocarem.
 - **Dados do `e2e/mock/api.ts` repetidos (`MERCHANTS`, perfis):** mantêm-se. Nenhum ficheiro de `e2e/` importa de `src/`; o mock é independente de propósito, como já é o `me()`.
 - **Variáveis de espera e matriz de axe nos e2e:** tirou-se o `networkidle` e reduziu-se o atraso do teste do carregamento; a matriz de 2 temas × 4 larguras mantém-se porque a spec pede axe de 320 a 820 px em claro e escuro.
+
+**R16. Contas que já existiam antes do onboarding (P6, decisão da Liz de 2026-10-30)**
+- Decisão: o onboarding é só para contas novas. A distinção faz-se **no backend**, com uma migração de dados que preenche `onboarding_completed_at` nas contas existentes. No frontend nada muda: `RequireOnboarding` e `Entry` já tratam «concluído» como «não interromper» e «concluído» a abrir `/boas-vindas` como «ir para o Início».
+- Porquê: uma só fonte da verdade (o perfil), sem lógica de «conta antiga» no cliente (por exemplo uma data de criação que `/v1/me` não devolve) e sem segunda ida à API.
+- Alternativas rejeitadas: (a) o cliente decidir pela data de criação da conta, que exige campo novo e põe regra de produto no cliente; (b) manter «uma vez, e pode saltar», resposta anterior da Liz, agora substituída.
+- Consequências: a meta de uma conta existente fica por definir até ao Perfil (spec 014); o Início (spec 011) tem de tratar a meta em falta. Testes desta spec: um perfil concluído e vazio (conta migrada) não é interrompido (T028).

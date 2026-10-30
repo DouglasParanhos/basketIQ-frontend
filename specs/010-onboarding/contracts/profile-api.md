@@ -8,6 +8,8 @@ Fonte de verdade: `../basketIQ-backend/specs/013-perfil-utilizador/contracts/api
 | `GET /v1/merchants` | ao entrar no passo 3 (cache `["merchants"]`, `staleTime` longo) | `MerchantOut[]`, 7 itens | erro → aviso com «Tentar de novo» e o passo pode ser saltado |
 | `PATCH /v1/me/profile` | uma vez, ao concluir ou saltar o passo 4 | `ProfileOut` | ver abaixo |
 
+`ProfileOut` de uma conta anterior ao onboarding (migração do backend, P6): `onboarding_completed_at` preenchido, `household_size` e `monthly_goal_cents` nulos, `merchants` e `goals` vazios.
+
 ## Corpo do `PATCH`
 
 ```text

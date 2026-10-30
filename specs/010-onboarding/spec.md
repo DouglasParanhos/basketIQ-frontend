@@ -20,7 +20,7 @@ Decisões da Liz (itens 7 e 10 de 2026-10-30) e respostas recomendadas pela skil
 - Q: O que diz o passo da meta quando a pessoa escolhe «Ainda não sei»? → A: remove-se «Calculamos pela sua média depois». O texto é «Pode definir a sua meta pessoal mais tarde, nas Definições.» (decisão da Liz).
 - Q: «Orçamento» ou «meta»? → A: sempre **meta pessoal** (decisão da Liz).
 - Q: De onde vêm os mercados? → A: de `GET /v1/merchants` (os 7 suportados); a lista fixa do protótipo, com 10, não se usa.
-- Q: Quem já usa a aplicação sem perfil vê o onboarding? → A: sim, uma vez, e pode saltá-lo.
+- Q: Quem já usa a aplicação vê o onboarding? → A: **não**. O onboarding é só para contas novas. Uma migração de dados do backend marca as contas existentes como concluídas (`onboarding_completed_at` preenchido, sem valores de perfil); essas pessoas definem a meta e as preferências no Perfil das Definições (spec 014). O frontend não distingue contas antigas de novas: só lê `onboarding_completed_at` (decisão da Liz, 2026-10-30; substitui a resposta anterior «sim, uma vez»).
 - Q: Quem já concluiu volta a `/boas-vindas`? → A: não, vai para o Início (decisão da Liz, P3). **Refazer as respostas faz-se no Perfil das Definições** (spec 014). `/boas-vindas` só mostra valores guardados a quem tem perfil sem conclusão.
 - Q: Os nomes dos mercados do onboarding? → A: só o onboarding usa os nomes de `GET /v1/merchants`; `src/lib/format.ts` (`merchantName`, `MERCHANT_NAMES`, `MERCHANT_OPTIONS`) mantém-se até às specs 012 e 013, porque também mostra «Outra loja» e lojas históricas que a API não devolve (decisão da Liz, P1).
 - Q: Texto do objetivo de gastar menos? → A: «Gastar menos nas compras»; nunca «poupar», «economizar» nem «poupou». As descrições dos objetivos não prometem a Lista nem a comparação de preços (decisão da Liz, P2). «Quero tudo isso» mantém-se.
@@ -76,7 +76,7 @@ Depois do consentimento, a pessoa responde a: objetivo, pessoas, mercados e meta
 4. **Given** o onboarding concluído, **When** abre `/boas-vindas`, **Then** vai para o Início. — RF-14
 5. **Given** a leitura do perfil em curso, **When** a guarda decide, **Then** não há piscar do Início antes de redirecionar. — RF-14
 6. **Given** a leitura do perfil falha, **When** a guarda decide, **Then** a pessoa não fica bloqueada fora da aplicação. — RF-14
-7. **Given** uma conta com compras e sem perfil, **When** entra, **Then** vê o onboarding uma vez, como qualquer outra, e pode saltá-lo. — RF-14
+7. **Given** uma conta criada antes do onboarding (já marcada como concluída pelo backend, com perfil sem valores), **When** entra, **Then** não vê o onboarding e abre a rota pedida. — RF-14
 8. **Given** uma pessoa autenticada cuja guarda ainda está a decidir, **When** o perfil carrega, **Then** a barra de navegação não aparece (a guarda está acima do AppShell) e só se vê o indicador de carregamento. — RF-14
 
 ---
@@ -106,6 +106,7 @@ Depois do consentimento, a pessoa responde a: objetivo, pessoas, mercados e meta
 
 ### Edge Cases
 
+- Conta anterior ao onboarding: concluída e sem meta, mercados nem objetivos. Não vê o onboarding; a meta fica por definir até ao Perfil (spec 014), e o Início (spec 011) deve tratar a meta em falta.
 - Nenhum mercado escolhido é válido.
 - Meta fora de 50–800 € não é possível pela barra; a API recusa-a de qualquer forma.
 - «Gastar menos nas compras» é um objetivo; não leva a texto de «poupança» nem de «economia» (as palavras «poupar», «economizar» e «poupou» estão fora do produto).
@@ -120,7 +121,7 @@ Depois do consentimento, a pessoa responde a: objetivo, pessoas, mercados e meta
 - **FR-003**: «Saltar» MUST NOT gravar nada do passo; «Ainda não sei» MUST NOT enviar a meta; um passo de objetivos ou mercados sem escolhas MUST NOT enviar valor. O corpo MUST NOT conter `null`, `[]` nem valores sugeridos não confirmados. — US2
 - **FR-004**: Os mercados MUST vir de `GET /v1/merchants` (nomes da API); a inicial é a primeira letra, com a regra do artigo para «EC». — US1.3, RF-13
 - **FR-005**: A meta MUST estar entre 50 € e 800 € e circular em cêntimos inteiros (`euros * 100`); as pessoas entre 1 e 12. — US1.2, US1.4, RF-13, constituição II
-- **FR-006**: Uma guarda MUST enviar para `/boas-vindas` quem está autenticado, consentiu a política atual e não concluiu o onboarding, sem mostrar o Início antes, sem mostrar a barra de navegação enquanto decide e sem bloquear a pessoa se a leitura do perfil falhar. — US3, RF-12, RF-14
+- **FR-006**: Uma guarda MUST enviar para `/boas-vindas` quem está autenticado, consentiu a política atual e não concluiu o onboarding, sem mostrar o Início antes, sem mostrar a barra de navegação enquanto decide e sem bloquear a pessoa se a leitura do perfil falhar. A guarda só lê `onboarding_completed_at`: as contas anteriores ao onboarding chegam marcadas como concluídas pelo backend e não são tratadas à parte. — US3, RF-12, RF-14
 - **FR-007**: Quem já concluiu MUST ser levado de `/boas-vindas` para o Início; refazer as respostas é do Perfil (spec 014). — US3.4, US4.1
 - **FR-008**: Em caso de falha do envio, o percurso MUST manter as respostas, mostrar um erro acionável e permitir repetir sem duplicar; um 403 `privacy_consent_required` MUST mostrar o motivo e o caminho para `/privacidade`. — US4
 - **FR-009**: As respostas MUST ficar só em memória; o percurso MUST NOT escrever em `localStorage` nem `sessionStorage` e o service worker MUST NOT guardar respostas da API. — US4.2, US4.4, constituição IV
@@ -142,6 +143,7 @@ Depois do consentimento, a pessoa responde a: objetivo, pessoas, mercados e meta
 
 - Depende da spec 013 do backend (enviada a 2026-10-30) e do `schema.d.ts` regenerado com `pnpm gen:api` (feito a 2026-10-30).
 - **Lista de mercados (decisão de 2026-10-30):** no onboarding a API (`GET /v1/merchants`) é a única fonte dos nomes dos mercados e a lista do protótipo não existe. `merchantName`, `MERCHANT_NAMES` e `MERCHANT_OPTIONS` de `src/lib/format.ts` **não se alteram nesta spec**: também mostram «Outra loja» e lojas históricas que a API não devolve, e passam a usar os nomes da API quando as specs 012 (Talões) e 013 (Adicionar) reescreverem esses ecrãs.
+- **Contas existentes (decisão de 2026-10-30):** o onboarding é só para contas novas. A migração de dados do backend (nova, depois da `e5a8b3d1f2c7`) marca as contas existentes como concluídas. Sem ela, em produção e na base de desenvolvimento, as contas antigas continuariam a cair em `/boas-vindas`. Esta spec não muda de código por causa disto.
 - Os identificadores de teste do perfil e dos mercados são os da spec 013 do backend (F-100 a F-112), citados aqui com «Verificado no Backend» ao implementar.
 - Os cenários manuais com o backend real exigem a **T032 do backend** aplicada (migração `e5a8b3d1f2c7` na base de desenvolvimento) e a imagem da API reconstruída; sem isso o perfil responde com erro, a guarda deixa passar e o onboarding não aparece.
 
@@ -153,6 +155,6 @@ Atribuídos a 2026-10-30 dentro da faixa da experiência v2 (F-86 a F-125), um p
 |---|---|---|---|
 | F-113 | Percurso de quatro passos: objetivos, pessoas, mercados (API), meta, progresso, «Voltar», «Tudo pronto», um só `PATCH` | US1.1 a US1.8 | T007, T010 |
 | F-114 | Só se grava o que a pessoa confirmou: corpo do `PATCH` em cada combinação de «Avançar», «Saltar» e «Ainda não sei» | US2.1 a US2.7 | T007, T014 |
-| F-115 | Guarda de rota: sem conclusão vai para `/boas-vindas`; consentimento primeiro; sem piscar nem barra; falha não bloqueia; concluído vai para o Início | US3.1 a US3.8 | T016 |
+| F-115 | Guarda de rota: sem conclusão vai para `/boas-vindas`; consentimento primeiro; sem piscar nem barra; falha não bloqueia; concluído vai para o Início; conta anterior ao onboarding não é interrompida | US3.1 a US3.8 | T016, T028 |
 | F-116 | Valores guardados à vista, recarregar volta ao passo 1, falha mantém as respostas, nada em `localStorage`, consentimento em falta | US4.1 a US4.5 | T019 |
 | F-117 | Acessibilidade: papéis, nomes, foco, anúncio do passo, axe em claro e escuro de 320 a 820 px, alvos ≥ 44 px, texto em português europeu | US5.1 a US5.6 | T021, T022 |

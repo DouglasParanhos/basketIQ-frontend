@@ -23,6 +23,9 @@ function serveProfileResponse(body: JsonBodyType, options: { status?: number; wa
 
 const renderApp = (path: string) => renderRoutes(routes, path);
 
+// An account that existed before the onboarding: the backend marked it as finished and left the values empty.
+const migrated = emptyProfile({ onboarding_completed_at: "2026-10-31T00:00:00Z" });
+
 beforeEach(() => {
   profileRequests = 0;
 });
@@ -36,12 +39,19 @@ describe("the onboarding guard (spec 010, US3)", () => {
     expect(screen.queryByRole("navigation", { name: NAV_NAME })).not.toBeInTheDocument();
   });
 
-  it("F-115: an account with purchases and no profile sees the onboarding once, like any other", async () => {
-    serveProfileResponse(emptyProfile());
-    const { router } = renderApp("/");
-    await screen.findByRole("heading", { level: 1, name: "Qual é o seu objetivo com a aplicação?" });
-    expect(router.state.location.pathname).toBe("/boas-vindas");
-    expect(screen.getByRole("button", { name: "Saltar" })).toBeInTheDocument();
+  it("F-115: an account from before the onboarding (finished and empty) is not interrupted", async () => {
+    serveProfileResponse(migrated);
+    const { router } = renderApp("/compras");
+    expect(await screen.findByRole("heading", { level: 1, name: "Compras" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/compras");
+    expect(screen.getByRole("navigation", { name: NAV_NAME })).toBeInTheDocument();
+  });
+
+  it("F-115: an account from before the onboarding that opens /boas-vindas goes to the Início", async () => {
+    serveProfileResponse(migrated);
+    const { router } = renderApp("/boas-vindas");
+    expect(await screen.findByRole("heading", { level: 1, name: "Início" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/");
   });
 
   it("F-115: the privacy consent comes before the onboarding", async () => {

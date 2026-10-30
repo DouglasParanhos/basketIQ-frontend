@@ -14,9 +14,9 @@
 1. `RequireSession`: sem sessão → `/login`; consentimento em falta ou de versão antiga → `/privacidade` (com `state.from`). **O consentimento vem antes do onboarding** (US3.2).
 2. `RequireOnboarding`, **acima** do AppShell (só nas rotas de utilizador; `/operador` e `*` ficam fora). Enquanto decide não se vê a barra de navegação (I3, R14):
    - perfil a carregar → `Spinner`, sem renderizar a página (US3.5);
-   - `onboarding_completed_at` nulo → `<Navigate to="/boas-vindas" replace />` (US3.1, US3.7);
+   - `onboarding_completed_at` nulo → `<Navigate to="/boas-vindas" replace />` (US3.1);
    - leitura do perfil falhou → deixa passar (US3.6);
-   - concluído → `<Outlet/>`.
+   - concluído → `<Outlet/>`, incluindo as contas anteriores ao onboarding, que o backend já marcou como concluídas (US3.3, US3.7).
 3. Em `/boas-vindas`: o primeiro perfil que chega decide uma vez: concluído → `<Navigate to="/" replace />` (US3.4). Depois disso uma cache atualizada não desvia a pessoa de «Tudo pronto» (R3 do research).
 
 ## Navegação dentro do percurso
