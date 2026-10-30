@@ -113,3 +113,5 @@ Depois do consentimento, a pessoa responde a: objetivo, pessoas, mercados e meta
 ## Assumptions
 
 - Depende da spec 013 do backend e da regeneração de `schema.d.ts` (`pnpm gen:api`).
+- **Lista de mercados (decisão de 2026-10-30):** a API (`GET /v1/merchants`) é a única fonte dos nomes dos mercados. A lista local deixa de existir: a do protótipo e o `merchantName` de `src/lib/format.ts` passam a usar os nomes da API (a alteração do código fica para a implementação desta spec).
+- Os identificadores de teste do perfil e dos mercados são os da spec 013 do backend (F-100 a F-112), citados aqui com «Verificado no Backend» ao implementar.
