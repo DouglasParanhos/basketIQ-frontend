@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { lisbonIso, lisbonParts, splitLine, toDraft, toPatch, setField } from "../features/receipts/draft";
 import { line } from "../test/fixtures";
-import { centsToInput, formatAmount, formatQuantity, parseEurToCents, parseQuantity } from "./format";
+import { centsToInput, formatAmount, formatQuantity, formatWholeEuros, parseEurToCents, parseQuantity } from "./format";
 import { describePeriod, periodFor, shiftPeriod } from "./period";
 import { effectiveType, validateFile } from "./upload";
 
@@ -28,6 +28,15 @@ describe("money (PT-7)", () => {
     expect(parseQuantity("0,456")).toBe("0.456");
     expect(parseQuantity("0")).toBeNull();
     expect(parseQuantity("1,2345")).toBeNull();
+  });
+});
+
+describe("whole euros (F-113)", () => {
+  it("F-113: shows whole euros without decimals, in pt-PT", () => {
+    const plain = (euros: number) => formatWholeEuros(euros).replace(/\s/g, " ");
+    expect(plain(300)).toBe("300 €");
+    expect(plain(50)).toBe("50 €");
+    expect(plain(800)).toBe("800 €");
   });
 });
 

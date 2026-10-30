@@ -18,6 +18,14 @@ async function signIn(page: Page, subject: string) {
   await page.getByRole("button", { name: "Sign-in" }).click();
   await expect(page).toHaveURL(/\/privacidade$/);
   await page.getByRole("button", { name: "Aceitar e continuar" }).click();
+  // A new account goes through the onboarding (spec 010) before anything else: skip the four steps.
+  await expect(page).toHaveURL(/\/boas-vindas$/);
+  for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Saltar" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Tudo pronto" })).toBeVisible();
+  await page.getByRole("button", { name: "Ir para o início" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
+  // The empty-account message now lives in the Resumo, under Talões (spec 009).
+  await page.goto("/compras/resumo");
   await expect(page.getByRole("heading", { name: "Comece pela primeira nota" })).toBeVisible();
 }
 

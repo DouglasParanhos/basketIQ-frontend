@@ -17,6 +17,13 @@ export function formatCents(cents: number | null | undefined): string {
   return money.format(cents / 100);
 }
 
+const wholeEuros = new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+
+/** A whole number of euros for display only ("300 €"); the value itself is multiplied into integer cents before it is sent. */
+export function formatWholeEuros(euros: number): string {
+  return wholeEuros.format(euros);
+}
+
 /** Amount as printed on a receipt, without the currency sign ("3,49"). */
 export function formatAmount(cents: number | null | undefined): string {
   return cents === null || cents === undefined ? "?" : centsToInput(cents);

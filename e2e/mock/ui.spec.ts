@@ -174,3 +174,106 @@ test.describe("flows with a fake API", () => {
     await expect(page.getByText(/A sua sessão terminou/)).toBeVisible();
   });
 });
+
+// ---------------------------------------------------------------- onboarding (spec 010)
+
+const ONBOARDING_STEPS = [/Qual é o seu objetivo/, /Quantas pessoas vivem/, /Onde costuma fazer compras/, /Qual é a sua meta pessoal por mês/];
+
+/** Walks the four steps and «Tudo pronto», running `check` on each screen. */
+async function walkOnboarding(page: Page, check: () => Promise<void>) {
+  await page.goto("/boas-vindas");
+  for (const [index, title] of ONBOARDING_STEPS.entries()) {
+    await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
+    if (index === 2) await expect(page.getByRole("checkbox", { name: "Lidl" })).toBeVisible();
+    // The page has moved on to this step before axe looks at it.
+    await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", String((index + 1) * 25));
+    await check();
+    await page.getByRole("button", { name: index === 3 ? "Concluir" : "Avançar" }).click();
+  }
+  await expect(page.getByRole("heading", { level: 1, name: "Tudo pronto" })).toBeVisible();
+  await check();
+}
+
+test.describe("onboarding (spec 010)", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    for (const width of [320, 375, 430, 820]) {
+      test(`F-117: every step and «Tudo pronto» have no axe violations and no horizontal scroll (${scheme}, ${width}px)`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.setViewportSize({ width, height: 800 });
+        await fakeApi(page, { onboarded: false });
+        await walkOnboarding(page, async () => {
+          await noA11yViolations(page);
+          await noHorizontalScroll(page);
+        });
+      });
+    }
+  }
+
+  test("F-117: every control of the onboarding has a touch target of at least 44 px", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await fakeApi(page, { onboarded: false });
+    await walkOnboarding(page, async () => {
+      const small = await page.locator("main button:visible, main label:visible, main input[type=range]:visible, main a:visible").evaluateAll((nodes) =>
+        nodes
+          .map((node) => ({ text: (node.textContent ?? node.getAttribute("aria-label") ?? "").trim().slice(0, 30), box: node.getBoundingClientRect() }))
+          .filter(({ box }) => box.height < 43.5 || box.width < 43.5)
+          .map(({ text, box }) => `${text}: ${Math.round(box.width)}x${Math.round(box.height)}`),
+      );
+      expect(small).toEqual([]);
+    });
+  });
+
+  test("F-113: a new account is sent to the onboarding, completes it, and lands on the Início", async ({ page }) => {
+    const state = await fakeApi(page, { onboarded: false });
+    await page.goto("/");
+    await expect(page).toHaveURL(/\/boas-vindas$/);
+    await expect(page.getByRole("navigation", { name: "Navegação principal" })).toHaveCount(0);
+    await page.getByRole("checkbox", { name: /Organizar as minhas finanças/ }).check({ force: true });
+    await page.getByRole("button", { name: "Avançar" }).click();
+    await page.getByRole("button", { name: "Mais uma pessoa" }).click();
+    await page.getByRole("button", { name: "Avançar" }).click();
+    await page.getByRole("checkbox", { name: "El Corte Inglés" }).check({ force: true });
+    await expect(page.getByText("EC", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Avançar" }).click();
+    await page.getByRole("button", { name: "Concluir" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Tudo pronto" })).toBeVisible();
+    expect(state.profilePatches).toEqual([
+      { goals: ["finances"], household_size: 3, merchants: ["EL_CORTE_INGLES"], monthly_goal_cents: 30000, onboarding_completed: true },
+    ]);
+    await page.getByRole("button", { name: "Ir para o início" }).click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeVisible();
+  });
+
+  test("F-114: skipping the four steps saves only that the onboarding is done", async ({ page }) => {
+    const state = await fakeApi(page, { onboarded: false });
+    await page.goto("/boas-vindas");
+    for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Saltar" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Tudo pronto" })).toBeVisible();
+    expect(state.profilePatches).toEqual([{ onboarding_completed: true }]);
+  });
+
+  test("F-115: while the profile loads there is only the loading indicator, no navigation bar", async ({ page }) => {
+    await fakeApi(page, { onboarded: false, profileDelayMs: 600 });
+    await page.goto("/");
+    await expect(page.getByRole("status")).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Navegação principal" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 1, name: "Início" })).toHaveCount(0);
+    await expect(page).toHaveURL(/\/boas-vindas$/);
+  });
+
+  test("F-115: an account that finished the onboarding goes from /boas-vindas to the Início", async ({ page }) => {
+    await fakeApi(page);
+    await page.goto("/boas-vindas");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
+  });
+
+  test("F-116: the onboarding writes nothing to localStorage or sessionStorage", async ({ page }) => {
+    await fakeApi(page, { onboarded: false });
+    await walkOnboarding(page, async () => undefined);
+    const stored = await page.evaluate(() => ({ local: Object.keys(localStorage), session: Object.keys(sessionStorage) }));
+    expect(stored).toEqual({ local: [], session: [] });
+  });
+});

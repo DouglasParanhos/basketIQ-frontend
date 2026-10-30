@@ -1,6 +1,8 @@
 import { House, ListChecks, Plus, ReceiptText, Settings } from "lucide-react";
+import { Suspense } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import { useSmartListEnabled } from "../config/appConfig";
+import { Spinner } from "./ui";
 
 const under = (path: string, base: string) => path === base || path.startsWith(`${base}/`);
 
@@ -53,7 +55,9 @@ export function AppShell() {
         </ul>
       </nav>
       <main id="conteudo" className="mx-auto w-full max-w-2xl px-4 pb-28 md:pb-12">
-        <Outlet />
+        <Suspense fallback={<Spinner />}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );

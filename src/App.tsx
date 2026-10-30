@@ -9,6 +9,7 @@ import { LoginPage } from "./features/auth/LoginPage";
 import { RequireSession } from "./features/auth/session";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { HomeRoute } from "./features/home/HomeRoute";
+import { RequireOnboarding } from "./features/onboarding/RequireOnboarding";
 import { PrivacyPage } from "./features/privacy/PrivacyPage";
 import { ReceiptPage } from "./features/receipts/ReceiptPage";
 import { ReceiptsPage } from "./features/receipts/ReceiptsPage";
@@ -20,6 +21,7 @@ import { AddPage } from "./features/upload/AddPage";
 const ProductsPage = lazy(() => import("./features/products/ProductsPage"));
 const ProductPage = lazy(() => import("./features/products/ProductPage"));
 const AdminPage = lazy(() => import("./features/admin/AdminPage"));
+const OnboardingPage = lazy(() => import("./features/onboarding/OnboardingPage"));
 
 function RouteError() {
   const error = useRouteError();
@@ -51,28 +53,43 @@ function Protected({ admin = false }: { admin?: boolean }) {
 export const routes: RouteObject[] = [
   { path: "/login", element: <LoginPage />, errorElement: <RouteError /> },
   { path: "/privacidade", element: <PrivacyPage />, errorElement: <RouteError /> },
+  // Signed in and consented. The onboarding is a full screen (no navigation bar); every other private page sits behind
+  // the onboarding guard, which is above the AppShell so that nothing of the shell shows while it decides.
+  {
+    element: <Protected />,
+    errorElement: <RouteError />,
+    children: [
+      { path: "/boas-vindas", element: <OnboardingPage /> },
+      {
+        element: <RequireOnboarding />,
+        children: [
+          {
+            element: <AppShell />,
+            errorElement: <RouteError />,
+            children: [
+              { path: "/", element: <HomeRoute /> },
+              {
+                element: <TaloesLayout />,
+                children: [
+                  { path: "/compras", element: <ReceiptsPage /> },
+                  { path: "/compras/resumo", element: <DashboardPage /> },
+                  { path: "/produtos", element: <ProductsPage /> },
+                ],
+              },
+              { path: "/compras/:id", element: <ReceiptPage /> },
+              { path: "/adicionar", element: <AddPage /> },
+              { path: "/produtos/:id", element: <ProductPage /> },
+              { path: "/definicoes", element: <SettingsPage /> },
+            ],
+          },
+        ],
+      },
+    ],
+  },
   {
     element: <AppShell />,
     errorElement: <RouteError />,
     children: [
-      {
-        element: <Protected />,
-        children: [
-          { path: "/", element: <HomeRoute /> },
-          {
-            element: <TaloesLayout />,
-            children: [
-              { path: "/compras", element: <ReceiptsPage /> },
-              { path: "/compras/resumo", element: <DashboardPage /> },
-              { path: "/produtos", element: <ProductsPage /> },
-            ],
-          },
-          { path: "/compras/:id", element: <ReceiptPage /> },
-          { path: "/adicionar", element: <AddPage /> },
-          { path: "/produtos/:id", element: <ProductPage /> },
-          { path: "/definicoes", element: <SettingsPage /> },
-        ],
-      },
       { element: <Protected admin />, children: [{ path: "/operador", element: <AdminPage /> }] },
       { path: "*", element: <RouteError /> },
     ],

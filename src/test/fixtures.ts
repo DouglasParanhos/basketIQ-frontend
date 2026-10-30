@@ -155,3 +155,28 @@ export function summary(overrides: Partial<Schemas["SummaryOut"]> = {}): Schemas
     ...overrides,
   };
 }
+
+/** A finished onboarding: what the server returns once the person has been through it. */
+export const profile: Schemas["ProfileOut"] = {
+  household_size: 2,
+  merchants: ["LIDL"],
+  goals: ["finances"],
+  monthly_goal_cents: 30000,
+  onboarding_completed_at: "2026-10-02T10:00:00Z",
+};
+
+/** A new account: nothing saved yet. */
+export function emptyProfile(overrides: Partial<Schemas["ProfileOut"]> = {}): Schemas["ProfileOut"] {
+  return { household_size: null, merchants: [], goals: [], monthly_goal_cents: null, onboarding_completed_at: null, ...overrides };
+}
+
+/** The seven supported merchants, as GET /v1/merchants serves them. */
+export const merchants: Schemas["MerchantOut"][] = [
+  { id: "CONTINENTE", name: "Continente" },
+  { id: "PINGO_DOCE", name: "Pingo Doce" },
+  { id: "LIDL", name: "Lidl" },
+  { id: "AUCHAN", name: "Auchan" },
+  { id: "ALDI", name: "Aldi" },
+  { id: "MERCADONA", name: "Mercadona" },
+  { id: "EL_CORTE_INGLES", name: "El Corte Inglés" },
+];

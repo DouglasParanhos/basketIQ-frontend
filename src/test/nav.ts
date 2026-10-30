@@ -1,6 +1,7 @@
 import { screen, within } from "@testing-library/react";
 
-export const nav = () => screen.getByRole("navigation", { name: "Navegação principal" });
+export const NAV_NAME = "Navegação principal";
+export const nav = () => screen.getByRole("navigation", { name: NAV_NAME });
 
 /** Labels of the bottom-navigation destinations marked as the current page. */
 export const currentDestinations = () =>

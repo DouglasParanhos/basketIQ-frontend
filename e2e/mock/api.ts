@@ -10,7 +10,26 @@ export interface FakeState {
   appName: string;
   /** SMART_LIST_ENABLED as served by GET /v1/config (off when absent). */
   smartList?: boolean;
+  /** Whether the person already finished the onboarding (true when absent). */
+  onboarded?: boolean;
+  /** Bodies received by PATCH /v1/me/profile, in order. */
+  profilePatches: Record<string, unknown>[];
+  /** Milliseconds GET /v1/me/profile waits before answering (to look at the loading state). */
+  profileDelayMs?: number;
 }
+
+const MERCHANTS = [
+  { id: "CONTINENTE", name: "Continente" },
+  { id: "PINGO_DOCE", name: "Pingo Doce" },
+  { id: "LIDL", name: "Lidl" },
+  { id: "AUCHAN", name: "Auchan" },
+  { id: "ALDI", name: "Aldi" },
+  { id: "MERCADONA", name: "Mercadona" },
+  { id: "EL_CORTE_INGLES", name: "El Corte Inglés" },
+];
+
+const emptyProfile = { household_size: null, merchants: [], goals: [], monthly_goal_cents: null, onboarding_completed_at: null };
+const doneProfile = { household_size: 2, merchants: ["LIDL"], goals: ["finances"], monthly_goal_cents: 30000, onboarding_completed_at: "2026-10-02T10:00:00Z" };
 
 const me = (s: FakeState) => ({
   id: "u1",
@@ -143,8 +162,10 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     receipts: [reviewReceipt],
     empty: false,
     appName: "Super Mercado",
+    profilePatches: [],
     ...overrides,
   };
+  let profile: Record<string, unknown> = state.onboarded === false ? { ...emptyProfile } : { ...doneProfile };
   const json = (route: Route, body: unknown, status = 200) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
   const unauth = (route: Route) => json(route, { code: "unauthenticated", message: "Sessão necessária.", request_id: "r" }, 401);
 
@@ -167,6 +188,18 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
       state.consented = true;
       return json(route, me(state));
     }
+    if (path === "/v1/me/profile" && method === "GET") {
+      if (state.profileDelayMs) await new Promise((resolve) => setTimeout(resolve, state.profileDelayMs));
+      return json(route, profile);
+    }
+    if (path === "/v1/me/profile" && method === "PATCH") {
+      const body = route.request().postDataJSON() as Record<string, unknown>;
+      state.profilePatches.push(body);
+      const { onboarding_completed: _done, ...values } = body;
+      profile = { ...profile, ...values, onboarding_completed_at: profile.onboarding_completed_at ?? "2026-10-30T12:00:00Z" };
+      return json(route, profile);
+    }
+    if (path === "/v1/merchants") return json(route, MERCHANTS);
     if (path === "/v1/receipts" && method === "GET") {
       const items = state.empty ? [] : state.receipts.map((r) => ({ id: r.id, status: r.status, merchant: r.merchant, purchase_at: r.purchase_at, total_cents: 313, line_count: 2, overall_confidence: 0.6, needs_action: true, created_at: r.created_at }));
       return json(route, { items, next_cursor: null });
