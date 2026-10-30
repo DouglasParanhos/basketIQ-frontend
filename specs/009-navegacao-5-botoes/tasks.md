@@ -92,7 +92,7 @@ description: "Tarefas da spec 009: navegação de cinco destinos"
 - [X] T020 [P] Atualizar a tabela de ecrãs do `README.md` (linhas `/` Resumo e `/compras`): Início provisório em `/`, Resumo em `/compras/resumo`, abas de Talões
 - [X] T021 Correr `/simplify` e depois `corepack pnpm@9 lint`, `typecheck`, `test` e `e2e:mock`; confirmar que `src/api/schema.d.ts` não mudou; registar o resultado
 - [ ] T022 (manual, só com o backend a correr) Correr o projeto `stack` e confirmar que `journey.spec.ts` (`/?de=…&ate=…`) continua verde pelo redirecionamento; sem o backend, registar «não corrido»
-- [ ] T023 **Só depois da Fase 2** (spec 013 do backend, US8, e `pnpm gen:api`): remover o tipo local de `src/config/appConfig.tsx` e usar o tipo gerado; o hook e os testes não mudam
+- [X] T023 **Só depois da Fase 2** (spec 013 do backend, US8, e `pnpm gen:api`): remover o tipo local de `src/config/appConfig.tsx` e usar o tipo gerado; o hook e os testes não mudam
 
 ---
 
