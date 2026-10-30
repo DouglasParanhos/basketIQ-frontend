@@ -17,3 +17,13 @@ export const server = setupServer(
 export function errorBody(code: string, message: string, extra: Record<string, unknown> = {}) {
   return { code, message, request_id: "req-1", ...extra };
 }
+
+/** Overrides GET /v1/config for one test. */
+export function serveConfig(body: Record<string, unknown>) {
+  server.use(http.get(`${API}/v1/config`, () => HttpResponse.json(body)));
+}
+
+/** Makes GET /v1/config fail with a 500 for one test. */
+export function failConfig() {
+  server.use(http.get(`${API}/v1/config`, () => HttpResponse.json(errorBody("internal_error", "x"), { status: 500 })));
+}

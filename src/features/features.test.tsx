@@ -362,19 +362,19 @@ describe("review (RF-07, F-11..F-15)", () => {
 
 describe("dashboard (RF-09, RF-11)", () => {
   const routes = [
-    { path: "/", element: <DashboardPage /> },
+    { path: "/compras/resumo", element: <DashboardPage /> },
     { path: "/adicionar", element: <p>adicionar</p> },
   ];
 
   it("F-21: explains how to import the first receipt when there is no data", async () => {
     server.use(http.get(`${API}/v1/receipts`, () => HttpResponse.json({ items: [], next_cursor: null })));
-    renderRoutes(routes, "/");
+    renderRoutes(routes, "/compras/resumo");
     expect(await screen.findByRole("heading", { name: /comece pela primeira nota/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /adicionar a primeira nota/i })).toHaveAttribute("href", "/adicionar");
   });
 
   it("shows totals, variation, an accessible table and empty periods", async () => {
-    renderRoutes(routes, "/?de=2026-09-01&ate=2026-09-30");
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
     expect(await screen.findByText("455,00 €")).toBeInTheDocument();
     expect(screen.getByText(/\+12,5 % face a/)).toBeInTheDocument();
     expect(screen.getByText("Ver como tabela")).toBeInTheDocument();
@@ -390,13 +390,13 @@ describe("dashboard (RF-09, RF-11)", () => {
       }),
     );
     const user = userEvent.setup();
-    renderRoutes(routes, "/?de=2026-09-01&ate=2026-09-30");
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
     await user.selectOptions(await screen.findByLabelText("Supermercado"), "LIDL");
     await waitFor(() => expect(seen).toContain("LIDL"));
   });
 
   it("shows how often and how much of each product is bought, and omits the block when empty", async () => {
-    renderRoutes(routes, "/?de=2026-09-01&ate=2026-09-30");
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
     const section = (await screen.findByRole("heading", { name: /consumo habitual/i })).closest("section")!;
     expect(within(section).getByRole("link", { name: "LEITE MEIO GORDO" })).toHaveAttribute("href", "/produtos/p1");
     expect(within(section).getByText(/3 compras · a cada 14 dias/)).toBeInTheDocument();
@@ -405,7 +405,7 @@ describe("dashboard (RF-09, RF-11)", () => {
 
   it("hides the consumption block when there is nothing to show", async () => {
     server.use(http.get(`${API}/v1/analytics/consumption`, () => HttpResponse.json(consumption({ items: [], empty: true }))));
-    renderRoutes(routes, "/?de=2026-09-01&ate=2026-09-30");
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
     expect(await screen.findByText("455,00 €")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /consumo habitual/i })).not.toBeInTheDocument();
   });
@@ -416,7 +416,7 @@ describe("dashboard (RF-09, RF-11)", () => {
         HttpResponse.json(summary({ series: { granularity: "day", points: [{ period: "2026-09-02", spent_cents: 100 }], insufficient_data: true } })),
       ),
     );
-    renderRoutes(routes, "/?de=2026-09-01&ate=2026-09-30");
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
     expect(await screen.findByText(/poucas compras neste período/i)).toBeInTheDocument();
   });
 });

@@ -14,21 +14,37 @@ async function noHorizontalScroll(page: Page) {
 }
 
 test.describe("accessibility (plano de testes §10)", () => {
-  for (const [name, path] of [
-    ["resumo", "/"],
-    ["compras", "/compras"],
-    ["revisão", "/compras/r1"],
-    ["adicionar", "/adicionar"],
-    ["definições", "/definicoes"],
-    ["produtos", "/produtos"],
-  ] as const) {
-    test(`${name} has no axe violations`, async ({ page }) => {
-      await fakeApi(page);
-      await page.goto(path);
-      await expect(page.locator("main").first()).toBeVisible();
-      await page.waitForLoadState("networkidle");
-      await noA11yViolations(page);
-    });
+  test("revisão has no axe violations", async ({ page }) => {
+    await fakeApi(page);
+    await page.goto("/compras/r1");
+    await expect(page.locator("main").first()).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await noA11yViolations(page);
+  });
+
+  // The destinations of the bottom navigation (and the Talões tabs), in both colour schemes at the
+  // narrowest and widest widths of the plan (§10 and §11).
+  for (const scheme of ["light", "dark"] as const) {
+    for (const width of [320, 820]) {
+      for (const [name, path] of [
+        ["início", "/"],
+        ["resumo", "/compras/resumo"],
+        ["compras", "/compras"],
+        ["produtos", "/produtos"],
+        ["adicionar", "/adicionar"],
+        ["definições", "/definicoes"],
+      ] as const) {
+        test(`F-99: ${name} has no axe violations (${scheme}, ${width}px)`, async ({ page }) => {
+          await page.emulateMedia({ colorScheme: scheme });
+          await page.setViewportSize({ width, height: 800 });
+          await fakeApi(page);
+          await page.goto(path);
+          await expect(page.locator("main").first()).toBeVisible();
+          await page.waitForLoadState("networkidle");
+          await noA11yViolations(page);
+        });
+      }
+    }
   }
 
   test("login has no axe violations", async ({ page }) => {
@@ -52,7 +68,7 @@ test.describe("small screens (plano de testes §11)", () => {
     test(`no horizontal scrolling at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
       await fakeApi(page);
-      for (const path of ["/", "/compras/r1", "/adicionar"]) {
+      for (const path of ["/", "/compras/resumo", "/compras/r1", "/adicionar"]) {
         await page.goto(path);
         await page.waitForLoadState("networkidle");
         await noHorizontalScroll(page);
@@ -60,17 +76,26 @@ test.describe("small screens (plano de testes §11)", () => {
     });
   }
 
-  test("bottom navigation reachable with one hand: 4 items, ≥ 44px targets", async ({ page }) => {
-    await fakeApi(page);
-    await page.goto("/");
-    const nav = page.getByRole("navigation", { name: "Navegação principal" });
-    const links = nav.getByRole("link");
-    await expect(links).toHaveText(["Resumo", "Compras", "Adicionar", "Definições"]);
-    for (const box of await links.evaluateAll((els) => els.map((e) => e.getBoundingClientRect()))) {
-      expect(box.height).toBeGreaterThanOrEqual(44);
-      expect(box.bottom).toBeGreaterThan(500); // anchored at the bottom of the screen
-    }
-  });
+  for (const [smartList, expected] of [
+    [false, ["Início", "Talões", "Adicionar", "Definições"]],
+    [true, ["Início", "Talões", "Adicionar", "Lista", "Definições"]],
+  ] as const) {
+    test(`F-91: bottom navigation reachable with one hand: ${expected.length} items, ≥ 44px targets, fits at 320px`, async ({ page }) => {
+      await page.setViewportSize({ width: 320, height: 800 });
+      await fakeApi(page, { smartList });
+      await page.goto("/");
+      const nav = page.getByRole("navigation", { name: "Navegação principal" });
+      const links = nav.getByRole("link");
+      await expect(links).toHaveText([...expected]);
+      for (const box of await links.evaluateAll((els) => els.map((e) => e.getBoundingClientRect()))) {
+        expect(box.height).toBeGreaterThanOrEqual(44);
+        expect(box.bottom).toBeGreaterThan(500); // anchored at the bottom of the screen
+        expect(box.left).toBeGreaterThanOrEqual(0);
+        expect(box.right).toBeLessThanOrEqual(320); // every destination fully visible
+      }
+      await noHorizontalScroll(page);
+    });
+  }
 });
 
 test.describe("customer-facing name (CFG-02)", () => {
@@ -94,17 +119,19 @@ test.describe("customer-facing name (CFG-02)", () => {
 });
 
 test.describe("flows with a fake API", () => {
-  test("F-01: first access asks for privacy consent, then shows the dashboard", async ({ page }) => {
+  test("F-01: first access asks for privacy consent, then shows the Início", async ({ page }) => {
     await fakeApi(page, { consented: false });
     await page.goto("/");
     await expect(page).toHaveURL(/\/privacidade$/);
     await page.getByRole("button", { name: "Aceitar e continuar" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
+    await page.getByRole("link", { name: "Ver resumo" }).click();
     await expect(page.getByText("Gasto total")).toBeVisible();
   });
 
   test("F-21: empty account explains how to import the first receipt", async ({ page }) => {
     await fakeApi(page, { empty: true });
-    await page.goto("/");
+    await page.goto("/compras/resumo");
     await expect(page.getByRole("heading", { name: "Comece pela primeira nota" })).toBeVisible();
     await page.getByRole("link", { name: "Adicionar a primeira nota" }).click();
     await expect(page.getByRole("button", { name: /Fotografar/ })).toBeVisible();
@@ -122,7 +149,7 @@ test.describe("flows with a fake API", () => {
 
   test("chart has a textual alternative (RF-11)", async ({ page }) => {
     await fakeApi(page);
-    await page.goto("/");
+    await page.goto("/compras/resumo");
     await page.getByText("Ver como tabela").click();
     await expect(page.getByRole("table", { name: "Gasto por período" })).toBeVisible();
   });
@@ -141,7 +168,8 @@ test.describe("flows with a fake API", () => {
     await expect(page.getByText("Revisão necessária")).toBeVisible();
     state.signedIn = false;
     // Any next request (navigation or a background refetch) discovers the lost session.
-    await page.getByRole("link", { name: "Resumo" }).click({ timeout: 3000 }).catch(() => undefined);
+    // The Resumo tab loads data, so it discovers the lost session (the Início makes no requests).
+    await page.getByRole("tab", { name: "Resumo" }).click({ timeout: 3000 }).catch(() => undefined);
     await expect(page).toHaveURL(/\/login\?error=session_expired/);
     await expect(page.getByText(/A sua sessão terminou/)).toBeVisible();
   });

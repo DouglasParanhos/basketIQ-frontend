@@ -4,7 +4,7 @@ Mobile-first PWA (React 19, TypeScript, Vite, Tailwind 4) for BasketIQ: photogra
 supermarket receipt, review what was read, and see spending, products and price history.
 
 Specification: `../Documentation/`. Feature specs and acceptance criteria with their tests:
-`specs/` (spec-kit). API: `../Backend` (contract in `../Backend/openapi.json`).
+`specs/` (spec-kit). API: `../basketIQ-backend` (contract in `../basketIQ-backend/openapi.json`).
 
 ## Screens
 
@@ -12,8 +12,9 @@ Specification: `../Documentation/`. Feature specs and acceptance criteria with t
 |---|---|
 | `/login` | "Entrar com Google" only (RF-01) |
 | `/privacidade` | Privacy policy and consent (required before using the app) |
-| `/` Resumo | Month/quarter/year/range, merchant and product filters, total and variation, spending chart with table alternative, share per merchant, top products |
-| `/compras` | Receipts with status, filters, pagination |
+| `/` Início | Provisional home (title, "Adicionar talão", "Ver resumo") until spec 011; an old Resumo address (`/?de=…&ate=…`) redirects to `/compras/resumo` with the same filters |
+| `/compras/resumo` | Resumo (tab of Talões): month/quarter/year/range, merchant and product filters, total and variation, spending chart with table alternative, share per merchant, top products |
+| `/compras` | Compras (tab of Talões): receipts with status, filters, pagination |
 | `/compras/:id` | Processing progress → review on a printed-receipt view (low-confidence values marked with a highlighter **and** text), edit/add/remove/split lines, totals check, confirm; duplicate and unknown-merchant decisions; view/delete original, delete purchase |
 | `/adicionar` | Camera (`capture=environment`), image (JPEG/PNG/HEIC) or PDF; crop/rotate; optional merchant; SHA-256 duplicate check; upload with progress and resumable retry |
 | `/produtos`, `/produtos/:id` | Search; weighted average price with explicit basis (per unit / kg / l), min/max, history, comparison between supermarkets |
@@ -24,7 +25,7 @@ Specification: `../Documentation/`. Feature specs and acceptance criteria with t
 
 Customers see **"Super Mercado"**; BasketIQ is only the project name (repos, packages, docs).
 The customer-facing name is **not** set in this repository. It is `APP_NAME_FOR_CUSTOMER` in
-`../Backend/config/app-config.yaml`, the single source of product decisions and feature flags
+`../basketIQ-backend/config/app-config.yaml`, the single source of product decisions and feature flags
 (see the Backend README). The app reads it at runtime:
 
 - `GET /v1/config` (public) feeds the login screen, the settings footer and `document.title`
@@ -45,7 +46,7 @@ brand's vivid green is never used for text. App icons: `node scripts/make_icons.
 
 ## Develop
 
-Requirements: Node 24+, pnpm 9, the backend stack (`cd ../Backend && make up`).
+Requirements: Node 24+, pnpm 9, the backend stack (`cd ../basketIQ-backend && make up`).
 
 ```bash
 pnpm install
@@ -66,7 +67,7 @@ pnpm e2e --project=stack          # full stack: mock OIDC login → upload PDF/p
                                   # (PaddleOCR) → review → confirm → dashboard → delete
 ```
 
-The stack journey uses the backend's synthetic golden documents; it needs `make up` in `../Backend`
+The stack journey uses the backend's synthetic golden documents; it needs `make up` in `../basketIQ-backend`
 and `pnpm dev` running.
 
 ## Notes

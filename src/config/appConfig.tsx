@@ -18,6 +18,17 @@ export function useAppConfig() {
   });
 }
 
+/**
+ * Whether the smart-list destination is shown (GET /v1/config → smart_list_enabled, key
+ * SMART_LIST_ENABLED). Anything other than `true` (missing field, pending or failed request) is off.
+ * The field is not in src/api/schema.d.ts until the backend exposes it (spec 013 US8) and
+ * `pnpm gen:api` runs; the local type below is temporary (task T023 of specs/009-navegacao-5-botoes).
+ */
+export function useSmartListEnabled(): boolean {
+  const config = useAppConfig().data as { smart_list_enabled?: boolean } | undefined;
+  return config?.smart_list_enabled === true;
+}
+
 export function useAppName(): string {
   return useAppConfig().data?.app_name ?? FALLBACK_APP_NAME;
 }

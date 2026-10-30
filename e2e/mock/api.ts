@@ -8,6 +8,8 @@ export interface FakeState {
   empty: boolean;
   /** APP_NAME_FOR_CUSTOMER as served by GET /v1/config. */
   appName: string;
+  /** SMART_LIST_ENABLED as served by GET /v1/config (off when absent). */
+  smartList?: boolean;
 }
 
 const me = (s: FakeState) => ({
@@ -151,7 +153,7 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     const path = url.pathname;
     const method = route.request().method();
     // Public configuration: available without a session (the login screen needs it).
-    if (path === "/v1/config") return json(route, { app_name: state.appName });
+    if (path === "/v1/config") return json(route, { app_name: state.appName, smart_list_enabled: state.smartList });
     if (path === "/v1/config/manifest.webmanifest") {
       return route.fulfill({
         contentType: "application/manifest+json",

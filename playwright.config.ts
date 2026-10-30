@@ -4,7 +4,7 @@ import { defineConfig, devices } from "@playwright/test";
  * Two projects:
  * - mock:  the built PWA with the API intercepted (page.route). Runs in CI, no backend needed.
  *          Covers accessibility (axe), responsive widths and UI flows.
- * - stack: end-to-end against the real backend (docker compose up in ../Backend) with the
+ * - stack: end-to-end against the real backend (docker compose up in ../basketIQ-backend) with the
  *          mock OIDC server. Run locally: `pnpm e2e --project=stack`.
  */
 export default defineConfig({

@@ -1,13 +1,13 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { LoginPage } from "../features/auth/LoginPage";
 import AdminPage from "../features/admin/AdminPage";
 import { renderRoutes } from "../test/render";
-import { API, errorBody, server } from "../test/server";
+import { API, errorBody, failConfig, server, serveConfig } from "../test/server";
 import { SettingsPage } from "../features/settings/SettingsPage";
-import { DocumentTitle, FALLBACK_APP_NAME } from "./appConfig";
+import { DocumentTitle, FALLBACK_APP_NAME, useSmartListEnabled } from "./appConfig";
 
 const anonymous = () =>
   server.use(
@@ -77,5 +77,52 @@ describe("operator configuration view (CFG-02)", () => {
     expect(screen.getByText("LLM_ENABLED").nextSibling).toHaveTextContent("true");
     expect(screen.getByText(/Só leitura/)).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+  });
+});
+
+describe("F-86: the smart-list option comes from the public configuration", () => {
+  function Probe() {
+    return <p>{useSmartListEnabled() ? "lista ligada" : "lista desligada"}</p>;
+  }
+  const probe = [{ path: "/", element: <Probe /> }];
+
+  it("is on only when the backend says true", async () => {
+    serveConfig({ app_name: "Super Mercado", smart_list_enabled: true });
+    renderRoutes(probe, "/");
+    expect(await screen.findByText("lista ligada")).toBeInTheDocument();
+  });
+
+  it("is off when the backend says false", async () => {
+    serveConfig({ app_name: "Super Mercado", smart_list_enabled: false });
+    renderRoutes(probe, "/");
+    await waitFor(() => expect(screen.getByText("lista desligada")).toBeInTheDocument());
+    expect(screen.queryByText("lista ligada")).not.toBeInTheDocument();
+  });
+
+  it("is off when the field is missing", async () => {
+    serveConfig({ app_name: "Super Mercado" });
+    renderRoutes(probe, "/");
+    await waitFor(() => expect(screen.getByText("lista desligada")).toBeInTheDocument());
+  });
+
+  it("is off while the request is pending and turns on when it arrives", async () => {
+    server.use(
+      http.get(`${API}/v1/config`, async () => {
+        await delay(50);
+        return HttpResponse.json({ app_name: "Super Mercado", smart_list_enabled: true });
+      }),
+    );
+    renderRoutes(probe, "/");
+    expect(screen.getByText("lista desligada")).toBeInTheDocument();
+    expect(await screen.findByText("lista ligada")).toBeInTheDocument();
+  });
+
+  it("is off when the request fails", async () => {
+    failConfig();
+    const { client } = renderRoutes(probe, "/");
+    // useAppConfig retries once (about 1 s) before the query settles in error.
+    await waitFor(() => expect(client.getQueryState(["app-config"])?.status).toBe("error"), { timeout: 4000 });
+    expect(screen.getByText("lista desligada")).toBeInTheDocument();
+    expect(screen.queryByText("lista ligada")).not.toBeInTheDocument();
   });
 });

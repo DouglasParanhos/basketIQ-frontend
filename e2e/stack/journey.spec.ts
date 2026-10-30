@@ -1,5 +1,5 @@
 /**
- * End-to-end against the real backend (cd ../Backend && make up) and `pnpm dev`.
+ * End-to-end against the real backend (cd ../basketIQ-backend && make up) and `pnpm dev`.
  * Uses the backend's synthetic golden-set documents (no personal data).
  */
 import { expect, test, type Page } from "@playwright/test";
@@ -7,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const SYNTHETIC = process.env.BASKETIQ_SYNTHETIC_DIR ?? path.resolve(HERE, "../../../Backend/tests/golden/synthetic");
+const SYNTHETIC = process.env.BASKETIQ_SYNTHETIC_DIR ?? path.resolve(HERE, "../../../basketIQ-backend/tests/golden/synthetic");
 const doc = (name: string, file = "document.pdf") => path.join(SYNTHETIC, name, file);
 
 async function signIn(page: Page, subject: string) {

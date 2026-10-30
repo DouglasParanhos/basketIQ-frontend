@@ -1,6 +1,6 @@
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, useState } from "react";
-import { createBrowserRouter, isRouteErrorResponse, Outlet, RouterProvider, useRouteError } from "react-router";
+import { createBrowserRouter, isRouteErrorResponse, Outlet, RouterProvider, useRouteError, type RouteObject } from "react-router";
 import { ApiError, setSessionExpiredHandler } from "./api/client";
 import { AppShell } from "./components/AppShell";
 import { Notice, Spinner } from "./components/ui";
@@ -8,10 +8,12 @@ import { DocumentTitle } from "./config/appConfig";
 import { LoginPage } from "./features/auth/LoginPage";
 import { RequireSession } from "./features/auth/session";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
+import { HomeRoute } from "./features/home/HomeRoute";
 import { PrivacyPage } from "./features/privacy/PrivacyPage";
 import { ReceiptPage } from "./features/receipts/ReceiptPage";
 import { ReceiptsPage } from "./features/receipts/ReceiptsPage";
 import { SettingsPage } from "./features/settings/SettingsPage";
+import { TaloesLayout } from "./features/taloes/TaloesLayout";
 import { AddPage } from "./features/upload/AddPage";
 
 // Heavier, less used screens are split out of the main bundle.
@@ -28,7 +30,7 @@ function RouteError() {
       : "Ocorreu um erro inesperado.";
   return (
     <main className="mx-auto max-w-md p-6">
-      <Notice tone="error" title="Não foi possível mostrar esta página" action={<a className="font-semibold text-brand underline" href="/">Voltar ao resumo</a>}>
+      <Notice tone="error" title="Não foi possível mostrar esta página" action={<a className="font-semibold text-brand underline" href="/">Voltar ao início</a>}>
         {message}
       </Notice>
     </main>
@@ -45,7 +47,8 @@ function Protected({ admin = false }: { admin?: boolean }) {
   );
 }
 
-const router = createBrowserRouter([
+/** Exported so the tests render the real table. */
+export const routes: RouteObject[] = [
   { path: "/login", element: <LoginPage />, errorElement: <RouteError /> },
   { path: "/privacidade", element: <PrivacyPage />, errorElement: <RouteError /> },
   {
@@ -55,11 +58,17 @@ const router = createBrowserRouter([
       {
         element: <Protected />,
         children: [
-          { path: "/", element: <DashboardPage /> },
-          { path: "/compras", element: <ReceiptsPage /> },
+          { path: "/", element: <HomeRoute /> },
+          {
+            element: <TaloesLayout />,
+            children: [
+              { path: "/compras", element: <ReceiptsPage /> },
+              { path: "/compras/resumo", element: <DashboardPage /> },
+              { path: "/produtos", element: <ProductsPage /> },
+            ],
+          },
           { path: "/compras/:id", element: <ReceiptPage /> },
           { path: "/adicionar", element: <AddPage /> },
-          { path: "/produtos", element: <ProductsPage /> },
           { path: "/produtos/:id", element: <ProductPage /> },
           { path: "/definicoes", element: <SettingsPage /> },
         ],
@@ -68,7 +77,9 @@ const router = createBrowserRouter([
       { path: "*", element: <RouteError /> },
     ],
   },
-]);
+];
+
+const router = createBrowserRouter(routes);
 
 function sessionLost(error: unknown) {
   const publicPage = ["/login", "/privacidade"].includes(window.location.pathname);
