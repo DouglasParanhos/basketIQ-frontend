@@ -24,8 +24,9 @@ strings decimais. Nenhum total é calculado em `number` com casas decimais.
 ### III. Nunca inventar valores
 
 O que a API devolve como `null` aparece como em falta e pedido à pessoa. A interface envia apenas os
-campos que a pessoa alterou (o resto mantém a confiança original). A descrição original da nota é
-sempre mostrada e nunca substituída pelo nome do produto.
+campos que a pessoa confirmou ou alterou (o resto mantém a confiança original). Confirmar é um gesto
+explícito sobre o que o ecrã mostra, como «Avançar» no onboarding; um valor sugerido que a pessoa saltou
+nunca se envia. A descrição original da nota é sempre mostrada e nunca substituída pelo nome do produto.
 
 ### IV. Privacidade no cliente
 
@@ -80,4 +81,4 @@ entram por antecipação.
 Esta constituição prevalece sobre convenções locais e não pode contradizer a constituição de produto
 do Backend. Alterações exigem nova versão (SemVer) e revisão das specs afetadas.
 
-**Version**: 1.0.1 | **Ratified**: 2026-10-15 | **Last Amended**: 2026-10-30
+**Version**: 1.0.2 | **Ratified**: 2026-10-15 | **Last Amended**: 2026-10-30
