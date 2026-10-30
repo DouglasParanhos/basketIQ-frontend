@@ -6,7 +6,7 @@
 
 **Status**: Implemented
 
-**Input**: Especificação Funcional RF-02..RF-05, RF-08, §4.2, §9; Plano de Testes F-04..F-08, F-17, F-24. Backend: `../Backend/specs/002-ingestao-upload`.
+**Input**: Especificação Funcional RF-02..RF-05, RF-08, §4.2, §9; Plano de Testes F-04..F-08, F-17, F-24. Backend: `../basketIQ-backend/specs/002-ingestao-upload`.
 
 ## User Scenarios & Testing *(mandatory)*
 

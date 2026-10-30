@@ -6,7 +6,7 @@
 
 **Status**: Implemented
 
-**Input**: Especificação Funcional RF-12; Plano de Testes F-22, F-22a, F-23, §9. Backend: `../Backend/specs/006-gestao-dados-retencao`.
+**Input**: Especificação Funcional RF-12; Plano de Testes F-22, F-22a, F-23, §9. Backend: `../basketIQ-backend/specs/006-gestao-dados-retencao`.
 
 ## User Scenarios & Testing *(mandatory)*
 

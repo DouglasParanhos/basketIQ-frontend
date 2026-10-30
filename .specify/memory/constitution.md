@@ -1,7 +1,7 @@
 # BasketIQ Constitution (Frontend)
 
 Princípios que governam a especificação, implementação e teste da PWA do BasketIQ. A constituição de
-produto é partilhada com o repositório Backend (`../Backend/.specify/memory/constitution.md`); este
+produto é partilhada com o repositório Backend (`../basketIQ-backend/.specify/memory/constitution.md`); este
 ficheiro repete os princípios de produto e acrescenta as regras específicas do cliente. Fontes:
 `Documentation/` — Especificação Funcional, Especificação Técnica e Plano de Testes, v1.2.
 
@@ -37,8 +37,9 @@ sempre mostrada e nunca substituída pelo nome do produto.
 
 ### V. Mobile-first e acessível
 
-Desenhada primeiro para 320–430 px e uso com uma mão: navegação inferior com quatro destinos
-(Resumo, Compras, Adicionar, Definições), alvos de toque ≥ 44 px, sem scroll horizontal. Meta WCAG 2.2
+Desenhada primeiro para 320–430 px e uso com uma mão: navegação inferior com cinco destinos
+(Início, Talões, Adicionar, Lista, Definições), em que a Lista só aparece com a opção da lista
+inteligente ligada (sem ela, quatro destinos), alvos de toque ≥ 44 px, sem scroll horizontal. Meta WCAG 2.2
 AA verificada com axe em CI (modo claro e escuro). A cor nunca é o único sinal: baixa confiança e erros
 levam ícone e texto. Todos os gráficos têm alternativa textual (tabela). Movimento respeita
 `prefers-reduced-motion`.
@@ -79,4 +80,4 @@ entram por antecipação.
 Esta constituição prevalece sobre convenções locais e não pode contradizer a constituição de produto
 do Backend. Alterações exigem nova versão (SemVer) e revisão das specs afetadas.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-15 | **Last Amended**: 2026-10-15
+**Version**: 1.0.1 | **Ratified**: 2026-10-15 | **Last Amended**: 2026-10-30

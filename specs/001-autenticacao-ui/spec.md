@@ -6,7 +6,7 @@
 
 **Status**: Implemented
 
-**Input**: Especificação Funcional RF-01, §4.1, §8; Plano de Testes F-01..F-03a. Backend: `../Backend/specs/001-autenticacao`.
+**Input**: Especificação Funcional RF-01, §4.1, §8; Plano de Testes F-01..F-03a. Backend: `../basketIQ-backend/specs/001-autenticacao`.
 
 ## User Scenarios & Testing *(mandatory)*
 
