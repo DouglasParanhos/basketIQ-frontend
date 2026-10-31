@@ -32,7 +32,7 @@ async function signIn(page: Page, subject: string) {
 async function upload(page: Page, file: string, input = "input-pdf") {
   await page.goto("/adicionar");
   await page.getByTestId(input).setInputFiles(file);
-  await page.getByRole("button", { name: "Enviar nota" }).click();
+  await page.getByRole("button", { name: "Enviar talão" }).click();
   await expect(page).toHaveURL(/\/compras\/[0-9a-f-]{36}$/);
 }
 
@@ -51,7 +51,7 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   // F-17: the same file again is flagged before uploading.
   await page.goto("/adicionar");
   await page.getByTestId("input-pdf").setInputFiles(doc("pingo_doce_text"));
-  await page.getByRole("button", { name: "Enviar nota" }).click();
+  await page.getByRole("button", { name: "Enviar talão" }).click();
   await expect(page.getByText("Esta nota parece já ter sido importada")).toBeVisible();
 
   // F-15b / F-12 / F-13: totals do not reconcile → review; fix the total and confirm.

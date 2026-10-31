@@ -83,8 +83,8 @@ describe("add receipt (RF-02..RF-04)", () => {
     const user = userEvent.setup();
     renderRoutes(routes, "/adicionar");
     await pickFile(screen.getByTestId("input-pdf"), new File(["%PDF-1.4"], "fatura.pdf", { type: "application/pdf" }));
-    await user.selectOptions(await screen.findByLabelText(/loja \(opcional\)/i), "LIDL");
-    await user.click(screen.getByRole("button", { name: /enviar nota/i }));
+    await user.selectOptions(await screen.findByLabelText(/supermercado \(opcional\)/i), "LIDL");
+    await user.click(screen.getByRole("button", { name: /^enviar talão$/i }));
     expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
     expect(calls).toEqual(["init:application/pdf:64:LIDL", "storage", "process"]);
     expect(processKey).toMatch(/^[0-9a-f-]{36}$/);
@@ -112,7 +112,7 @@ describe("add receipt (RF-02..RF-04)", () => {
     const user = userEvent.setup();
     renderRoutes(routes, "/adicionar");
     await pickFile(screen.getByTestId("input-pdf"), new File(["%PDF"], "f.pdf", { type: "application/pdf" }));
-    await user.click(await screen.findByRole("button", { name: /enviar nota/i }));
+    await user.click(await screen.findByRole("button", { name: /^enviar talão$/i }));
     expect(await screen.findByText(/parece já ter sido importada/i)).toBeInTheDocument();
     expect(screen.getByText(/Lidl, .*9,05/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /guardar nova versão/i }));
@@ -146,11 +146,11 @@ describe("add receipt (RF-02..RF-04)", () => {
       const user = userEvent.setup();
       renderRoutes(routes, "/adicionar");
       await pickFile(screen.getByTestId("input-image"), jpg("a.jpg"));
-      expect(await screen.findByText(/nota comprida\? tire mais fotos/i)).toBeInTheDocument();
-      expect(screen.getByText(/2 ou 3 últimos produtos/i)).toBeInTheDocument();
+      expect(await screen.findByRole("heading", { level: 1, name: "Confirme as partes" })).toBeInTheDocument();
+      expect(screen.getByText("Parte 2 · comece onde a parte 1 acabou")).toBeInTheDocument();
       await pickFile(screen.getByTestId("input-image"), jpg("b.jpg"));
-      expect(await screen.findByText(/foto 2: b\.jpg/i)).toBeInTheDocument();
-      await user.click(screen.getByRole("button", { name: /enviar nota/i }));
+      expect(await screen.findByText("b.jpg")).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: /^enviar talão · 2 fotos$/i }));
       expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
       expect(calls).toEqual(["init:a.jpg", "photo:b.jpg:64", "storage:p0", "storage:p1", "process"]);
     });
@@ -160,22 +160,21 @@ describe("add receipt (RF-02..RF-04)", () => {
       renderRoutes(routes, "/adicionar");
       await pickFile(screen.getByTestId("input-image"), jpg("a.jpg"));
       await pickFile(screen.getByTestId("input-image"), jpg("b.jpg"));
-      await screen.findByText(/foto 2: b\.jpg/i);
-      await user.click(screen.getByRole("button", { name: /descer a foto 1/i }));
-      expect(await screen.findByText(/foto 1: b\.jpg/i)).toBeInTheDocument();
-      expect(screen.getByText(/foto 2: a\.jpg/i)).toBeInTheDocument();
-      await user.click(screen.getByRole("button", { name: /remover a foto 1/i }));
-      expect(screen.queryByText(/foto \d: /i)).not.toBeInTheDocument(); // one photo left: no numbering
+      await screen.findByText("b.jpg");
+      await user.click(screen.getByRole("button", { name: /descer a parte 1/i }));
+      await waitFor(() => expect(screen.getAllByRole("listitem").map((li) => li.textContent)).toEqual([expect.stringContaining("b.jpg"), expect.stringContaining("a.jpg")]));
+      await user.click(screen.getByRole("button", { name: /apagar a parte 1/i }));
+      expect(screen.queryByRole("button", { name: /apagar a parte 2/i })).not.toBeInTheDocument(); // one part left
       expect(screen.getByText("a.jpg")).toBeInTheDocument();
     });
 
     it("F-31: a PDF cannot be joined to a photo", async () => {
       renderRoutes(routes, "/adicionar");
       await pickFile(screen.getByTestId("input-image"), jpg("a.jpg"));
-      await screen.findByText(/nota comprida/i);
+      await screen.findByRole("heading", { level: 1, name: "Confirme as partes" });
       await pickFile(screen.getByTestId("input-pdf"), new File(["%PDF"], "f.pdf", { type: "application/pdf" }));
       expect(await screen.findByText(/só é possível juntar fotografias/i)).toBeInTheDocument();
-      expect(screen.queryByText(/foto 2/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /apagar a parte 2/i })).not.toBeInTheDocument();
     });
   });
 
@@ -197,7 +196,7 @@ describe("add receipt (RF-02..RF-04)", () => {
     const user = userEvent.setup();
     renderRoutes(routes, "/adicionar");
     await pickFile(screen.getByTestId("input-pdf"), new File(["%PDF"], "f.pdf", { type: "application/pdf" }));
-    await user.click(await screen.findByRole("button", { name: /enviar nota/i }));
+    await user.click(await screen.findByRole("button", { name: /^enviar talão$/i }));
     expect(await screen.findByText(/o envio não terminou/i)).toBeInTheDocument();
     expect(screen.getByText(/retoma de onde parou/i)).toBeInTheDocument();
     // Network back: retry reuses the same receipt (no second upload-init).
@@ -221,6 +220,34 @@ describe("review (RF-07, F-11..F-15)", () => {
     expect(within(banana).getByText(/verificar quantidade/i)).toBeInTheDocument();
     expect(within(banana).getByText(/verificar preço unitário/i)).toBeInTheDocument();
     expect(screen.getByText(/reveja antes de confirmar/i)).toBeInTheDocument();
+  });
+
+  it("F-202: image quality warnings come with the action «Tire outra foto», as a status with text and icon, and never block the review", async () => {
+    server.use(
+      http.get(`${API}/v1/receipts/r1`, () =>
+        HttpResponse.json(
+          receipt({
+            quality_warnings: [
+              { code: "blurry", message: "A imagem parece desfocada." },
+              { code: "too_dark", message: "A imagem está demasiado escura." },
+            ],
+          }),
+        ),
+      ),
+    );
+    renderRoutes([...routes, { path: "/adicionar", element: <p>adicionar</p> }], "/compras/r1");
+    const notice = (await screen.findByText("A fotografia pode ser melhorada")).closest("[role=status]") as HTMLElement;
+    expect(within(notice).getByText(/A imagem parece desfocada\. A imagem está demasiado escura\./)).toBeInTheDocument();
+    expect(notice.querySelector("svg[aria-hidden=true]")).not.toBeNull();
+    expect(within(notice).getByRole("link", { name: "Tire outra foto" })).toHaveAttribute("href", "/adicionar");
+    expect(screen.queryByText(/se os valores não estiverem certos/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /banana/i })).toBeInTheDocument(); // the review is still there
+  });
+
+  it("F-202: without warnings no quality message appears", async () => {
+    renderRoutes(routes, "/compras/r1");
+    await screen.findByRole("button", { name: /banana/i });
+    expect(screen.queryByText("A fotografia pode ser melhorada")).not.toBeInTheDocument();
   });
 
   it("F-13: editing a line sends only the changed field with the version", async () => {

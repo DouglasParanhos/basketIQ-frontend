@@ -26,6 +26,12 @@ export interface FakeState {
   profilePatches: Record<string, unknown>[];
   /** Milliseconds GET /v1/me/profile waits before answering (to look at the loading state). */
   profileDelayMs?: number;
+  /** What the upload endpoints received: the files in the order sent, and how many calls of each kind. */
+  uploads: { inits: number; photos: number; stored: number; processed: number; names: string[]; hints: (string | null)[] };
+  /** upload-init answers 409 duplicate_suspected unless allow_duplicate is true. */
+  duplicate?: boolean;
+  /** The presigned storage drops the connection (a network failure). */
+  storageFails?: boolean;
 }
 
 const MERCHANTS = [
@@ -174,6 +180,7 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     appName: "Super Mercado",
     profilePatches: [],
     storedFilesDeletes: 0,
+    uploads: { inits: 0, photos: 0, stored: 0, processed: 0, names: [], hints: [] },
     ...overrides,
   };
   let purchasesWithFiles = Math.ceil((state.storedFiles ?? 0) / 3);
@@ -182,6 +189,15 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     : state.onboarded === false ? { ...emptyProfile } : { ...doneProfile };
   const json = (route: Route, body: unknown, status = 200) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
   const unauth = (route: Route) => json(route, { code: "unauthenticated", message: "Sessão necessária.", request_id: "r" }, 401);
+
+  // The presigned storage is another origin: it answers the upload (CORS allowed) or drops the connection.
+  await page.route("http://storage.test/**", (route) => {
+    const cors = { "access-control-allow-origin": "*" };
+    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: { ...cors, "access-control-allow-methods": "POST" } });
+    if (state.storageFails) return route.abort("failed");
+    state.uploads.stored += 1;
+    return route.fulfill({ status: 204, headers: cors });
+  });
 
   await page.route("**/v1/**", async (route) => {
     const url = new URL(route.request().url());
@@ -231,6 +247,34 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     if (path === "/v1/receipts" && method === "GET") {
       const items = state.empty ? [] : state.receipts.map((r) => ({ id: r.id, status: r.status, merchant: r.merchant, purchase_at: r.purchase_at, total_cents: 313, line_count: 2, overall_confidence: 0.6, needs_action: true, created_at: r.created_at }));
       return json(route, { items, next_cursor: null });
+    }
+    if (path === "/v1/receipts/upload-init" && method === "POST") {
+      const body = route.request().postDataJSON() as { filename: string; allow_duplicate: boolean; merchant_hint: string | null };
+      if (state.duplicate && !body.allow_duplicate) {
+        return json(
+          route,
+          { code: "duplicate_suspected", message: "Este documento parece já ter sido importado.", request_id: "r", details: { duplicate_of: { receipt_id: "r1", merchant: "LIDL", purchase_at: "2026-09-12T10:15:00+01:00", total_cents: 905 } } },
+          409,
+        );
+      }
+      state.uploads.inits += 1;
+      state.uploads.names.push(body.filename);
+      state.uploads.hints.push(body.merchant_hint);
+      return json(
+        route,
+        { receipt_id: "r1", upload: { url: "http://storage.test/p0", fields: {}, expires_at: "2030-01-01T00:00:00Z" }, requirements: { max_bytes: 15728640, accepted_types: [], max_pdf_pages: 5, max_photos: 6 } },
+        201,
+      );
+    }
+    if (path === "/v1/receipts/r1/photos" && method === "POST") {
+      state.uploads.photos += 1;
+      state.uploads.names.push((route.request().postDataJSON() as { filename: string }).filename);
+      return json(route, { url: `http://storage.test/p${state.uploads.photos}`, fields: {}, expires_at: "2030-01-01T00:00:00Z" }, 201);
+    }
+    if (path === "/v1/receipts/r1/upload-url" && method === "POST") return json(route, { url: "http://storage.test/retry", fields: {}, expires_at: "2030-01-01T00:00:00Z" });
+    if (path === "/v1/receipts/r1/process" && method === "POST") {
+      state.uploads.processed += 1;
+      return json(route, { id: "j1", status: "QUEUED", attempt_count: 0, processing_route: null, created_at: "2026-10-31T10:00:00Z" }, 202);
     }
     if (path === "/v1/receipts/r1" && method === "GET") return json(route, reviewReceipt);
     if (path === "/v1/analytics/summary") return json(route, summary);

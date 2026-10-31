@@ -58,8 +58,16 @@ function Body({ receipt: r }: { receipt: Receipt }) {
   return (
     <>
       {r.quality_warnings.length > 0 && (
-        <Notice tone="info" title="A fotografia pode ser melhorada">
-          {r.quality_warnings.map((w) => w.message).join(" ")} Se os valores não estiverem certos, tire uma nova fotografia.
+        <Notice
+          tone="info"
+          title="A fotografia pode ser melhorada"
+          action={
+            <LinkButton to="/adicionar" variant="secondary">
+              Tire outra foto
+            </LinkButton>
+          }
+        >
+          {r.quality_warnings.map((w) => w.message).join(" ")}
         </Notice>
       )}
       {r.duplicate_of_receipt_id && !r.duplicate_acknowledged && <DuplicateChoice receipt={r} />}

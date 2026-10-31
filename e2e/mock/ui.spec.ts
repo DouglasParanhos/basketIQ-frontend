@@ -436,3 +436,154 @@ test.describe("definições (spec 014)", () => {
     expect(stored).toEqual({ local: [], session: [] });
   });
 });
+
+// ---------------------------------------------------------------- Adicionar (spec 013)
+
+/** A 1x1 PNG: a real image, so the browser loads it and the cropper measures it. */
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
+const png = (name: string) => ({ name, mimeType: "image/png", buffer: PNG });
+
+/** Picks a file through the real file chooser that a tap on the button opens. */
+async function choose(page: Page, button: string | RegExp, file: ReturnType<typeof png>) {
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: button }).click();
+  await (await chooser).setFiles(file);
+}
+
+/** Walks the first screen, the parts screen (two parts), the editor of a part and the discard question. */
+async function walkAdd(page: Page, check: () => Promise<void>) {
+  await page.goto("/adicionar");
+  await expect(page.getByRole("heading", { level: 1, name: "Adicionar talão" })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "Lidl" })).toBeAttached();
+  await check();
+  await choose(page, "Escolher imagem", png("a.png"));
+  await expect(page.getByRole("heading", { level: 1, name: "Confirme as partes" })).toBeVisible();
+  await choose(page, "Adicionar outra parte", png("b.png"));
+  await expect(page.getByText("b.png")).toBeVisible();
+  await check();
+  await page.getByRole("button", { name: "Recortar a parte 1" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: "Recortar a parte 1" })).toBeVisible();
+  await check();
+  await page.getByRole("button", { name: "Concluir" }).click();
+  await page.getByRole("button", { name: "Voltar" }).click();
+  await expect(page.getByText("Descartar as 2 fotos?")).toBeVisible();
+  await check();
+}
+
+test.describe("adicionar (spec 013)", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    for (const width of [320, 375, 430, 820]) {
+      test(`F-205: every screen has no axe violations and no horizontal scroll (${scheme}, ${width}px)`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.setViewportSize({ width, height: 800 });
+        await fakeApi(page);
+        await walkAdd(page, async () => {
+          await noA11yViolations(page);
+          await noHorizontalScroll(page);
+        });
+      });
+    }
+  }
+
+  test("F-205: every control of the Adicionar has a touch target of at least 44 px", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await fakeApi(page);
+    await walkAdd(page, async () => {
+      const small = await page
+        .locator("main button:visible, main a:visible, main label:has(input):visible, main select:visible, main input[type=range]:visible")
+        .evaluateAll((nodes) =>
+          nodes
+            .map((node) => ({ text: (node.textContent ?? "").trim().slice(0, 30) || node.getAttribute("aria-label") || node.tagName, box: node.getBoundingClientRect() }))
+            .filter(({ box }) => box.height < 43.5 || box.width < 43.5)
+            .map(({ text, box }) => `${text}: ${Math.round(box.width)}x${Math.round(box.height)}`),
+        );
+      expect(small).toEqual([]);
+    });
+  });
+
+  test("F-200: one photo goes from the first screen to the receipt in two taps and is sent once", async ({ page }) => {
+    const state = await fakeApi(page);
+    await page.goto("/adicionar");
+    await page.getByRole("radio", { name: "Lidl" }).check({ force: true });
+    await choose(page, "Escolher imagem", png("a.png")); // tap 1
+    await page.getByRole("button", { name: "Enviar talão" }).click(); // tap 2
+    await expect(page).toHaveURL(/\/compras\/r1$/);
+    expect(state.uploads).toMatchObject({ inits: 1, photos: 0, stored: 1, processed: 1, names: ["a.png"], hints: ["LIDL"] });
+  });
+
+  test("F-200: the camera input targets the rear camera, and a denied camera falls back to choosing a file", async ({ page }) => {
+    await fakeApi(page);
+    await page.goto("/adicionar");
+    await expect(page.getByTestId("input-camera")).toHaveAttribute("capture", "environment");
+    const chooser = page.waitForEvent("filechooser");
+    await page.getByRole("button", { name: /Fotografar/ }).click();
+    expect((await chooser).isMultiple()).toBe(false);
+  });
+
+  test("F-201: two parts make one receipt, sent in the order shown, within five taps after the first photo", async ({ page }) => {
+    const state = await fakeApi(page);
+    await page.goto("/adicionar");
+    await choose(page, "Escolher imagem", png("a.png"));
+    await choose(page, "Adicionar outra parte", png("b.png")); // tap 1
+    await page.getByRole("button", { name: "Descer a parte 1" }).click(); // b.png first
+    await page.getByRole("button", { name: "Enviar talão · 2 fotos" }).click(); // tap 3
+    await expect(page).toHaveURL(/\/compras\/r1$/);
+    expect(state.uploads).toMatchObject({ inits: 1, photos: 1, stored: 2, processed: 1, names: ["b.png", "a.png"] });
+  });
+
+  test("F-201 (A5): the edit of a part is kept when switching parts, with the real editor, and the edited part is what is sent", async ({ page }) => {
+    const state = await fakeApi(page);
+    await page.goto("/adicionar");
+    await choose(page, "Escolher imagem", png("a.png"));
+    await choose(page, "Adicionar outra parte", png("b.png"));
+    const zoom = page.getByRole("slider", { name: /zoom/i });
+
+    await page.getByRole("button", { name: "Recortar a parte 1" }).click();
+    await zoom.fill("2");
+    await page.getByRole("button", { name: "Rodar para a direita" }).click();
+    await page.getByRole("button", { name: "Concluir" }).click();
+
+    await page.getByRole("button", { name: "Recortar a parte 2" }).click();
+    await expect(zoom).toHaveValue("1"); // another part has its own edit
+    await page.getByRole("button", { name: "Concluir" }).click();
+
+    await page.getByRole("button", { name: "Recortar a parte 1" }).click();
+    await expect(zoom).toHaveValue("2"); // back to the first: the edit is still there
+    await page.getByRole("button", { name: "Concluir" }).click();
+
+    await page.getByRole("button", { name: "Enviar talão · 2 fotos" }).click();
+    await expect(page).toHaveURL(/\/compras\/r1$/);
+    expect(state.uploads.names).toEqual(["a.jpg", "b.png"]); // the edited part goes rendered as a JPEG, the other as the original
+  });
+
+  test("F-201: a network failure keeps the receipt and «Tentar novamente» resumes without a second purchase", async ({ page }) => {
+    const state = await fakeApi(page, { storageFails: true });
+    await page.goto("/adicionar");
+    await choose(page, "Escolher imagem", png("a.png"));
+    await page.getByRole("button", { name: "Enviar talão" }).click();
+    await expect(page.getByText("O envio não terminou")).toBeVisible();
+    state.storageFails = false;
+    await page.getByRole("button", { name: "Tentar novamente" }).click();
+    await expect(page).toHaveURL(/\/compras\/r1$/);
+    expect(state.uploads.inits).toBe(1);
+    expect(state.uploads.processed).toBe(1);
+  });
+
+  test("F-201: a duplicate is warned about and «Guardar nova versão» sends it anyway", async ({ page }) => {
+    const state = await fakeApi(page, { duplicate: true });
+    await page.goto("/adicionar");
+    await choose(page, "Escolher imagem", png("a.png"));
+    await page.getByRole("button", { name: "Enviar talão" }).click();
+    await expect(page.getByText(/parece já ter sido importada/)).toBeVisible();
+    await page.getByRole("button", { name: "Guardar nova versão" }).click();
+    await expect(page).toHaveURL(/\/compras\/r1$/);
+    expect(state.uploads.inits).toBe(1);
+  });
+
+  test("F-205: the Adicionar writes nothing to localStorage or sessionStorage", async ({ page }) => {
+    await fakeApi(page);
+    await walkAdd(page, async () => undefined);
+    const stored = await page.evaluate(() => ({ local: Object.keys(localStorage), session: Object.keys(sessionStorage) }));
+    expect(stored).toEqual({ local: [], session: [] });
+  });
+});
