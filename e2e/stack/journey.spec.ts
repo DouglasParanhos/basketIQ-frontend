@@ -96,10 +96,10 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   await expect(total).toHaveText("18,17 €");
 
   // F-23: account deletion.
-  await page.goto("/definicoes");
-  await page.getByRole("button", { name: "Eliminar conta" }).click();
+  await page.goto("/definicoes/conta");
+  await page.getByRole("link", { name: "Eliminar conta…" }).click();
   await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: "Eliminar conta e dados" }).click();
+  await page.getByRole("button", { name: "Eliminar a minha conta" }).click();
   await expect(page).toHaveURL(/\/login/);
 });
 

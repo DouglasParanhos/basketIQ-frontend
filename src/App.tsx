@@ -1,6 +1,6 @@
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, useState } from "react";
-import { createBrowserRouter, isRouteErrorResponse, Outlet, RouterProvider, useRouteError, type RouteObject } from "react-router";
+import { createBrowserRouter, isRouteErrorResponse, Navigate, Outlet, RouterProvider, useRouteError, type RouteObject } from "react-router";
 import { ApiError, setSessionExpiredHandler } from "./api/client";
 import { AppShell } from "./components/AppShell";
 import { Notice, Spinner } from "./components/ui";
@@ -13,7 +13,11 @@ import { RequireOnboarding } from "./features/onboarding/RequireOnboarding";
 import { PrivacyPage } from "./features/privacy/PrivacyPage";
 import { ReceiptPage } from "./features/receipts/ReceiptPage";
 import { ReceiptsPage } from "./features/receipts/ReceiptsPage";
-import { SettingsPage } from "./features/settings/SettingsPage";
+import { AccountTab } from "./features/settings/AccountTab";
+import { DeleteAccountPage } from "./features/settings/DeleteAccountPage";
+import { PrivacyTab } from "./features/settings/PrivacyTab";
+import { ProfileTab } from "./features/settings/ProfileTab";
+import { SettingsLayout } from "./features/settings/SettingsLayout";
 import { TaloesLayout } from "./features/taloes/TaloesLayout";
 import { AddPage } from "./features/upload/AddPage";
 
@@ -79,7 +83,17 @@ export const routes: RouteObject[] = [
               { path: "/compras/:id", element: <ReceiptPage /> },
               { path: "/adicionar", element: <AddPage /> },
               { path: "/produtos/:id", element: <ProductPage /> },
-              { path: "/definicoes", element: <SettingsPage /> },
+              {
+                path: "/definicoes",
+                element: <SettingsLayout />,
+                children: [
+                  { index: true, element: <Navigate to="/definicoes/perfil" replace /> },
+                  { path: "perfil", element: <ProfileTab /> },
+                  { path: "privacidade", element: <PrivacyTab /> },
+                  { path: "conta", element: <AccountTab /> },
+                ],
+              },
+              { path: "/definicoes/conta/eliminar", element: <DeleteAccountPage /> },
             ],
           },
         ],

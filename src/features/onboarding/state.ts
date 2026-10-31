@@ -47,7 +47,7 @@ export type Action =
 const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));
 const advance = (step: number) => Math.min(step + 1, LAST_STEP);
 
-function toggle<T>(list: readonly T[], item: T): T[] {
+export function toggle<T>(list: readonly T[], item: T): T[] {
   return list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
 }
 

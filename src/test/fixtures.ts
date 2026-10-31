@@ -170,6 +170,12 @@ export function emptyProfile(overrides: Partial<Schemas["ProfileOut"]> = {}): Sc
   return { household_size: null, merchants: [], goals: [], monthly_goal_cents: null, onboarding_completed_at: null, ...overrides };
 }
 
+/** An account from before the onboarding: finished and empty (what the backend migration leaves). */
+export const migratedProfile = emptyProfile({ onboarding_completed_at: "2026-10-31T00:00:00Z" });
+
+/** The signed-in operator. */
+export const adminMe: Schemas["MeOut"] = { ...me, role: "admin" };
+
 /** The seven supported merchants, as GET /v1/merchants serves them. */
 export const merchants: Schemas["MerchantOut"][] = [
   { id: "CONTINENTE", name: "Continente" },

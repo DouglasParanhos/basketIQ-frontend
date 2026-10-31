@@ -21,8 +21,13 @@ export function useProfile() {
 export function useSaveProfile() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (patch: Schemas["ProfilePatch"]) => unwrap(await api.PATCH("/v1/me/profile", { body: patch })),
-    onSuccess: (profile) => qc.setQueryData(["profile"], profile),
+    // The generated body type requires `onboarding_completed` because the API defaults it; omitted, the API leaves it alone.
+    mutationFn: async (patch: Partial<Schemas["ProfilePatch"]>) => unwrap(await api.PATCH("/v1/me/profile", { body: patch as Schemas["ProfilePatch"] })),
+    onSuccess: (profile) => {
+      qc.setQueryData(["profile"], profile);
+      // The goal moves the ring of the Início: its cached month must not be shown as current.
+      void qc.invalidateQueries({ queryKey: ["overview"] });
+    },
     onError: (error) => {
       if (isConsentError(error)) void qc.invalidateQueries({ queryKey: ["me"] });
     },

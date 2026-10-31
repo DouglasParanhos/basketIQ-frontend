@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
+import type { Schemas } from "../api/client";
 import { consumption, emptyProfile, me, merchants, profile, receipt, summary } from "./fixtures";
 
 export const API = "http://localhost:3000";
@@ -10,6 +11,8 @@ export const server = setupServer(
   http.get(`${API}/v1/me`, () => HttpResponse.json(me)),
   http.get(`${API}/v1/me/profile`, () => HttpResponse.json(profile)),
   http.get(`${API}/v1/merchants`, () => HttpResponse.json(merchants)),
+  http.get(`${API}/v1/receipts/stored-files`, () => HttpResponse.json({ files: 9 })),
+  http.delete(`${API}/v1/receipts/stored-files`, () => HttpResponse.json({ files_deleted: 9, receipts: 3, remaining: 0 })),
   http.get(`${API}/v1/receipts`, () => HttpResponse.json({ items: [{ id: "r1", status: "CONFIRMED", merchant: "LIDL", purchase_at: null, total_cents: 100, line_count: 1, overall_confidence: 1, needs_action: false, created_at: "2026-09-01T00:00:00Z" }], next_cursor: null })),
   http.get(`${API}/v1/receipts/:id`, () => HttpResponse.json(receipt())),
   http.get(`${API}/v1/analytics/summary`, () => HttpResponse.json(summary())),
@@ -33,6 +36,24 @@ export function failConfig() {
 /** The person's profile as the server has it (nothing saved unless told otherwise). */
 export function serveProfile(saved = emptyProfile()) {
   server.use(http.get(`${API}/v1/me/profile`, () => HttpResponse.json(saved)));
+}
+
+/** GET /v1/receipts/stored-files for one test. */
+export function serveStoredFiles(files: number) {
+  server.use(http.get(`${API}/v1/receipts/stored-files`, () => HttpResponse.json({ files })));
+}
+
+/** DELETE /v1/receipts/stored-files: one answer per call (the last repeats); returns the call counter. */
+export function serveStoredFilesDelete(answers: (Schemas["StoredFilesDeleted"] | "error")[]) {
+  const calls = { count: 0 };
+  server.use(
+    http.delete(`${API}/v1/receipts/stored-files`, () => {
+      const answer = answers[Math.min(calls.count, answers.length - 1)];
+      calls.count += 1;
+      return answer === "error" ? HttpResponse.json(errorBody("internal_error", "x"), { status: 500 }) : HttpResponse.json(answer);
+    }),
+  );
+  return calls;
 }
 
 /** PATCH /v1/me/profile: answers with the profile it produces and returns the list that collects the bodies it receives. */

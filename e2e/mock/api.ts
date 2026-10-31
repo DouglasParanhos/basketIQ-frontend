@@ -12,6 +12,16 @@ export interface FakeState {
   smartList?: boolean;
   /** Whether the person already finished the onboarding (true when absent). */
   onboarded?: boolean;
+  /** An account from before the onboarding: finished, with nothing answered (spec 014). */
+  migrated?: boolean;
+  /** The signed-in person is an operator. */
+  admin?: boolean;
+  /** Stored original files (3 per purchase), as GET /v1/receipts/stored-files counts them. Zero when absent. */
+  storedFiles?: number;
+  /** Calls received by DELETE /v1/receipts/stored-files. */
+  storedFilesDeletes: number;
+  /** Makes DELETE /v1/receipts/stored-files answer 500. */
+  storedFilesFail?: boolean;
   /** Bodies received by PATCH /v1/me/profile, in order. */
   profilePatches: Record<string, unknown>[];
   /** Milliseconds GET /v1/me/profile waits before answering (to look at the loading state). */
@@ -35,7 +45,7 @@ const me = (s: FakeState) => ({
   id: "u1",
   email: "maria@example.test",
   display_name: "Maria Silva",
-  role: "user",
+  role: s.admin ? "admin" : "user",
   privacy_accepted_at: s.consented ? "2026-10-01T10:00:00Z" : null,
   privacy_version: s.consented ? "2026-10-15" : null,
   current_privacy_version: "2026-10-15",
@@ -163,9 +173,13 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     empty: false,
     appName: "Super Mercado",
     profilePatches: [],
+    storedFilesDeletes: 0,
     ...overrides,
   };
-  let profile: Record<string, unknown> = state.onboarded === false ? { ...emptyProfile } : { ...doneProfile };
+  let purchasesWithFiles = Math.ceil((state.storedFiles ?? 0) / 3);
+  let profile: Record<string, unknown> = state.migrated
+    ? { ...emptyProfile, onboarding_completed_at: "2026-10-31T00:00:00Z" }
+    : state.onboarded === false ? { ...emptyProfile } : { ...doneProfile };
   const json = (route: Route, body: unknown, status = 200) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
   const unauth = (route: Route) => json(route, { code: "unauthenticated", message: "Sessão necessária.", request_id: "r" }, 401);
 
@@ -200,6 +214,20 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
       return json(route, profile);
     }
     if (path === "/v1/merchants") return json(route, MERCHANTS);
+    if (path === "/v1/receipts/stored-files" && method === "GET") return json(route, { files: state.storedFiles ?? 0 });
+    if (path === "/v1/receipts/stored-files" && method === "DELETE") {
+      state.storedFilesDeletes += 1;
+      if (state.storedFilesFail) return json(route, { code: "internal_error", message: "Erro.", request_id: "r" }, 500);
+      const batch = Math.min(500, purchasesWithFiles);
+      purchasesWithFiles -= batch;
+      const removed = Math.min(batch * 3, state.storedFiles ?? 0);
+      state.storedFiles = (state.storedFiles ?? 0) - removed;
+      return json(route, { files_deleted: removed, receipts: batch, remaining: purchasesWithFiles });
+    }
+    if (path === "/v1/me" && method === "DELETE") {
+      state.signedIn = false;
+      return json(route, { receipts_deleted: 1, objects_deleted: 1 });
+    }
     if (path === "/v1/receipts" && method === "GET") {
       const items = state.empty ? [] : state.receipts.map((r) => ({ id: r.id, status: r.status, merchant: r.merchant, purchase_at: r.purchase_at, total_cents: 313, line_count: 2, overall_confidence: 0.6, needs_action: true, created_at: r.created_at }));
       return json(route, { items, next_cursor: null });

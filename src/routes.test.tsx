@@ -60,12 +60,13 @@ describe("route table (spec 009)", () => {
     expect(within(nav()).queryByRole("link", { name: "Lista" })).not.toBeInTheDocument();
   });
 
-  it("F-98: /adicionar and /definicoes are unchanged", async () => {
+  it("F-98: /adicionar is unchanged and /definicoes goes to the Perfil", async () => {
     const { router } = renderApp("/adicionar");
     expect(await screen.findByRole("heading", { level: 1, name: "Adicionar compra" })).toBeInTheDocument();
     expect(currentDestinations()).toEqual(["Adicionar"]);
     await router.navigate("/definicoes");
     expect(await screen.findByRole("heading", { level: 1, name: "Definições" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/definicoes/perfil");
     expect(currentDestinations()).toEqual(["Definições"]);
   });
 

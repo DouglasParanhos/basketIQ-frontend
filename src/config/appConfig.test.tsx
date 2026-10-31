@@ -6,7 +6,7 @@ import { LoginPage } from "../features/auth/LoginPage";
 import AdminPage from "../features/admin/AdminPage";
 import { renderRoutes } from "../test/render";
 import { API, errorBody, failConfig, server, serveConfig } from "../test/server";
-import { SettingsPage } from "../features/settings/SettingsPage";
+import { SettingsLayout } from "../features/settings/SettingsLayout";
 import { DocumentTitle, FALLBACK_APP_NAME, useSmartListEnabled } from "./appConfig";
 
 const anonymous = () =>
@@ -41,7 +41,7 @@ describe("customer-facing name comes from the backend (CFG-02)", () => {
 
   it("settings footer shows the configured name", async () => {
     serveName("Mercado do Zé");
-    renderRoutes([{ path: "/definicoes", element: <SettingsPage /> }], "/definicoes");
+    renderRoutes([{ path: "/definicoes", element: <SettingsLayout />, children: [{ path: "perfil", element: null }] }], "/definicoes/perfil");
     expect(await screen.findByText(/Mercado do Zé test/)).toBeInTheDocument();
   });
 

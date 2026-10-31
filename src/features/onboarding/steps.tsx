@@ -1,7 +1,9 @@
-import { Check, Minus, Plus } from "lucide-react";
-import type { ChangeEventHandler, Dispatch, ReactNode } from "react";
+import { Minus, Plus } from "lucide-react";
+import type { Dispatch } from "react";
+import { ChoiceCard, Tick } from "../../components/Choice";
 import { Button, Notice, Spinner } from "../../components/ui";
 import { formatWholeEuros } from "../../lib/format";
+import { GOAL_OPTIONS } from "../profile/goals";
 import { useMerchants } from "../profile/useProfile";
 import {
   GOAL_MAX_EUROS,
@@ -12,7 +14,6 @@ import {
   isAllGoals,
   initialsOf,
   type Action,
-  type Goal,
   type OnboardingState,
 } from "./state";
 
@@ -23,45 +24,6 @@ export const STEP_COPY = [
   { title: "Onde costuma fazer compras?", hint: "Escolha todos os mercados que usa." },
   { title: "Qual é a sua meta pessoal por mês?", hint: "Por mês. Pode mudá-la quando quiser." },
 ] as const;
-
-const GOAL_OPTIONS: { goal: Goal; title: string; hint: string }[] = [
-  { goal: "finances", title: "Organizar as minhas finanças", hint: "Ver quanto gasto e onde" },
-  { goal: "shopping_list", title: "Ajuda com a lista de compras", hint: "Saber o que costumo comprar" },
-  { goal: "savings", title: "Gastar menos nas compras", hint: "Acompanhar o que gasto ao longo do tempo" },
-];
-
-/** The state of a choice is shown by a tick as well as by the frame: colour is never the only sign. */
-function Tick({ checked, className = "" }: { checked: boolean; className?: string }) {
-  return (
-    <span
-      aria-hidden
-      className={`grid size-7 shrink-0 place-items-center rounded-full ${checked ? "bg-brand text-white dark:text-ground" : "border-2 border-line"} ${className}`}
-    >
-      {checked && <Check className="size-4" strokeWidth={3} />}
-    </span>
-  );
-}
-
-function ChoiceCard({
-  checked,
-  onChange,
-  className = "",
-  children,
-}: {
-  checked: boolean;
-  onChange: ChangeEventHandler<HTMLInputElement>;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <label
-      className={`relative flex min-h-16 cursor-pointer rounded-surface border-2 bg-paper p-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand ${checked ? "border-brand" : "border-line"} ${className}`}
-    >
-      <input type="checkbox" checked={checked} onChange={onChange} className="sr-only" />
-      {children}
-    </label>
-  );
-}
 
 export function GoalsStep({ state, dispatch }: { state: OnboardingState; dispatch: Dispatch<Action> }) {
   const rows: { key: string; title: string; hint: string; checked: boolean; action: Action }[] = [

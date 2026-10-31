@@ -277,3 +277,162 @@ test.describe("onboarding (spec 010)", () => {
     expect(stored).toEqual({ local: [], session: [] });
   });
 });
+
+// ---------------------------------------------------------------- Definições (spec 014)
+
+/** Walks the Perfil (reading, editing with a goal error, cancelling), Privacidade (with the confirmation), Conta and Eliminar conta. */
+async function walkSettings(page: Page, check: () => Promise<void>) {
+  await page.goto("/definicoes");
+  await expect(page).toHaveURL(/\/definicoes\/perfil$/);
+  await expect(page.getByRole("heading", { level: 2, name: "Perfil" })).toBeVisible();
+  await check();
+  await page.getByRole("button", { name: "Editar meta pessoal" }).click();
+  await page.getByRole("textbox", { name: /Meta pessoal do mês/ }).fill("30");
+  await expect(page.getByText("A meta tem de estar entre 50 € e 800 €.")).toBeVisible();
+  await check();
+  await page.getByRole("button", { name: "Cancelar" }).click();
+  await expect(page.getByText(/Descartar as/)).toBeVisible();
+  await check();
+  await page.getByRole("button", { name: "Continuar a editar" }).click();
+  await page.getByRole("button", { name: "Cancelar" }).click();
+  await page.getByRole("button", { name: "Descartar", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 2, name: "Perfil" })).toBeVisible();
+  await page.getByRole("tab", { name: "Privacidade" }).click();
+  await expect(page.getByText("9 ficheiros guardados agora")).toBeVisible();
+  await check();
+  await page.getByRole("button", { name: "Apagar agora" }).click();
+  await expect(page.getByRole("heading", { name: "Apagar os ficheiros originais?" })).toBeVisible();
+  await check();
+  await page.getByRole("tab", { name: "Conta" }).click();
+  await expect(page.getByText("Entrou com Google · maria@example.test")).toBeVisible();
+  await check();
+  await page.getByRole("link", { name: "Eliminar conta…" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Eliminar conta" })).toBeVisible();
+  await page.getByRole("checkbox").check({ force: true });
+  await check();
+}
+
+test.describe("definições (spec 014)", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    for (const width of [320, 375, 430, 820]) {
+      test(`F-194: every tab and the delete screen have no axe violations and no horizontal scroll (${scheme}, ${width}px)`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.setViewportSize({ width, height: 800 });
+        await fakeApi(page, { storedFiles: 9 });
+        await walkSettings(page, async () => {
+          await noA11yViolations(page);
+          await noHorizontalScroll(page);
+        });
+      });
+    }
+
+    test(`F-194: the Perfil of an account from before the onboarding has no axe violations (${scheme}, 320px)`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.setViewportSize({ width: 320, height: 800 });
+      await fakeApi(page, { migrated: true });
+      await page.goto("/definicoes/perfil");
+      await expect(page.getByText("Ainda não definiu.").first()).toBeVisible();
+      await noA11yViolations(page);
+      await noHorizontalScroll(page);
+    });
+  }
+
+  test("F-194: every control of the Definições has a touch target of at least 44 px", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await fakeApi(page, { storedFiles: 9, admin: true });
+    await walkSettings(page, async () => {
+      const small = await page
+        .locator("main button:visible, main a:visible, main label:visible, main [role=tab]:visible")
+        .evaluateAll((nodes) =>
+          nodes
+            .map((node) => ({ text: (node.textContent ?? node.getAttribute("aria-label") ?? "").trim().slice(0, 30), box: node.getBoundingClientRect() }))
+            .filter(({ box }) => box.height < 43.5 || box.width < 43.5)
+            .map(({ text, box }) => `${text}: ${Math.round(box.width)}x${Math.round(box.height)}`),
+        );
+      expect(small).toEqual([]);
+    });
+  });
+
+  test("F-189: the tabs move with the arrows and open with Enter; the operator panel is offered to operators", async ({ page }) => {
+    await fakeApi(page, { admin: true });
+    await page.goto("/definicoes/perfil");
+    await page.getByRole("tab", { name: "Perfil" }).focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(page.getByRole("tab", { name: "Privacidade" })).toBeFocused();
+    await page.keyboard.press("End");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/definicoes\/conta$/);
+    await expect(page.getByRole("link", { name: "Abrir painel do operador" })).toBeVisible();
+  });
+
+  test("F-190: editing, saving and reloading keeps the goal; cancelling with changes asks first", async ({ page }) => {
+    const state = await fakeApi(page);
+    await page.goto("/definicoes/perfil");
+    await page.getByRole("button", { name: "Editar meta pessoal" }).click();
+    await page.getByRole("textbox", { name: /Meta pessoal do mês/ }).fill("450");
+    await expect(page.getByText("1 alteração por guardar")).toBeVisible();
+    await page.getByRole("button", { name: "Guardar alterações" }).click();
+    await expect(page.getByText("Perfil guardado.")).toBeVisible();
+    expect(state.profilePatches).toEqual([{ monthly_goal_cents: 45000 }]);
+    await page.reload();
+    await expect(page.getByText("450,00 €")).toBeVisible();
+
+    await page.getByRole("button", { name: "Editar pessoas na casa" }).click();
+    await page.getByRole("button", { name: "Mais uma pessoa" }).click();
+    await page.getByRole("button", { name: "Cancelar" }).click();
+    await expect(page.getByText("Descartar as 1 alteração?")).toBeVisible();
+    await page.getByRole("button", { name: "Descartar", exact: true }).click();
+    await expect(page.getByText("2 pessoas")).toBeVisible();
+    expect(state.profilePatches).toHaveLength(1);
+  });
+
+  test("F-193: an account from before the onboarding defines the goal from ?editar=meta with one save", async ({ page }) => {
+    const state = await fakeApi(page, { migrated: true });
+    await page.goto("/definicoes/perfil?editar=meta");
+    const goal = page.getByRole("textbox", { name: /Meta pessoal do mês/ });
+    await expect(goal).toBeFocused();
+    await goal.fill("350");
+    await page.getByRole("button", { name: "Guardar alterações" }).click();
+    await expect(page.getByText("Perfil guardado.")).toBeVisible();
+    expect(state.profilePatches).toEqual([{ monthly_goal_cents: 35000 }]);
+    await expect(page).toHaveURL(/\/definicoes\/perfil$/);
+  });
+
+  test("F-191: «Apagar agora» repeats the call until nothing remains (1 200 purchases, 3 calls)", async ({ page }) => {
+    const state = await fakeApi(page, { storedFiles: 3600 });
+    await page.goto("/definicoes/privacidade");
+    await expect(page.getByText("3600 ficheiros guardados agora")).toBeVisible();
+    await page.getByRole("button", { name: "Apagar agora" }).click();
+    await page.getByRole("button", { name: "Apagar ficheiros" }).click();
+    await expect(page.getByText("Nenhum ficheiro guardado")).toBeVisible();
+    expect(state.storedFilesDeletes).toBe(3);
+  });
+
+  test("F-191: a failing delete says so and offers «Tentar de novo»", async ({ page }) => {
+    await fakeApi(page, { storedFiles: 9, storedFilesFail: true });
+    await page.goto("/definicoes/privacidade");
+    await page.getByRole("button", { name: "Apagar agora" }).click();
+    await page.getByRole("button", { name: "Apagar ficheiros" }).click();
+    await expect(page.getByText(/Não foi possível apagar tudo/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Tentar de novo" })).toBeVisible();
+  });
+
+  test("F-192, F-23: deleting the account goes through its own screen and ends at the sign-in", async ({ page }) => {
+    await fakeApi(page);
+    await page.goto("/definicoes/conta");
+    await page.getByRole("link", { name: "Eliminar conta…" }).click();
+    await expect(page).toHaveURL(/\/definicoes\/conta\/eliminar$/);
+    const confirm = page.getByRole("button", { name: "Eliminar a minha conta" });
+    await expect(confirm).toBeDisabled();
+    await page.getByRole("checkbox").check({ force: true });
+    await confirm.click();
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  test("F-194: the Definições write nothing to localStorage or sessionStorage", async ({ page }) => {
+    await fakeApi(page, { storedFiles: 9 });
+    await walkSettings(page, async () => undefined);
+    const stored = await page.evaluate(() => ({ local: Object.keys(localStorage), session: Object.keys(sessionStorage) }));
+    expect(stored).toEqual({ local: [], session: [] });
+  });
+});

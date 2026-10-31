@@ -8,7 +8,6 @@ import { API, errorBody, server } from "../test/server";
 import { LoginPage } from "./auth/LoginPage";
 import { DashboardPage } from "./dashboard/DashboardPage";
 import { ReceiptPage } from "./receipts/ReceiptPage";
-import { SettingsPage } from "./settings/SettingsPage";
 import { AddPage } from "./upload/AddPage";
 
 const anonymous = () =>
@@ -418,26 +417,5 @@ describe("dashboard (RF-09, RF-11)", () => {
     );
     renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
     expect(await screen.findByText(/poucas compras neste período/i)).toBeInTheDocument();
-  });
-});
-
-describe("settings (RF-12)", () => {
-  it("F-23: account deletion explains the consequence and needs explicit confirmation", async () => {
-    let deleted = false;
-    server.use(
-      http.delete(`${API}/v1/me`, () => {
-        deleted = true;
-        return HttpResponse.json({ receipts_deleted: 1, objects_deleted: 1 });
-      }),
-    );
-    const user = userEvent.setup();
-    renderRoutes([{ path: "/definicoes", element: <SettingsPage /> }], "/definicoes");
-    await user.click(await screen.findByRole("button", { name: /^eliminar conta$/i }));
-    expect(screen.getByText(/não pode ser desfeito/i)).toBeInTheDocument();
-    const confirm = screen.getByRole("button", { name: /eliminar conta e dados/i });
-    expect(confirm).toBeDisabled();
-    await user.click(screen.getByRole("checkbox"));
-    expect(confirm).toBeEnabled();
-    expect(deleted).toBe(false);
   });
 });
