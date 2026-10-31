@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import type { Schemas } from "../../api/client";
-import { Button, Notice, Spinner, Surface } from "../../components/ui";
+import { Button, Notice, SMALL_CAPS, Spinner, Surface } from "../../components/ui";
 import { formatCents, merchantName } from "../../lib/format";
 import { GOAL_OPTIONS } from "../profile/goals";
 import { useMerchants, useProfile } from "../profile/useProfile";
@@ -83,29 +83,50 @@ export function ProfileTab() {
 }
 
 function ReadBlocks({ saved, names, onEdit }: { saved: Profile; names: Schemas["MerchantOut"][] | undefined; onEdit: (block: Block) => void }) {
-  const merchantNames = saved.merchants.map((id) => names?.find((m) => m.id === id)?.name ?? merchantName(id)).join(", ");
-  const goals = GOAL_OPTIONS.filter(({ goal }) => saved.goals.includes(goal)).map(({ title }) => title).join(", ");
+  const merchantNames = saved.merchants.map((id) => names?.find((m) => m.id === id)?.name ?? merchantName(id));
+  const goals = GOAL_OPTIONS.filter(({ goal }) => saved.goals.includes(goal)).map(({ title }) => title);
   const people = saved.household_size === null ? null : `${saved.household_size} ${saved.household_size === 1 ? "pessoa" : "pessoas"}`;
-  const blocks: { block: Block; title: string; short: string; value: string | null; note?: string }[] = [
-    { block: "people", title: "Pessoas na casa", short: "pessoas na casa", value: people },
-    { block: "merchants", title: "Onde faz compras", short: "mercados", value: merchantNames || null },
-    { block: "goal", title: "Meta pessoal do mês", short: "meta pessoal", value: saved.monthly_goal_cents === null ? null : formatCents(saved.monthly_goal_cents), note: "Um objetivo seu, não um limite." },
-    { block: "goals", title: "Objetivos", short: "objetivos", value: goals || null },
+  const big = (text: string) => <p className="mt-1 text-2xl font-extrabold">{text}</p>;
+  const chips = (items: string[]) => (
+    <ul className="mt-2 flex flex-wrap gap-2">
+      {items.map((item) => (
+        <li key={item} className="rounded-[14px] bg-brand-soft px-3 py-1 text-[13px] font-bold text-brand-deep">
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+  const blocks: { block: Block; title: string; short: string; empty: boolean; value: ReactNode; note?: string }[] = [
+    { block: "people", title: "Pessoas na casa", short: "pessoas na casa", empty: people === null, value: people && big(people) },
+    { block: "merchants", title: "Onde faz compras", short: "mercados", empty: merchantNames.length === 0, value: chips(merchantNames) },
+    {
+      block: "goal",
+      title: "Meta pessoal do mês",
+      short: "meta pessoal",
+      empty: saved.monthly_goal_cents === null,
+      value: saved.monthly_goal_cents !== null && big(formatCents(saved.monthly_goal_cents)),
+      note: "Um objetivo seu, não um limite.",
+    },
+    { block: "goals", title: "Objetivos", short: "objetivos", empty: goals.length === 0, value: chips(goals) },
   ];
   return (
     <>
-      {blocks.map(({ block, title, short, value, note }) => (
-        <Surface key={block}>
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className="font-bold">{title}</h3>
-              {value === null ? <p className="mt-1 text-ink-soft">Ainda não definiu.</p> : <p className="mt-1">{value}</p>}
-              {note && <p className="mt-1 text-sm text-ink-soft">{note}</p>}
-            </div>
-            <Button variant="quiet" data-edit={block} aria-label={`${value === null ? "Definir" : "Editar"} ${short}`} onClick={() => onEdit(block)}>
-              {value === null ? "Definir" : "Editar"}
-            </Button>
+      {blocks.map(({ block, title, short, empty, value, note }) => (
+        <Surface key={block} tone="bordered">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className={SMALL_CAPS}>{title}</h3>
+            <button
+              type="button"
+              data-edit={block}
+              aria-label={`${empty ? "Definir" : "Editar"} ${short}`}
+              onClick={() => onEdit(block)}
+              className="-my-1 inline-flex min-h-11 items-center rounded-full px-2 text-sm font-bold text-brand hover:bg-brand-soft"
+            >
+              {empty ? "Definir" : "Editar"}
+            </button>
           </div>
+          {empty ? <p className="text-ink-soft">Ainda não definiu.</p> : value}
+          {note && <p className="mt-1 text-sm text-ink-soft">{note}</p>}
         </Surface>
       ))}
     </>

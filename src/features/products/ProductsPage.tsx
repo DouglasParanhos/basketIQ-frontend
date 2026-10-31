@@ -62,7 +62,7 @@ export default function ProductsPage() {
           value={q}
           onChange={(e) => update({ q: e.target.value })}
           placeholder="Pesquisar produto"
-          className="min-h-12 w-full rounded-full border border-line bg-paper pl-12 pr-4 text-base"
+          className="min-h-[3.25rem] w-full rounded-full border-[1.5px] border-line bg-paper pl-12 pr-4 text-base"
         />
       </label>
       <div role="radiogroup" aria-label="Ordenar produtos" className="mb-3 flex gap-2 overflow-x-auto">
@@ -94,7 +94,7 @@ export default function ProductsPage() {
                 </span>
               </span>
               <Price product={p} />
-              <ChevronRight aria-hidden className="size-5 shrink-0 text-ink-soft" />
+              <ChevronRight aria-hidden className="size-[18px] shrink-0 text-ink-soft" />
             </Link>
           </li>
         ))}

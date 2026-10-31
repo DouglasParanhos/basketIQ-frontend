@@ -26,7 +26,8 @@ function serveSave(current: Saved, answer?: () => Response) {
 async function openProfile(current: Saved = saved, url = "/definicoes/perfil") {
   serveProfile(current);
   const view = { ...renderRoutes(routes, url), user: userEvent.setup() };
-  await screen.findByRole("heading", { level: 2, name: url.includes("editar") ? "Editar perfil" : "Perfil" });
+  const editing = url.includes("editar");
+  await screen.findByRole("heading", { level: editing ? 1 : 2, name: editing ? "Editar perfil" : "Perfil" });
   return view;
 }
 
@@ -62,13 +63,14 @@ describe("profile tab (spec 014, US2)", () => {
   it("F-190: the merchants are read by name even when the list of merchants does not load", async () => {
     server.use(http.get(`${API}/v1/merchants`, () => HttpResponse.json(errorBody("internal_error", "x"), { status: 500 })));
     await openProfile({ ...saved, merchants: ["LIDL", "PINGO_DOCE"] });
-    expect(await screen.findByText("Lidl, Pingo Doce")).toBeInTheDocument();
+    expect(await screen.findByText("Lidl")).toBeInTheDocument();
+    expect(screen.getByText("Pingo Doce")).toBeInTheDocument();
   });
 
   it("F-190: «Editar» opens «Editar perfil» on the chosen block, with nothing to save yet", async () => {
     const { user } = await openProfile();
     await press(user, "Editar pessoas na casa");
-    expect(await screen.findByRole("heading", { level: 2, name: "Editar perfil" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Editar perfil" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: "Pessoas na casa" })).toHaveFocus();
     expect(counter()).toHaveTextContent("Sem alterações");
     expect(screen.getByRole("button", { name: "Guardar alterações" })).toBeDisabled();
@@ -150,7 +152,7 @@ describe("profile tab (spec 014, US2)", () => {
     await press(user, "Mais uma pessoa");
     await press(user, "Guardar alterações");
     expect(await screen.findByText("Não foi possível guardar. Tente de novo.")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2, name: "Editar perfil" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Editar perfil" })).toBeInTheDocument();
     expect(counter()).toHaveTextContent("1 alteração por guardar");
     fail = false;
     await press(user, "Guardar alterações");
@@ -263,7 +265,8 @@ describe("profile tab (spec 014, US2)", () => {
     const old = { ...saved, merchants: ["LIDL", "COVIRAN"] };
     const bodies = serveSave(old);
     const { user } = await openProfile(old);
-    expect(screen.getByText("Lidl, COVIRAN")).toBeInTheDocument();
+    expect(screen.getByText("Lidl")).toBeInTheDocument();
+    expect(screen.getByText("COVIRAN")).toBeInTheDocument();
     await press(user, "Editar pessoas na casa");
     await press(user, "Mais uma pessoa");
     await press(user, "Guardar alterações");
@@ -291,7 +294,7 @@ describe("profile tab (spec 014, US2)", () => {
 });
 
 async function user_clearAndSave(user: ReturnType<typeof userEvent.setup>) {
-  await screen.findByRole("heading", { level: 2, name: "Editar perfil" });
+  await screen.findByRole("heading", { level: 1, name: "Editar perfil" });
   await user.clear(goalField());
   await user.type(goalField(), "310");
   await user.click(screen.getByRole("button", { name: "Guardar alterações" }));

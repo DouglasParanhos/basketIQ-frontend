@@ -44,11 +44,11 @@ export function groupByMonth(items: Receipt[]): MonthGroup[] {
   return groups;
 }
 
-/** «Outubro 2026 · 7 confirmados · 248,00 €» from the endpoint of totals; just the month where that would mislead. */
-export function headerText(group: MonthGroup, totals: MonthTotal[] | undefined, filter: Filter): string {
+/** «7 confirmados · 248,00 €» from the endpoint of totals; nothing where that would mislead. */
+export function headerSummary(group: MonthGroup, totals: MonthTotal[] | undefined, filter: Filter): string | null {
   const total = filter === "acao" ? undefined : totals?.find((t) => t.month === group.key);
-  if (!total) return group.title;
-  return `${group.title} · ${total.confirmed_count} ${total.confirmed_count === 1 ? "confirmado" : "confirmados"} · ${formatCents(total.total_cents)}`;
+  if (!total) return null;
+  return `${total.confirmed_count} ${total.confirmed_count === 1 ? "confirmado" : "confirmados"} · ${formatCents(total.total_cents)}`;
 }
 
 /** The year the list opens on: the one of the purchase sent most recently (the first, the API orders by sending). */

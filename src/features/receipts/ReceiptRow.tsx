@@ -37,15 +37,15 @@ export function ReceiptRow({ receipt: r }: { receipt: Schemas["ReceiptSummaryOut
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="truncate font-semibold">{name}</span>
           {r.store_label && <span className="truncate text-xs text-ink-soft">{r.store_label}</span>}
-          <span className="text-xs text-ink-soft">
-            <span className={state === "attention" ? "font-bold text-ink" : undefined}>{day}</span>
+          <span className={`text-xs ${state === "attention" ? "font-semibold text-warn-ink" : "text-ink-soft"}`}>
+            <span className={state === "attention" ? "font-bold" : undefined}>{day}</span>
             {state === "progress" && " · a ler o talão…"}
             {state === "error" && <> · {STATUS[r.status].label}</>}
             {state !== "progress" && state !== "error" && items && ` · ${items}`}
             {state === "attention" && (
               <>
                 {" · "}
-                <span className="font-semibold text-ink">
+                <span>
                   <span className="sr-only">Requer ação: </span>rever valores
                 </span>
               </>

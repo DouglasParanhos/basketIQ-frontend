@@ -1,7 +1,8 @@
-import { ArrowLeft, Camera, Plus } from "lucide-react";
+import { Camera, ChevronLeft, Plus } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Link } from "react-router";
-import { Button, Notice } from "../../components/ui";
+import { FullScreen } from "../../components/FullScreen";
+import { Button, Notice, ROUND_NEUTRAL } from "../../components/ui";
 import { formatCents, formatDate, merchantName } from "../../lib/format";
 import { MAX_PHOTOS } from "../../lib/upload";
 import type { Edit } from "./edit";
@@ -15,6 +16,8 @@ import type { useUpload } from "./useUpload";
 export type FocusTarget = { to: "title" } | { to: "part"; id: string };
 
 type Upload = ReturnType<typeof useUpload>;
+
+const FORM_ID = "parts-form";
 
 /** «Confirme as partes»: every part with its preview, adding another, the store, and the send. */
 export function PartsScreen(props: {
@@ -60,16 +63,27 @@ export function PartsScreen(props: {
   }, [props.confirmingDiscard]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <header className="flex items-center gap-2 pt-4">
-        <Button type="button" variant="secondary" aria-label="Voltar" disabled={busy} onClick={props.onLeave} className="size-12 shrink-0 px-0">
-          <ArrowLeft aria-hidden className="size-5" />
-        </Button>
-        <h1 ref={title} tabIndex={-1} className="text-xl font-extrabold leading-tight">
-          Confirme as partes
-        </h1>
-      </header>
-
+    <FullScreen
+      title="Confirme as partes"
+      titleRef={title}
+      start={
+        <button type="button" className={ROUND_NEUTRAL} aria-label="Voltar" disabled={busy} onClick={props.onLeave}>
+          <ChevronLeft aria-hidden className="size-6" />
+        </button>
+      }
+      footer={
+        editing < 0 && (
+          <>
+            <Button type="submit" form={FORM_ID} size="lg" className="w-full" busy={busy} disabled={upload.phase === "duplicate"}>
+              {upload.phase === "failed" ? "Tentar novamente" : busy ? "A enviar…" : parts.length > 1 ? `Enviar talão · ${parts.length} fotos` : "Enviar talão"}
+            </Button>
+            <Button type="button" variant="ghost" className="w-full" disabled={busy} onClick={props.onLeave}>
+              Cancelar
+            </Button>
+          </>
+        )
+      }
+    >
       {props.confirmingDiscard && (
         <Notice
           tone="warning"
@@ -91,7 +105,8 @@ export function PartsScreen(props: {
         <PartEditor part={parts[editing]!} index={editing} onChange={props.onEditChange} onDone={() => props.onEdit(null)} />
       ) : (
         <form
-          className="flex flex-col gap-4"
+          id={FORM_ID}
+          className="flex flex-col gap-3"
           onSubmit={(e) => {
             e.preventDefault();
             props.onSubmit();
@@ -121,7 +136,14 @@ export function PartsScreen(props: {
                   {nextPartText(parts)}
                 </p>
               )}
-              <Button type="button" variant="secondary" aria-describedby={atLimit ? undefined : "next-part"} disabled={busy || atLimit} onClick={props.onAddCamera}>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-[3.25rem] border-dashed"
+                aria-describedby={atLimit ? undefined : "next-part"}
+                disabled={busy || atLimit}
+                onClick={props.onAddCamera}
+              >
                 <Plus aria-hidden className="size-5" /> Adicionar outra parte
               </Button>
               <Button type="button" variant="quiet" disabled={busy || atLimit} onClick={props.onAddGallery}>
@@ -181,16 +203,8 @@ export function PartsScreen(props: {
             </Notice>
           )}
 
-          <div className="flex flex-wrap gap-2">
-            <Button type="submit" busy={busy} disabled={upload.phase === "duplicate"}>
-              {upload.phase === "failed" ? "Tentar novamente" : busy ? "A enviar…" : parts.length > 1 ? `Enviar talão · ${parts.length} fotos` : "Enviar talão"}
-            </Button>
-            <Button type="button" variant="quiet" disabled={busy} onClick={props.onLeave}>
-              Cancelar
-            </Button>
-          </div>
         </form>
       )}
-    </div>
+    </FullScreen>
   );
 }

@@ -13,20 +13,22 @@ export const SOURCES = [
 /** The three big buttons and the long-receipt warning. */
 export function SourceButtons({ onPick }: { onPick: (source: Source) => void }) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2.5">
       {SOURCES.map(({ id, label, hint, icon: Icon }, i) => (
         <button
           key={id}
           type="button"
           onClick={() => onPick(id)}
-          className={`flex min-h-20 items-center gap-4 rounded-surface p-4 text-left ${
+          className={`flex min-h-[5.25rem] items-center gap-3.5 rounded-[22px] px-4 py-3.5 text-left ${
             i === 0 ? "bg-brand text-white dark:text-ground" : "bg-paper text-ink ring-1 ring-inset ring-line"
           }`}
         >
-          <Icon aria-hidden className="size-7 shrink-0" />
+          <span className={`grid size-12 shrink-0 place-items-center rounded-full ${i === 0 ? "bg-white/15 dark:bg-ground/15" : "bg-brand-soft text-brand"}`}>
+            <Icon aria-hidden className="size-6" />
+          </span>
           <span className="flex flex-col">
-            <span className="text-lg font-bold">{label}</span>
-            <span className={i === 0 ? "text-white/80 dark:text-ground/80" : "text-sm text-ink-soft"}>{hint}</span>
+            <span className="text-[17px] font-bold">{label}</span>
+            <span className={`text-[13px] ${i === 0 ? "text-white/80 dark:text-ground/80" : "text-ink-soft"}`}>{hint}</span>
           </span>
         </button>
       ))}

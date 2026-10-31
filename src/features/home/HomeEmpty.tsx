@@ -1,10 +1,9 @@
 import type { Schemas } from "../../api/client";
-import { LinkButton } from "../../components/ui";
+import { LinkButton, SMALL_CAPS } from "../../components/ui";
 import { formatCents } from "../../lib/format";
 import { DEFINE_GOAL_PATH } from "./GoalRing";
 
 const DASHED = "rounded-surface border-[1.5px] border-dashed border-line";
-const SMALL_CAPS = "text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-soft";
 
 /** An account with no confirmed purchase: the final layout as dashed cards, each saying what it unlocks. The ghost figures are not values. */
 export function HomeEmpty({ overview }: { overview: Schemas["OverviewOut"] }) {
@@ -12,9 +11,15 @@ export function HomeEmpty({ overview }: { overview: Schemas["OverviewOut"] }) {
   return (
     <>
       <section aria-label="Meta pessoal do mês" className={`${DASHED} flex items-center gap-4 p-4.5`}>
-        <svg aria-hidden width="148" height="148" viewBox="0 0 148 148" className="size-37 shrink-0 -rotate-90">
-          <circle cx="74" cy="74" r="62" fill="none" strokeWidth="16" strokeDasharray="3 12" strokeLinecap="round" className="stroke-line" />
-        </svg>
+        <div aria-hidden className="relative size-37 shrink-0">
+          <svg width="148" height="148" viewBox="0 0 148 148" className="size-full -rotate-90">
+            <circle cx="74" cy="74" r="62" fill="none" strokeWidth="16" strokeDasharray="3 12" strokeLinecap="round" className="stroke-line" />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-3xl font-extrabold leading-none text-ink-soft">—</span>
+            <span className="text-xs text-ink-soft">da meta</span>
+          </div>
+        </div>
         <div className="flex min-w-0 flex-col gap-1.5">
           <p className={SMALL_CAPS}>Meta pessoal do mês</p>
           {goal !== null ? (
@@ -35,6 +40,9 @@ export function HomeEmpty({ overview }: { overview: Schemas["OverviewOut"] }) {
           <p className={SMALL_CAPS}>Média mensal</p>
           <p aria-hidden className="text-3xl font-extrabold leading-tight text-ink-soft">— €</p>
           <p className="text-xs leading-snug text-ink-soft">Aparece com {overview.average_min_months} meses de histórico</p>
+          <p className="text-xs font-semibold text-ink-soft">
+            {overview.average_months}/{overview.average_min_months} meses
+          </p>
         </section>
         <section aria-label="Compras no mês" className={`${DASHED} flex flex-col gap-1.5 p-4`}>
           <p className={SMALL_CAPS}>Compras no mês</p>

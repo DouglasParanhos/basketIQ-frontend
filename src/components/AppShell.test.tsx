@@ -8,8 +8,8 @@ import { API, failConfig, server, serveConfig } from "../test/server";
 import { AppShell } from "./AppShell";
 
 const shell = [{ path: "*", element: <AppShell /> }];
-const FOUR = ["Início", "Talões", "Adicionar", "Definições"];
-const FIVE = ["Início", "Talões", "Adicionar", "Lista", "Definições"];
+const FOUR = ["Início", "Talões", "Adicionar talão", "Definições"];
+const FIVE = ["Início", "Talões", "Adicionar talão", "Lista", "Definições"];
 
 const labels = () => within(nav()).getAllByRole("link").map((link) => link.textContent);
 
@@ -62,7 +62,7 @@ describe("bottom navigation (spec 009)", () => {
     ["/compras/r1", "Talões"],
     ["/produtos", "Talões"],
     ["/produtos/p1", "Talões"],
-    ["/adicionar", "Adicionar"],
+    ["/adicionar", "Adicionar talão"],
     ["/definicoes", "Definições"],
   ])("F-90: %s marks only %s as the current destination", (path, label) => {
     renderRoutes(shell, path);

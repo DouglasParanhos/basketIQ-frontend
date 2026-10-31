@@ -23,7 +23,8 @@ function serveSave() {
 async function open(url: string, profile = migratedProfile) {
   serveProfile(profile);
   const view = { ...renderRoutes(routes, url), user: userEvent.setup() };
-  await screen.findByRole("heading", { level: 2, name: url.includes("editar") ? "Editar perfil" : "Perfil" });
+  const editing = url.includes("editar");
+  await screen.findByRole("heading", { level: editing ? 1 : 2, name: editing ? "Editar perfil" : "Perfil" });
   return view;
 }
 const press = (user: ReturnType<typeof userEvent.setup>, name: string | RegExp) => user.click(screen.getByRole("button", { name }));

@@ -12,7 +12,7 @@ export function PeriodPicker({ value, onChange }: { value: Period; onChange: (p:
   const today = lisbonToday();
   return (
     <div className="flex flex-col gap-3">
-      <div role="radiogroup" aria-label="Período" className="grid grid-cols-4 gap-1 rounded-full bg-paper p-1 ring-1 ring-inset ring-line">
+      <div role="radiogroup" aria-label="Período" className="grid grid-cols-4 gap-1.5">
         {KINDS.map(({ kind, label }) => (
           <button
             key={kind}
@@ -25,7 +25,7 @@ export function PeriodPicker({ value, onChange }: { value: Period; onChange: (p:
                   : periodFor(kind, { y: Number(value.from.slice(0, 4)) || today.y, m0: Number(value.from.slice(5, 7)) - 1 || today.m0 }),
               )
             }
-            className="min-h-11 rounded-full text-sm font-semibold text-ink-soft aria-checked:bg-brand aria-checked:text-white dark:aria-checked:text-ground"
+            className="min-h-11 rounded-full text-sm font-bold text-ink ring-1 ring-inset ring-line aria-checked:bg-brand aria-checked:text-white aria-checked:ring-brand dark:aria-checked:text-ground"
           >
             {label}
           </button>
@@ -59,7 +59,7 @@ export function PeriodPicker({ value, onChange }: { value: Period; onChange: (p:
           <button onClick={() => onChange(shiftPeriod(value, -1))} aria-label="Período anterior" className="grid size-11 place-items-center rounded-full hover:bg-brand-soft">
             <ChevronLeft aria-hidden className="size-5" />
           </button>
-          <p className="text-lg font-bold first-letter:uppercase" aria-live="polite">
+          <p className="text-xl font-extrabold first-letter:uppercase" aria-live="polite">
             {describePeriod(value)}
           </p>
           <button onClick={() => onChange(shiftPeriod(value, 1))} aria-label="Período seguinte" className="grid size-11 place-items-center rounded-full hover:bg-brand-soft">

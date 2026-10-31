@@ -79,8 +79,8 @@ test.describe("small screens (plano de testes §11)", () => {
   }
 
   for (const [smartList, expected] of [
-    [false, ["Início", "Talões", "Adicionar", "Definições"]],
-    [true, ["Início", "Talões", "Adicionar", "Lista", "Definições"]],
+    [false, ["Início", "Talões", "Adicionar talão", "Definições"]],
+    [true, ["Início", "Talões", "Adicionar talão", "Lista", "Definições"]],
   ] as const) {
     test(`F-91: bottom navigation reachable with one hand: ${expected.length} items, ≥ 44px targets, fits at 320px`, async ({ page }) => {
       await page.setViewportSize({ width: 320, height: 800 });
@@ -307,7 +307,7 @@ async function walkSettings(page: Page, check: () => Promise<void>) {
   await expect(page.getByRole("heading", { name: "Apagar os ficheiros originais?" })).toBeVisible();
   await check();
   await page.getByRole("tab", { name: "Conta" }).click();
-  await expect(page.getByText("Entrou com Google · maria@example.test")).toBeVisible();
+  await expect(page.getByText("Google · maria@example.test")).toBeVisible();
   await check();
   await page.getByRole("link", { name: "Eliminar conta…" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Eliminar conta" })).toBeVisible();

@@ -1,5 +1,6 @@
 import type { Schemas } from "../../api/client";
-import { LinkButton } from "../../components/ui";
+import { Link } from "react-router";
+import { SMALL_CAPS } from "../../components/ui";
 import { formatCents } from "../../lib/format";
 import { ringView, type RingTone } from "./ringView";
 
@@ -40,19 +41,26 @@ export function GoalRing({ overview, isCurrentMonth }: { overview: Schemas["Over
           </div>
         </div>
         <div className="flex min-w-0 flex-col gap-1">
-          <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-soft">Gasto em mercado no mês</p>
+          <p className={SMALL_CAPS}>Gasto em mercado no mês</p>
           <p className="amount text-3xl font-extrabold leading-tight min-[420px]:text-4xl">{formatCents(overview.spent_cents)}</p>
-          {overview.goal_cents !== null && (
+          {overview.goal_cents !== null ? (
             <p className="text-sm text-ink-soft">
               A sua meta pessoal: {formatCents(overview.goal_cents)}{" "}
               {view.goalNote && <span className="font-semibold text-ink">{view.goalNote}</span>}
             </p>
+          ) : (
+            <p className="text-sm text-ink-soft">{view.text}</p>
           )}
         </div>
       </div>
       <div className="flex flex-col items-start gap-2 border-t border-line pt-3">
-        <p className={`rounded-control px-3 py-1.5 text-sm font-bold ${CHIP[view.tone]}`}>{view.text}</p>
-        {view.tone === "none" && <LinkButton to={DEFINE_GOAL_PATH}>Definir a minha meta pessoal</LinkButton>}
+        {view.tone === "none" ? (
+          <Link to={DEFINE_GOAL_PATH} className={`inline-flex min-h-11 items-center rounded-full px-3 text-[13px] font-bold ${CHIP.none}`}>
+            Definir a minha meta pessoal
+          </Link>
+        ) : (
+          <p className={`rounded-full px-3 py-1.5 text-[13px] font-bold ${CHIP[view.tone]}`}>{view.text}</p>
+        )}
         <p className="text-xs leading-snug text-ink-soft">A meta pessoal é um objetivo seu, não um limite. Pode mudá-la quando quiser.</p>
       </div>
     </section>

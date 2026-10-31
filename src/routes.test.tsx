@@ -66,7 +66,7 @@ describe("route table (spec 009)", () => {
   it("F-98: /adicionar is unchanged and /definicoes goes to the Perfil", async () => {
     const { router } = renderApp("/adicionar");
     expect(await screen.findByRole("heading", { level: 1, name: "Adicionar talão" })).toBeInTheDocument();
-    expect(currentDestinations()).toEqual(["Adicionar"]);
+    expect(currentDestinations()).toEqual(["Adicionar talão"]);
     await router.navigate("/definicoes");
     expect(await screen.findByRole("heading", { level: 1, name: "Definições" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/definicoes/perfil");
@@ -76,7 +76,7 @@ describe("route table (spec 009)", () => {
   it("F-98: Back returns to the previous destination", async () => {
     const { router, user } = renderApp("/");
     await screen.findByRole("heading", { level: 1, name: "Início" });
-    await user.click(within(nav()).getByRole("link", { name: "Adicionar" }));
+    await user.click(within(nav()).getByRole("link", { name: "Adicionar talão" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Adicionar talão" })).toBeInTheDocument();
     await router.navigate(-1);
     expect(await screen.findByRole("heading", { level: 1, name: "Início" })).toBeInTheDocument();

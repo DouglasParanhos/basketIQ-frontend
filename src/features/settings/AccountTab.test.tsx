@@ -17,7 +17,7 @@ async function openAccount(url = "/definicoes/conta") {
 describe("account tab (spec 014, US4)", () => {
   it("F-192: shows how the person signed in, when the account was created, and «Terminar sessão»", async () => {
     await openAccount();
-    expect(await screen.findByText("Entrou com Google · maria@example.test")).toBeInTheDocument();
+    expect(await screen.findByText("Google · maria@example.test")).toBeInTheDocument();
     expect(screen.getByText(`Conta criada a ${formatDate(me.created_at)}.`)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Terminar sessão" })).toBeInTheDocument();
   });
@@ -32,7 +32,7 @@ describe("account tab (spec 014, US4)", () => {
 
   it("F-192: the operator panel is offered to operators only", async () => {
     const first = await openAccount();
-    await screen.findByText("Entrou com Google · maria@example.test");
+    await screen.findByText("Google · maria@example.test");
     expect(screen.queryByRole("link", { name: "Abrir painel do operador" })).not.toBeInTheDocument();
     first.unmount();
     server.use(http.get(`${API}/v1/me`, () => HttpResponse.json(adminMe)));

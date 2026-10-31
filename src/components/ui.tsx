@@ -4,50 +4,64 @@ import { useId } from "react";
 import { Link, type LinkProps } from "react-router";
 import { STATUS, type ReceiptStatus } from "../lib/status";
 
-type Variant = "primary" | "secondary" | "quiet" | "danger" | "dangerQuiet";
+type Variant = "primary" | "secondary" | "quiet" | "ghost" | "outline" | "danger" | "dangerQuiet" | "dangerOutline";
 
 const VARIANTS: Record<Variant, string> = {
   primary: "bg-brand text-white hover:bg-brand-deep dark:text-ground",
   secondary: "bg-paper text-brand ring-1 ring-inset ring-line hover:ring-brand",
   quiet: "text-brand hover:bg-brand-soft",
+  ghost: "text-ink hover:bg-brand-soft",
+  outline: "border-[1.5px] border-ink text-ink hover:bg-brand-soft",
   danger: "bg-alert text-white hover:opacity-90 dark:text-ground",
   dangerQuiet: "text-alert hover:bg-alert-soft",
+  dangerOutline: "border-[1.5px] border-alert text-alert hover:bg-alert-soft",
+};
+
+// "lg" is the 56 px call to action the design puts at the foot of a screen.
+type Size = "sm" | "md" | "lg";
+
+const SIZES: Record<Size, string> = {
+  sm: "min-h-11 text-[13px] font-bold",
+  md: "min-h-12 text-[0.95rem] font-semibold",
+  lg: "min-h-14 text-base font-bold",
 };
 
 const BASE =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-control px-4 text-[0.95rem] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex items-center justify-center gap-2 rounded-full px-4 transition-colors disabled:cursor-not-allowed disabled:opacity-50";
 
 export function Button({
   variant = "primary",
+  size = "md",
   busy = false,
   className = "",
   children,
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; busy?: boolean }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size; busy?: boolean }) {
   return (
-    <button className={`${BASE} ${VARIANTS[variant]} ${className}`} disabled={busy || props.disabled} aria-busy={busy} {...props}>
+    <button className={`${BASE} ${SIZES[size]} ${VARIANTS[variant]} ${className}`} disabled={busy || props.disabled} aria-busy={busy} {...props}>
       {busy && <Loader2 aria-hidden className="size-4 animate-spin" />}
       {children}
     </button>
   );
 }
 
-export function LinkButton({ variant = "primary", className = "", ...props }: LinkProps & { variant?: Variant }) {
-  return <Link className={`${BASE} ${VARIANTS[variant]} ${className}`} {...props} />;
+export function LinkButton({ variant = "primary", size = "md", className = "", ...props }: LinkProps & { variant?: Variant; size?: Size }) {
+  return <Link className={`${BASE} ${SIZES[size]} ${VARIANTS[variant]} ${className}`} {...props} />;
 }
 
 export function Field({
   label,
+  hideLabel = false,
   error,
   hint,
   className = "",
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string | null; hint?: string }) {
+}: InputHTMLAttributes<HTMLInputElement> & { label: string; hideLabel?: boolean; error?: string | null; hint?: string }) {
   const id = useId();
   const describedBy = [error ? `${id}-err` : null, hint ? `${id}-hint` : null].filter(Boolean).join(" ") || undefined;
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
-      <label htmlFor={id} className="text-sm font-medium text-ink-soft">
+      <label htmlFor={id} className={hideLabel ? "sr-only" : "text-sm font-medium text-ink-soft"}>
         {label}
       </label>
       <input
@@ -93,7 +107,7 @@ export function Select({
 const NOTICE = {
   info: { icon: Info, cls: "bg-brand-soft text-ink" },
   success: { icon: CheckCircle2, cls: "bg-ok-soft text-ink" },
-  warning: { icon: AlertTriangle, cls: "bg-marker/40 text-ink" },
+  warning: { icon: AlertTriangle, cls: "bg-marker/40 text-marker-ink" },
   error: { icon: OctagonAlert, cls: "bg-alert-soft text-ink" },
 } as const;
 
@@ -155,6 +169,27 @@ export function PageHeader({ title, children }: { title: string; children?: Reac
   );
 }
 
-export function Surface({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <section className={`rounded-surface bg-paper p-4 ${className}`}>{children}</section>;
+const SURFACE_TONE = { paper: "bg-paper", bordered: "bg-paper ring-1 ring-inset ring-line", alert: "bg-alert-soft" } as const;
+
+export function Surface({
+  children,
+  className = "",
+  tone = "paper",
+  dense = false,
+}: {
+  children: ReactNode;
+  className?: string;
+  tone?: keyof typeof SURFACE_TONE;
+  dense?: boolean;
+}) {
+  return <section className={`rounded-surface ${dense ? "px-4 py-2" : "p-4"} ${SURFACE_TONE[tone]} ${className}`}>{children}</section>;
 }
+
+/** The small label in capitals above a value. */
+export const SMALL_CAPS = "text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-soft";
+
+/** The 44 px round button (back, crop, delete, steppers): the shape, with the colours added by each use. */
+export const ROUND_BUTTON =
+  "inline-flex size-11 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-50";
+export const ROUND_NEUTRAL = `${ROUND_BUTTON} border-line bg-paper text-ink hover:border-ink`;
+export const ROUND_DANGER = `${ROUND_BUTTON} border-line bg-paper text-alert hover:border-alert`;

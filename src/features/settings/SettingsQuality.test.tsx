@@ -30,7 +30,7 @@ describe("settings quality (spec 014, US6)", () => {
   it("F-194: no banned word while editing the profile", async () => {
     const { user } = await open("/definicoes/perfil", "Perfil", 2);
     await user.click(screen.getByRole("button", { name: "Editar objetivos" }));
-    await screen.findByRole("heading", { level: 2, name: "Editar perfil" });
+    await screen.findByRole("heading", { level: 1, name: "Editar perfil" });
     await screen.findByRole("checkbox", { name: "Lidl" });
     expect(document.body.textContent).not.toMatch(BANNED);
   });

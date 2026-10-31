@@ -42,7 +42,7 @@ function TooltipBox({ title, children }: { title: string; children: ReactNode })
 export function SpendBars({ points, title }: { points: Point[]; title: string }) {
   const color = useToken("--color-chart", "#0b8a52");
   return (
-    <figure aria-label={title} className="h-56 w-full">
+    <figure aria-label={title} className="h-40 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={points} margin={{ top: 8, right: 4, bottom: 0, left: 0 }} barCategoryGap={2}>
           <CartesianGrid vertical={false} stroke="var(--color-line)" strokeDasharray="2 4" />
@@ -67,7 +67,7 @@ export function SpendBars({ points, title }: { points: Point[]; title: string })
 export function PriceLine({ points, title, basis }: { points: (Point & { merchant: string })[]; title: string; basis: string }) {
   const color = useToken("--color-chart", "#0b8a52");
   return (
-    <figure aria-label={title} className="h-56 w-full">
+    <figure aria-label={title} className="h-40 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={points} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
           <CartesianGrid vertical={false} stroke="var(--color-line)" strokeDasharray="2 4" />

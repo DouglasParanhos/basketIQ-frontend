@@ -23,18 +23,18 @@ export function PrivacyTab() {
   return (
     <>
       <Surface>
-        <h2 className="font-bold">Política de privacidade</h2>
-        <p className="mt-1 text-sm text-ink-soft">
+        <h2 className="text-[15px] font-bold">Política de privacidade</h2>
+        <p className="mt-1 text-[13px] text-ink-soft">
           Aceite a {formatDate(me.privacy_accepted_at)} · versão {me.privacy_version}
         </p>
-        <Link to="/privacidade" className="mt-3 inline-flex min-h-11 items-center font-semibold text-brand underline">
+        <Link to="/privacidade" className="mt-2 inline-flex min-h-11 items-center font-bold text-brand">
           Ler a política
         </Link>
       </Surface>
 
       <Surface>
-        <h2 className="font-bold">Originais dos talões</h2>
-        <p className="mt-1 text-sm text-ink-soft">
+        <h2 className="text-[15px] font-bold">Originais dos talões</h2>
+        <p className="mt-1 text-[13px] text-ink-soft">
           Os ficheiros (fotos e PDF) são apagados automaticamente 30 dias depois de confirmar a compra. Os valores ficam nas suas contas.
         </p>
         <div className="mt-3">
@@ -51,7 +51,14 @@ export function PrivacyTab() {
               }
             />
           ) : (
-            <p className="font-semibold">{count === 0 ? "Nenhum ficheiro guardado" : `${count} ${count === 1 ? "ficheiro guardado" : "ficheiros guardados"} agora`}</p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[13px] font-semibold">{count === 0 ? "Nenhum ficheiro guardado" : `${count} ${count === 1 ? "ficheiro guardado" : "ficheiros guardados"} agora`}</p>
+              {!confirming && (
+                <Button variant="outline" size="sm" className="shrink-0" disabled={!count || remove.isPending} onClick={() => setConfirming(true)}>
+                  Apagar agora
+                </Button>
+              )}
+            </div>
           )}
         </div>
         {remove.isError && (
@@ -88,16 +95,12 @@ export function PrivacyTab() {
               </Button>
             </div>
           </div>
-        ) : (
-          <Button variant="dangerQuiet" className="mt-3" disabled={!count || remove.isPending} onClick={() => setConfirming(true)}>
-            Apagar agora
-          </Button>
-        )}
+        ) : null}
       </Surface>
 
       <Surface>
-        <h2 className="font-bold">Os seus direitos</h2>
-        <p className="mt-1 text-sm text-ink-soft">
+        <h2 className="text-[15px] font-bold">Os seus direitos</h2>
+        <p className="mt-1 text-[13px] text-ink-soft">
           Pode ver e apagar compras uma a uma, apagar só o ficheiro original ou eliminar a conta inteira quando quiser.
         </p>
       </Surface>

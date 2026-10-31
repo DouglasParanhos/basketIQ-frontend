@@ -5,7 +5,7 @@ import { Button, LinkButton, Notice, Spinner } from "../../components/ui";
 import { IN_PROGRESS, type ReceiptStatus } from "../../lib/status";
 import { useMonths } from "../taloes/useMonths";
 import { useYear } from "../taloes/useYear";
-import { groupByMonth, headerText, yearOf, type Filter } from "./months";
+import { groupByMonth, headerSummary, yearOf, type Filter } from "./months";
 import { ReceiptRow } from "./ReceiptRow";
 
 const ACTION_STATUSES: ReceiptStatus[] = ["REVIEW_REQUIRED", "COMPLETED", "RECEIVED", "INVALID_FORMAT", "UNREADABLE", "UNSUPPORTED_MERCHANT", "TEMPORARY_FAILURE", "PERMANENT_FAILURE"];
@@ -70,6 +70,7 @@ export function ReceiptsPage() {
             onClick={() => choose(f.id)}
             className="min-h-11 shrink-0 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line aria-checked:bg-brand aria-checked:text-white aria-checked:ring-brand dark:aria-checked:text-ground"
           >
+            {f.id === "acao" && asked > 0 && <span aria-hidden className="mr-2 inline-block size-2 rounded-full bg-marker" />}
             {f.id === "acao" && asked > 0 ? `${f.label} · ${asked >= 100 ? "99+" : asked}` : f.label}
           </button>
         ))}
@@ -93,18 +94,27 @@ export function ReceiptsPage() {
         </Notice>
       )}
 
-      {groups.map((g) => (
-        <section key={g.key} aria-labelledby={`mes-${g.key}`} className="mb-2">
-          <h3 id={`mes-${g.key}`} className="pb-1 pt-3 text-sm font-bold">
-            {headerText(g, months.data, filter.id)}
-          </h3>
-          <ul className="flex flex-col">
-            {g.rows.map((r) => (
-              <ReceiptRow key={r.id} receipt={r} />
-            ))}
-          </ul>
-        </section>
-      ))}
+      {groups.map((g) => {
+        const summary = headerSummary(g, months.data, filter.id);
+        return (
+          <section key={g.key} aria-labelledby={`mes-${g.key}`} className="mb-2">
+            <h3 id={`mes-${g.key}`} className="flex items-baseline justify-between gap-3 pb-1 pt-3">
+              <span className="text-lg font-extrabold">{g.title}</span>
+              {summary && (
+                <>
+                  <span className="sr-only"> · </span>
+                  <span className="text-right text-xs font-normal text-ink-soft">{summary}</span>
+                </>
+              )}
+            </h3>
+            <ul className="flex flex-col">
+              {g.rows.map((r) => (
+                <ReceiptRow key={r.id} receipt={r} />
+              ))}
+            </ul>
+          </section>
+        );
+      })}
       {query.hasNextPage && (
         <Button variant="secondary" className="mt-4 w-full" busy={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>
           Carregar mais

@@ -1,4 +1,5 @@
 import type { Schemas } from "../../api/client";
+import { SMALL_CAPS } from "../../components/ui";
 import { formatCents } from "../../lib/format";
 
 type Overview = Schemas["OverviewOut"];
@@ -28,8 +29,8 @@ export function averageView(o: Overview): AverageView {
 }
 
 const SURFACE: Record<AverageTone, string> = {
-  good: "bg-ok-soft",
-  high: "bg-alert-soft",
+  good: "bg-ok-soft ring-1 ring-inset ring-ok/20",
+  high: "bg-alert-soft ring-1 ring-inset ring-alert/20",
   neutral: "bg-paper ring-1 ring-inset ring-line",
   none: "bg-paper ring-1 ring-inset ring-line",
 };
@@ -39,7 +40,7 @@ export function AverageCard({ overview }: { overview: Overview }) {
   const view = averageView(overview);
   return (
     <section aria-label="Média mensal" className={`flex flex-col gap-1.5 rounded-surface p-4 ${SURFACE[view.tone]}`}>
-      <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-soft">Média mensal</p>
+      <p className={SMALL_CAPS}>Média mensal</p>
       <p className={`amount text-3xl font-extrabold leading-tight ${view.tone === "none" ? "text-ink-soft" : ""}`}>{view.value}</p>
       <p className="text-xs leading-snug">{view.text}</p>
       {view.progress && <p className="text-xs font-semibold text-ink-soft">{view.progress}</p>}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { monthTotals, receiptItem } from "../../test/fixtures";
-import { defaultYear, groupByMonth, headerText, monthKey, yearOf, yearsToShow } from "./months";
+import { defaultYear, groupByMonth, headerSummary, monthKey, yearOf, yearsToShow } from "./months";
 
 const plain = (s: string) => s.replace(/\u00a0/g, " ");
 const sent = (created_at: string, purchase_at: string | null = null) => receiptItem({ id: created_at, created_at, purchase_at });
@@ -32,16 +32,16 @@ describe("months of the list of purchases (spec 012)", () => {
 
   it("F-195: the header has the confirmed count and total of the endpoint, with the singular", () => {
     const [october, september] = groupByMonth([sent("2026-10-24T10:00:00Z", "2026-10-24T10:00:00Z"), sent("2026-09-24T10:00:00Z", "2026-09-24T10:00:00Z")]);
-    expect(plain(headerText(october!, monthTotals, "todas"))).toBe("Outubro 2026 · 7 confirmados · 248,00 €");
-    expect(plain(headerText(september!, monthTotals, "confirmadas"))).toBe("Setembro 2026 · 5 confirmados · 322,00 €");
-    expect(plain(headerText(october!, [{ month: "2026-10", confirmed_count: 1, total_cents: 2895 }], "todas"))).toBe("Outubro 2026 · 1 confirmado · 28,95 €");
+    expect(plain(headerSummary(october!, monthTotals, "todas")!)).toBe("7 confirmados · 248,00 €");
+    expect(plain(headerSummary(september!, monthTotals, "confirmadas")!)).toBe("5 confirmados · 322,00 €");
+    expect(plain(headerSummary(october!, [{ month: "2026-10", confirmed_count: 1, total_cents: 2895 }], "todas")!)).toBe("1 confirmado · 28,95 €");
   });
 
   it("F-195: the header is only the month when there are no confirmed ones, in «Requer ação», or without totals", () => {
     const [october] = groupByMonth([sent("2026-10-24T10:00:00Z", "2026-10-24T10:00:00Z")]);
-    expect(headerText(october!, monthTotals, "acao")).toBe("Outubro 2026");
-    expect(headerText(october!, [{ month: "2026-09", confirmed_count: 1, total_cents: 1 }], "todas")).toBe("Outubro 2026");
-    expect(headerText(october!, undefined, "todas")).toBe("Outubro 2026");
+    expect(headerSummary(october!, monthTotals, "acao")).toBeNull();
+    expect(headerSummary(october!, [{ month: "2026-09", confirmed_count: 1, total_cents: 1 }], "todas")).toBeNull();
+    expect(headerSummary(october!, undefined, "todas")).toBeNull();
   });
 
   it("F-195: the default year is the one of the purchase sent most recently, the first of the list; without purchases, the current one", () => {

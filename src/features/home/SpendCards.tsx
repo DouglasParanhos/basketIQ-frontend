@@ -2,7 +2,7 @@ import { useId, type ReactNode } from "react";
 import { Link } from "react-router";
 import type { Schemas } from "../../api/client";
 import { DataTable } from "../../components/charts";
-import { StatusBadge } from "../../components/ui";
+import { SMALL_CAPS, StatusBadge } from "../../components/ui";
 import { formatCents } from "../../lib/format";
 import { formatDayMonth, shortMonth } from "../../lib/month";
 import { initialsOf } from "../onboarding/state";
@@ -10,7 +10,6 @@ import { initialsOf } from "../onboarding/state";
 type Overview = Schemas["OverviewOut"];
 
 const CARD = "flex flex-col gap-3 rounded-surface bg-paper p-4 ring-1 ring-inset ring-line";
-const SMALL_CAPS = "text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-soft";
 
 /** «Compras no mês», next to the average: the confirmed purchases of the month and of the civil month before it. */
 export function PurchasesCard({ overview, isCurrentMonth }: { overview: Overview; isCurrentMonth: boolean }) {
@@ -46,12 +45,12 @@ function Weeks({ weeks }: { weeks: Overview["weeks"] }) {
   const highest = Math.max(1, ...weeks.map((w) => w.spent_cents));
   return (
     <Card title="Gasto por semana">
-      <ol className="flex h-28 items-end gap-2">
-        {weeks.map((w) => (
+      <ol className="flex h-[104px] items-end gap-3">
+        {weeks.map((w, i) => (
           <li key={w.index} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
             <span className="amount text-[0.6875rem] text-ink-soft">{formatCents(w.spent_cents)}</span>
             {/* The height only draws the value, which is written above. */}
-            <span aria-hidden className="block w-full rounded-md bg-chart" style={{ height: `${Math.max(4, (w.spent_cents / highest) * 100)}%` }} />
+            <span aria-hidden className={`block w-full rounded-lg ${i === weeks.length - 1 ? "bg-chart" : "bg-brand-soft"}`} style={{ height: `${Math.max(4, (w.spent_cents / highest) * 100)}%` }} />
             <span className="text-center text-[0.6875rem] leading-tight text-ink-soft">
               <span className="block font-semibold">Sem. {w.index}</span>
               <span className="block">{weekRange(w.from, w.to)}</span>
@@ -102,7 +101,7 @@ function Recent({ receipts }: { receipts: Overview["recent_receipts"] }) {
         <h2 id={id} className="text-sm font-bold">
           Últimas compras
         </h2>
-        <Link to="/compras" className="inline-flex min-h-11 items-center px-1 text-sm font-bold text-brand">
+        <Link to="/compras" className="inline-flex min-h-11 items-center px-1 text-[13px] font-bold text-brand">
           Ver todas
         </Link>
       </div>

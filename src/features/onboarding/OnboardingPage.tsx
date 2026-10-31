@@ -1,4 +1,4 @@
-import { ArrowLeft, Check } from "lucide-react";
+import { Check, ChevronLeft } from "lucide-react";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router";
 import { ApiError } from "../../api/client";
@@ -42,18 +42,19 @@ function Onboarding({ saved }: { saved: Profile | null }) {
 
   if (state.phase === "done") {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6">
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-          <span aria-hidden className="grid size-20 place-items-center rounded-full bg-brand-soft text-brand">
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-7">
+        <div className="flex flex-1 flex-col items-center justify-center gap-3.5 text-center">
+          <span aria-hidden className="grid size-[84px] place-items-center rounded-full bg-brand-soft text-brand">
             <Check className="size-10" strokeWidth={2.5} />
           </span>
           <h1 ref={titleRef} tabIndex={-1} className="text-[2.125rem] font-extrabold leading-tight outline-none">
             Tudo pronto
           </h1>
-          <p className="text-ink-soft">Pode editar estas respostas no Perfil a qualquer momento.</p>
+          <p className="leading-6 text-ink-soft">Pode editar estas respostas no Perfil a qualquer momento.</p>
         </div>
-        <div className="pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <div className="pb-[max(1.75rem,env(safe-area-inset-bottom))]">
           <Button
+            size="lg"
             className="w-full"
             onClick={() => navigate("/", { replace: true })}
           >
@@ -78,7 +79,7 @@ function Onboarding({ saved }: { saved: Profile | null }) {
             onClick={() => dispatch({ type: "back" })}
             className="grid size-11 place-items-center rounded-full text-ink hover:bg-brand-soft"
           >
-            <ArrowLeft aria-hidden className="size-5" />
+            <ChevronLeft aria-hidden className="size-[22px]" />
           </button>
         ) : (
           <span aria-hidden className="size-11" />
@@ -89,18 +90,23 @@ function Onboarding({ saved }: { saved: Profile | null }) {
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={percent}
-          className="h-1.5 flex-1 rounded-full bg-line"
+          className="h-[5px] flex-1 rounded-full bg-line"
         >
           <div className="h-full rounded-full bg-brand transition-[width] motion-reduce:transition-none" style={{ width: `${percent}%` }} />
         </div>
-        <Button variant="quiet" className="min-h-11 px-3" disabled={save.isPending} onClick={() => move("skip")}>
+        <button
+          type="button"
+          disabled={save.isPending}
+          onClick={() => move("skip")}
+          className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-medium text-ink-soft hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-50"
+        >
           Saltar
-        </Button>
+        </button>
       </header>
 
       <div className="flex-1 pt-6">
-        <p id={STEP_LABEL_ID} className="text-sm font-semibold text-ink-soft">{`Passo ${state.step + 1} de ${STEP_COUNT}`}</p>
-        <h1 ref={titleRef} tabIndex={-1} aria-describedby={STEP_LABEL_ID} className="mt-1 text-[2rem] font-extrabold leading-tight tracking-tight outline-none">
+        <p id={STEP_LABEL_ID} className="sr-only">{`Passo ${state.step + 1} de ${STEP_COUNT}`}</p>
+        <h1 ref={titleRef} tabIndex={-1} aria-describedby={STEP_LABEL_ID} className="mt-1 text-[2rem] font-extrabold leading-[1.12] tracking-[-0.01em] outline-none">
           {copy.title}
         </h1>
         <p className="mt-2 text-ink-soft">{copy.hint}</p>
@@ -131,7 +137,7 @@ function Onboarding({ saved }: { saved: Profile | null }) {
             {problem.text}
           </Notice>
         )}
-        <Button className="w-full" busy={save.isPending} onClick={() => move("next")}>
+        <Button size="lg" className="w-full" busy={save.isPending} onClick={() => move("next")}>
           {state.step === LAST_STEP ? "Concluir" : "Avançar"}
         </Button>
       </div>

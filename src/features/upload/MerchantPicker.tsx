@@ -1,6 +1,6 @@
-import { Check } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { useId } from "react";
-import { Select } from "../../components/ui";
+import { SMALL_CAPS } from "../../components/ui";
 import { initialsOf } from "../onboarding/state";
 import { useMerchants } from "../profile/useProfile";
 
@@ -14,7 +14,7 @@ export function MerchantChips({ value, onChange }: { value: string; onChange: (m
   const options = [{ id: "", name: AUTO }, ...(merchants.data ?? [])];
   return (
     <div>
-      <p id={labelId} className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-soft">
+      <p id={labelId} className={`mb-2 ${SMALL_CAPS}`}>
         Supermercado (opcional)
       </p>
       {/* Native radios, hidden: the arrow keys move between the chips. */}
@@ -43,16 +43,29 @@ export function MerchantChips({ value, onChange }: { value: string; onChange: (m
 /** The same choice as a field (second screen), bound to the same state. */
 export function MerchantField({ value, onChange, disabled }: { value: string; onChange: (merchant: string) => void; disabled?: boolean }) {
   const merchants = useMerchants();
+  const selectId = useId();
   return (
     <div>
-      <Select label="Supermercado (opcional)" value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}>
-        <option value="">{AUTO}</option>
-        {merchants.data?.map(({ id, name }) => (
-          <option key={id} value={id}>
-            {name}
-          </option>
-        ))}
-      </Select>
+      <div className="relative rounded-surface bg-paper px-4 py-3 ring-1 ring-inset ring-line">
+        <label htmlFor={selectId} className={`block ${SMALL_CAPS}`}>
+          Supermercado (opcional)
+        </label>
+        <select
+          id={selectId}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+          className="min-h-11 w-full appearance-none bg-transparent pr-8 text-[15px] font-bold text-ink disabled:opacity-50"
+        >
+          <option value="">{AUTO}</option>
+          {merchants.data?.map(({ id, name }) => (
+            <option key={id} value={id}>
+              {name}
+            </option>
+          ))}
+        </select>
+        <ChevronDown aria-hidden className="pointer-events-none absolute bottom-6 right-4 size-5 text-ink-soft" />
+      </div>
       {merchants.isError && <p className="mt-1 text-sm text-ink-soft">{MISSING}</p>}
     </div>
   );

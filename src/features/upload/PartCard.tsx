@@ -1,5 +1,5 @@
-import { ArrowDown, ArrowUp, FileText } from "lucide-react";
-import { Button } from "../../components/ui";
+import { ArrowDown, ArrowUp, Crop, FileText, Trash2 } from "lucide-react";
+import { Button, ROUND_DANGER, ROUND_NEUTRAL } from "../../components/ui";
 import type { Part } from "./photos";
 
 /** One part of the receipt: its preview, its number and its actions (crop, delete, move). */
@@ -23,7 +23,7 @@ export function PartCard({
   const n = index + 1;
   return (
     <li className="flex flex-col gap-2">
-      <div className="grid h-64 place-items-center overflow-hidden rounded-surface bg-ink">
+      <div className="grid h-[250px] place-items-center overflow-hidden rounded-[18px] bg-ink">
         {part.previewUrl ? (
           <img src={part.previewUrl} alt="" className="size-full object-contain" />
         ) : (
@@ -34,31 +34,33 @@ export function PartCard({
         )}
       </div>
       {part.previewError && <p className="text-sm text-ink-soft">Não é possível pré-visualizar esta imagem neste navegador. Pode enviá-la na mesma.</p>}
-      <div className="min-w-0">
-        <p className="font-bold">Parte {n}</p>
-        <p className="truncate text-sm text-ink-soft">{part.file.name}</p>
-        <p className="text-xs text-ink-soft">{(part.file.size / 1024 / 1024).toLocaleString("pt-PT", { maximumFractionDigits: 1 })} MB</p>
+      <div className="flex items-center justify-between gap-1">
+        <p className="text-sm font-bold">Parte {n}</p>
+        <div className="flex gap-1">
+          {part.previewUrl && (
+            <button type="button" className={ROUND_NEUTRAL} data-part-edit={part.id} aria-label={`Recortar a parte ${n}`} disabled={disabled} onClick={onEdit}>
+              <Crop aria-hidden className="size-5" />
+            </button>
+          )}
+          <button type="button" className={ROUND_DANGER} aria-label={`Apagar a parte ${n}`} disabled={disabled} onClick={onRemove}>
+            <Trash2 aria-hidden className="size-5" />
+          </button>
+        </div>
       </div>
-      <div className="grid grid-cols-2 gap-1">
-        {part.previewUrl && (
-          <Button type="button" variant="secondary" className="px-2" data-part-edit={part.id} aria-label={`Recortar a parte ${n}`} disabled={disabled} onClick={onEdit}>
-            Recortar
+      <div className="flex gap-1 text-xs text-ink-soft">
+        <p className="min-w-0 truncate">{part.file.name}</p>
+        <p className="shrink-0">· {(part.file.size / 1024 / 1024).toLocaleString("pt-PT", { maximumFractionDigits: 1 })} MB</p>
+      </div>
+      {count > 1 && (
+        <div className="grid grid-cols-2 gap-1">
+          <Button type="button" variant="quiet" aria-label={`Subir a parte ${n}`} disabled={disabled || index === 0} onClick={() => onMove(-1)}>
+            <ArrowUp aria-hidden className="size-5" />
           </Button>
-        )}
-        <Button type="button" variant="dangerQuiet" className="px-2" aria-label={`Apagar a parte ${n}`} disabled={disabled} onClick={onRemove}>
-          Apagar
-        </Button>
-        {count > 1 && (
-          <>
-            <Button type="button" variant="quiet" aria-label={`Subir a parte ${n}`} disabled={disabled || index === 0} onClick={() => onMove(-1)}>
-              <ArrowUp aria-hidden className="size-5" />
-            </Button>
-            <Button type="button" variant="quiet" aria-label={`Descer a parte ${n}`} disabled={disabled || index === count - 1} onClick={() => onMove(1)}>
-              <ArrowDown aria-hidden className="size-5" />
-            </Button>
-          </>
-        )}
-      </div>
+          <Button type="button" variant="quiet" aria-label={`Descer a parte ${n}`} disabled={disabled || index === count - 1} onClick={() => onMove(1)}>
+            <ArrowDown aria-hidden className="size-5" />
+          </Button>
+        </div>
+      )}
     </li>
   );
 }

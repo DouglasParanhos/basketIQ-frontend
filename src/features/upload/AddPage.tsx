@@ -105,7 +105,7 @@ export function AddPage() {
       {parts.length === 0 ? (
         <div className="flex flex-col gap-4">
           <header className="pb-1 pt-6">
-            <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight">Adicionar talão</h1>
+            <h1 className="text-[1.875rem] font-extrabold leading-tight tracking-tight">Adicionar talão</h1>
             <p className="mt-1.5 text-ink-soft">Lemos o talão e confirma os valores.</p>
           </header>
           <MerchantChips value={merchant} onChange={setMerchant} />

@@ -31,12 +31,12 @@ export function GoalsStep({ state, dispatch }: { state: OnboardingState; dispatc
     { key: "all", title: "Todas as anteriores", hint: "Quero tudo isso", checked: isAllGoals(state.goals), action: { type: "toggleAllGoals" } },
   ];
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2.5">
       {rows.map(({ key, title, hint, checked, action }) => (
-        <ChoiceCard key={key} checked={checked} onChange={() => dispatch(action)} className="items-center gap-3">
+        <ChoiceCard key={key} checked={checked} onChange={() => dispatch(action)} className="min-h-[4.5rem] items-center gap-3 px-4 py-3">
           <span className="flex-1">
             <span className="block font-bold">{title}</span>
-            <span className="block text-sm text-ink-soft">{hint}</span>
+            <span className="block text-[0.8125rem] text-ink-soft">{hint}</span>
           </span>
           <Tick checked={checked} />
         </ChoiceCard>
@@ -48,18 +48,18 @@ export function GoalsStep({ state, dispatch }: { state: OnboardingState; dispatc
 export function PeopleStep({ state, dispatch }: { state: OnboardingState; dispatch: Dispatch<Action> }) {
   const round = "grid size-16 place-items-center rounded-full disabled:cursor-not-allowed disabled:opacity-40";
   return (
-    <div className="mt-10 flex flex-col items-center gap-2 text-center">
-      <output aria-live="polite" className="flex flex-col items-center">
+    <div className="mt-[3.75rem] flex flex-col items-center text-center">
+      <output aria-live="polite" className="flex flex-col items-center gap-2">
         <span className="text-[clamp(4.5rem,30vw,7.5rem)] font-extrabold leading-none tabular-nums">{state.householdSize}</span>{" "}
         <span className="text-base text-ink-soft">{state.householdSize === 1 ? "pessoa" : "pessoas"}</span>
       </output>
-      <div className="mt-6 flex gap-7">
+      <div className="mt-7 flex gap-7">
         <button
           type="button"
           aria-label="Menos uma pessoa"
           disabled={state.householdSize <= PEOPLE_MIN}
           onClick={() => dispatch({ type: "people", delta: -1 })}
-          className={`${round} border-2 border-line bg-paper text-ink`}
+          className={`${round} border-[1.5px] border-line bg-paper text-ink`}
         >
           <Minus aria-hidden className="size-6" />
         </button>
@@ -104,13 +104,13 @@ export function MerchantsStep({ state, dispatch }: { state: OnboardingState; dis
             key={id}
             checked={checked}
             onChange={() => dispatch({ type: "toggleMerchant", id })}
-            className="min-h-28 flex-col items-center justify-center gap-2 px-1 py-2 text-center"
+            className="min-h-[6.5rem] flex-col items-center justify-center gap-2 px-1 py-2 text-center"
           >
-            <span aria-hidden className="grid size-11 place-items-center rounded-control bg-brand-soft text-lg font-extrabold text-brand-deep">
+            <span aria-hidden className="grid size-11 place-items-center rounded-[14px] bg-brand-soft text-[22px] font-extrabold text-brand-deep">
               {initialsOf(name)}
             </span>
             <span className="text-[0.8125rem] font-bold leading-tight [overflow-wrap:anywhere]">{name}</span>
-            <Tick checked={checked} className="absolute right-1.5 top-1.5 size-5" />
+            <Tick checked={checked} small className="absolute right-1.5 top-1.5" />
           </ChoiceCard>
         );
       })}
@@ -125,8 +125,8 @@ export function GoalAmountStep({ state, dispatch }: { state: OnboardingState; di
       <p data-testid="goal-value" className={`text-[clamp(3rem,20vw,5rem)] font-extrabold leading-none tabular-nums ${unknown ? "text-ink-soft" : ""}`}>
         {unknown ? "Ainda não sei" : formatWholeEuros(state.goalEuros)}
       </p>
-      <p className="mt-2 text-ink-soft">{unknown ? "Pode definir a sua meta pessoal mais tarde, nas Definições." : "por mês"}</p>
-      <div className={`mt-8 w-full ${unknown ? "opacity-50" : ""}`}>
+      <p className="mt-1 text-ink-soft">{unknown ? "Pode definir a sua meta pessoal mais tarde, nas Definições." : "por mês"}</p>
+      <div className={`mt-10 w-full ${unknown ? "opacity-[.35]" : ""}`}>
         <input
           type="range"
           min={GOAL_MIN_EUROS}
@@ -144,7 +144,7 @@ export function GoalAmountStep({ state, dispatch }: { state: OnboardingState; di
           <span>{formatWholeEuros(GOAL_MAX_EUROS)}</span>
         </div>
       </div>
-      <Button variant="secondary" className="mt-5" onClick={() => dispatch({ type: "toggleGoalUnknown" })}>
+      <Button variant="outline" className="mt-5" onClick={() => dispatch({ type: "toggleGoalUnknown" })}>
         {unknown ? "Definir um valor" : "Ainda não sei"}
       </Button>
     </div>
