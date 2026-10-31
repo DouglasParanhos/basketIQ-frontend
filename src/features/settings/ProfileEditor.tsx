@@ -11,7 +11,7 @@ import { buildPatch, countChanges, initialDraft, stepPeople, validate } from "./
 type Profile = Schemas["ProfileOut"];
 export type Block = "people" | "merchants" | "goal" | "goals";
 
-const round = "grid size-12 place-items-center rounded-full disabled:cursor-not-allowed disabled:opacity-40";
+const round = "grid size-12 shrink-0 place-items-center rounded-full disabled:cursor-not-allowed disabled:opacity-40";
 
 /** The whole profile in edit mode: the counter, the fields, «Guardar alterações» and «Cancelar» (with confirmation). */
 export function ProfileEditor({ saved, focus, onDone }: { saved: Profile; focus: Block | null; onDone: (saved: boolean, origin: Block | null) => void }) {
@@ -48,7 +48,7 @@ export function ProfileEditor({ saved, focus, onDone }: { saved: Profile; focus:
         <h3 data-block="people" tabIndex={-1} className="font-bold">
           Pessoas na casa
         </h3>
-        <div className="mt-3 flex items-center gap-4">
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
           <button type="button" aria-label="Menos uma pessoa" disabled={draft.people === null || draft.people <= 1} onClick={() => setDraft({ ...draft, people: stepPeople(draft.people, -1) })} className={`${round} border-2 border-line bg-paper text-ink`}>
             <Minus aria-hidden className="size-5" />
           </button>

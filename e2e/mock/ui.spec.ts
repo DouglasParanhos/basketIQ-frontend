@@ -342,7 +342,7 @@ test.describe("definições (spec 014)", () => {
     await fakeApi(page, { storedFiles: 9, admin: true });
     await walkSettings(page, async () => {
       const small = await page
-        .locator("main button:visible, main a:visible, main label:visible, main [role=tab]:visible")
+        .locator("main button:visible, main a:visible, main label:has(input):visible, main input:not([type=checkbox]):visible, main [role=tab]:visible")
         .evaluateAll((nodes) =>
           nodes
             .map((node) => ({ text: (node.textContent ?? node.getAttribute("aria-label") ?? "").trim().slice(0, 30), box: node.getBoundingClientRect() }))
