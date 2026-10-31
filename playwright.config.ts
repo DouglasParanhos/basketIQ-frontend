@@ -5,7 +5,8 @@ import { defineConfig, devices } from "@playwright/test";
  * - mock:  the built PWA with the API intercepted (page.route). Runs in CI, no backend needed.
  *          Covers accessibility (axe), responsive widths and UI flows.
  * - stack: end-to-end against the real backend (docker compose up in ../Backend) with the
- *          mock OIDC server. Run locally: `pnpm e2e --project=stack`.
+ *          mock OIDC server. Runs in CI on pull requests (e2e-stack job) and locally with
+ *          `pnpm e2e --project=stack`.
  */
 export default defineConfig({
   testDir: "./e2e",

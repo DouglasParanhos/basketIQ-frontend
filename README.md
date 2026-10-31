@@ -67,7 +67,8 @@ pnpm e2e --project=stack          # full stack: mock OIDC login → upload PDF/p
 ```
 
 The stack journey uses the backend's synthetic golden documents; it needs `make up` in `../Backend`
-and `pnpm dev` running.
+and `pnpm dev` running. In CI it runs only on pull requests (job `e2e-stack`), against the backend's
+`main` branch.
 
 ## Notes
 
