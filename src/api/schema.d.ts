@@ -384,6 +384,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/analytics/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Home: goal ring, monthly average, weeks, stores and latest receipts */
+        get: operations["overview_v1_analytics_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/analytics/months": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Confirmed receipts and total spending per month, newest first */
+        get: operations["months_v1_analytics_months_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/analytics/consumption": {
         parameters: {
             query?: never;
@@ -886,6 +920,28 @@ export interface components {
             /** Share Pct */
             share_pct: number;
         };
+        /** MerchantShareOut */
+        MerchantShareOut: {
+            /** Merchant */
+            merchant: string | null;
+            /** Name */
+            name: string;
+            /** Spent Cents */
+            spent_cents: number;
+            /** Purchases */
+            purchases: number;
+            /** Share Pct */
+            share_pct: number;
+        };
+        /** MonthTotalOut */
+        MonthTotalOut: {
+            /** Month */
+            month: string;
+            /** Confirmed Count */
+            confirmed_count: number;
+            /** Total Cents */
+            total_cents: number;
+        };
         /** OriginalUrlOut */
         OriginalUrlOut: {
             /** Url */
@@ -894,6 +950,44 @@ export interface components {
             expires_in_seconds: number;
             /** Content Type */
             content_type: string;
+        };
+        /** OverviewOut */
+        OverviewOut: {
+            /** Month */
+            month: string;
+            /** Spent Cents */
+            spent_cents: number;
+            /** Goal Cents */
+            goal_cents: number | null;
+            /** Goal Pct */
+            goal_pct: number | null;
+            /**
+             * Band
+             * @enum {string}
+             */
+            band: "ok" | "attention" | "high" | "none";
+            /** Monthly Average Cents */
+            monthly_average_cents: number | null;
+            /** Recent Vs Average Pct */
+            recent_vs_average_pct: number | null;
+            /** Average Trend */
+            average_trend: ("below" | "on_average" | "above") | null;
+            /** Average Months */
+            average_months: number;
+            /** Average Min Months */
+            average_min_months: number;
+            /** Purchases This Month */
+            purchases_this_month: number;
+            /** Purchases Last Month */
+            purchases_last_month: number;
+            /** Weeks */
+            weeks: components["schemas"]["WeekOut"][];
+            /** By Merchant */
+            by_merchant: components["schemas"]["MerchantShareOut"][];
+            /** Recent Receipts */
+            recent_receipts: components["schemas"]["RecentReceiptOut"][];
+            /** Empty */
+            empty: boolean;
         };
         /** PhotoAddIn */
         PhotoAddIn: {
@@ -1014,6 +1108,14 @@ export interface components {
             llm_enabled: boolean;
             /** Smart List Enabled */
             smart_list_enabled: boolean;
+            /** Goal Ring Green Up To Pct */
+            goal_ring_green_up_to_pct: number;
+            /** Goal Ring Orange Up To Pct */
+            goal_ring_orange_up_to_pct: number;
+            /** Average Min Months */
+            average_min_months: number;
+            /** Average On Target Pct */
+            average_on_target_pct: number;
         };
         /** ProductInfo */
         ProductInfo: {
@@ -1061,6 +1163,17 @@ export interface components {
             spent_cents: number;
             /** Last Purchase At */
             last_purchase_at: string | null;
+            /** Avg Price Cents */
+            avg_price_cents: number | null;
+            /**
+             * Price Basis
+             * @enum {string}
+             */
+            price_basis: "un" | "kg" | "l";
+            /** Purchases */
+            purchases: number;
+            /** Merchants */
+            merchants: number;
         };
         /** ProfileOut */
         ProfileOut: {
@@ -1231,6 +1344,26 @@ export interface components {
              */
             created_at: string;
         };
+        /** RecentReceiptOut */
+        RecentReceiptOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Merchant */
+            merchant: string | null;
+            /** Name */
+            name: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Total Cents */
+            total_cents: number | null;
+            status: components["schemas"]["ReceiptStatus"];
+        };
         /** ReviewReasonOut */
         ReviewReasonOut: {
             /** Code */
@@ -1383,6 +1516,23 @@ export interface components {
             code: string;
             /** Message */
             message: string;
+        };
+        /** WeekOut */
+        WeekOut: {
+            /** Index */
+            index: number;
+            /**
+             * From
+             * Format: date
+             */
+            from: string;
+            /**
+             * To
+             * Format: date
+             */
+            to: string;
+            /** Spent Cents */
+            spent_cents: number;
         };
     };
     responses: never;
@@ -2621,6 +2771,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    overview_v1_analytics_overview_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    months_v1_analytics_months_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthTotalOut"][];
                 };
             };
         };
