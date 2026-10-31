@@ -49,7 +49,7 @@
 - O perfil guarda uma só meta e a API devolve sempre a meta atual (C8 respondida). Um mês passado mostra o gasto desse mês contra a meta de hoje, **com a nota «Meta atual»** junto ao valor da meta (e «… da meta atual usada» na alternativa em texto do anel), para não parecer que era a meta daquele mês.
 
 **R10. «Definir a minha meta pessoal» (D-P8, aprovado).**
-- Aponta para `/definicoes` até a spec 014 do frontend fixar a rota de edição da meta; quando existir, passa a essa rota (uma constante, um teste). O lançamento espera pelo Perfil (decisão da Liz, 2026-10-30).
+- Aponta para `/definicoes/perfil?editar=meta`, a edição da meta da spec 014 do frontend (já implementada a 2026-10-31): o Perfil abre em edição com o foco no campo da meta. Fica numa constante com um teste. O lançamento espera pelo Perfil (decisão da Liz, 2026-10-30).
 
 **R11. Efeito nos testes e nos mocks existentes.**
 - `RequireOnboarding.test.tsx`, `OnboardingPage.test.tsx`, `routes.test.tsx`, `AppShell.test.tsx`, `HomeRoute.test.tsx` e os e2e abrem `/` e esperam o título «Início». (`features.test.tsx` não contém o Início.) Com a página nova, `/` faz um pedido a `overview`; com `onUnhandledRequest: "error"` esses testes falham sem handler. Tarefa: handler por omissão em `src/test/server.ts` (resposta sintética com dados) e em `e2e/mock/api.ts`. O teste F-95 da página provisória («Ver resumo») em `HomeRoute.test.tsx` fica obsoleto e é substituído; os F-96 do redirecionamento mantêm-se.

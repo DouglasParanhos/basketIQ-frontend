@@ -6,6 +6,8 @@
 
 **Status**: Implemented
 
+**Nota (2026-10-31):** o ecrã das Definições foi reestilizado pela spec 014 (`specs/014-definicoes-v2`): abas Perfil · Privacidade · Conta e a eliminação de conta em ecrã próprio (`/definicoes/conta/eliminar`). O comportamento de eliminar a conta e de terminar sessão não mudou; os testes F-23 e F-22a seguem a nova estrutura.
+
 **Input**: Especificação Funcional RF-12; Plano de Testes F-22, F-22a, F-23, §9. Backend: `../basketIQ-backend/specs/006-gestao-dados-retencao`.
 
 ## User Scenarios & Testing *(mandatory)*

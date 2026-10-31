@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-30
 
-**Status**: Especificada em 2026-10-31 (dia, sem supervisão). **Pode ser implementada:** o backend da spec 013 está enviado e `src/api/schema.d.ts` já tem `GET/PATCH /v1/me/profile`, `GET /v1/merchants` e `GET/DELETE /v1/receipts/stored-files`. **O lançamento da UX v2 espera por esta spec** (decisão da Liz, 2026-10-30): é aqui que as contas anteriores ao onboarding passam a poder definir a meta e as preferências.
+**Status**: Implementada em 2026-10-31 (Vitest, lint e typecheck verdes; e2e por correr). Especificada no mesmo dia. **Podia ser implementada:** o backend da spec 013 está enviado e `src/api/schema.d.ts` já tem `GET/PATCH /v1/me/profile`, `GET /v1/merchants` e `GET/DELETE /v1/receipts/stored-files`. **O lançamento da UX v2 espera por esta spec** (decisão da Liz, 2026-10-30): é aqui que as contas anteriores ao onboarding passam a poder definir a meta e as preferências.
 
 **Input**: Especificação Funcional v1.4 §8, RF-12, RF-13, RF-14; `Documentation/Super Mercado_—_Plano_de_Implementação_UX_v2.md` (Fase 6, D3, D8, decisão 17); `Documentation/design-ux-v2/DefinicoesV2.dc.html` (layout) e `README.md` (textos pt-PT e o que não se implementa). Backend: `../basketIQ-backend/specs/013-perfil-utilizador` (`contracts/api.md`). Specs relacionadas: `006-definicoes-dados` (reestilizada aqui), `009-navegacao-5-botoes` (`SegmentedTabs`), `010-onboarding` (perfil, mercados, guarda), `011-inicio` (liga aqui «Definir a minha meta pessoal»).
 

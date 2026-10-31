@@ -23,7 +23,7 @@ Resultado esperado: tudo verde; os testes que abrem `/` passam a receber um `ove
 | 2 | Gasto de 248 € | 62 %, laranja, «Quase lá · saldo da meta: 152,00 €» |
 | 3 | Gasto de 352 € | 88 %, vermelho, «Reta final · saldo da meta: 48,00 €» |
 | 4 | Gasto de 452 € | anel cheio, vermelho, «Acima da meta pessoal este mês · 52,00 € além da meta», sem saldo negativo |
-| 5 | Conta sem meta (por exemplo anterior ao onboarding) | anel vazio, «—», «Sem meta pessoal definida», botão «Definir a minha meta pessoal» que vai a `/definicoes` |
+| 5 | Conta sem meta (por exemplo anterior ao onboarding) | anel vazio, «—», «Sem meta pessoal definida», botão «Definir a minha meta pessoal» que vai a `/definicoes/perfil?editar=meta` (Perfil em edição, com o foco na meta) |
 | 6 | Gastos de 200,00, 201,60, 202,00, 300,00, 301,60 e 302,00 € para 400 € | 50 %, 50 %, 51 %, 75 %, 75 %, 76 % e as faixas da US1.10 |
 | 7 | Conta com 3 ou mais meses completos de compras | cartão da média com valor, tendência, fundo suave e texto (palavra e tom de `average_trend`) |
 | 7b | Conta com exatamente 2 meses completos | valor da média e «A tendência aparece com mais um mês completo de compras.», sem fundo colorido |

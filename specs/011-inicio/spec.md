@@ -46,7 +46,7 @@ Respostas deduzidas dos documentos (HANDOFF, plano UX v2, README de design, spec
 2. **Given** gasto de 248 €, **When** abre, **Then** mostra 62 %, a faixa laranja e «Quase lá · saldo da meta: 152,00 €». — RF-15
 3. **Given** gasto de 352 €, **When** abre, **Then** mostra 88 %, a faixa vermelha e «Reta final · saldo da meta: 48,00 €». — RF-15
 4. **Given** nenhuma meta (`band` sem meta), **When** abre, **Then** o anel está vazio e tracejado, mostra «—», «Sem meta pessoal definida», o gasto do mês e o botão «Definir a minha meta pessoal». — RF-15
-5. **Given** o botão «Definir a minha meta pessoal», **When** a pessoa o toca, **Then** vai para a edição da meta no Perfil das Definições (até o Perfil existir, para `/definicoes`). — RF-13, RF-15
+5. **Given** o botão «Definir a minha meta pessoal», **When** a pessoa o toca, **Then** vai para a edição da meta no Perfil das Definições (`/definicoes/perfil?editar=meta`). — RF-13, RF-15
 6. **Given** qualquer faixa, **When** é lida por leitor de ecrã, **Then** o anel tem alternativa em texto («Anel verde, 38 % da meta usada») e a cor nunca é o único sinal. — §8, RF-15
 7. **Given** o ecrã, **When** é mostrado, **Then** a nota «A meta pessoal é um objetivo seu, não um limite.» está sempre visível. — RF-13, RF-15
 8. **Given** gasto acima da meta, **When** abre, **Then** o anel enche-se por completo na faixa vermelha e o texto é «Acima da meta pessoal este mês · 52,00 € além da meta», sem saldo negativo nem linguagem de perda; com gasto igual à meta, o texto é «Reta final · saldo da meta: 0,00 €». — RF-15

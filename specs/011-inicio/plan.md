@@ -60,7 +60,7 @@ Decididas pela Liz a 2026-10-31 (as recomendações do plano foram aceites, salv
 | D-P5 | «Mês seguinte» no mês corrente | desativado | R8 |
 | D-P6 | Identificadores | **F-183 a F-188** (o backend 014 usa F-176 a F-182) | spec |
 | D-P7 | Meta nos meses passados | mostrar a meta de hoje com a nota «Meta atual» | R9 |
-| D-P8 | «Definir a minha meta pessoal» | `/definicoes` até existir o Perfil; depois, a edição da meta (spec 014 do frontend) | R10 |
+| D-P8 | «Definir a minha meta pessoal» | `/definicoes/perfil?editar=meta` (a edição da meta da spec 014 do frontend, já implementada) | R10 |
 | D-P9 | Ordem dos cartões | anel, média + compras, gasto por semana, «Onde gasta mais», últimas compras | R3 |
 | D-P10 | «Mês passado» vs «Mês anterior» | «Mês anterior: N» nos meses que não são o corrente | copy |
 | D-P11 | Navegação entre meses | mantida (P2, separável) | spec |
