@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-30
 
-**Status**: Especificada em 2026-10-31 (Fase 4 do plano UX v2). **Sem bloqueio de contrato:** o backend 014 já publica `GET /v1/analytics/months` e o `GET /v1/products` enriquecido (verificado no OpenAPI da API em execução a 2026-10-31); falta só regenerar `src/api/schema.d.ts` (tarefa `gen:api`, constituição VI). Por implementar.
+**Status**: Especificada em 2026-10-31 (Fase 4 do plano UX v2). **Sem bloqueio de contrato:** o backend 014 já publica `GET /v1/analytics/months` e o `GET /v1/products` enriquecido (verificado no OpenAPI da API em execução a 2026-10-31); o `src/api/schema.d.ts` foi regenerado na spec 011. **Implementada a 2026-10-31** (US1, US2, US3, US5); a US4 (papel de talão) fica adiada (D-T11).
 
 **Input**: Especificação Funcional v1.4 §8, RF-07, RF-09, RF-10, RF-11, RF-12; `Documentation/Super Mercado_—_Plano_de_Implementação_UX_v2.md` (Fase 4, D2); `Documentation/design-ux-v2/TaloesV2.dc.html` (layout) e `README.md` (textos pt-PT e o que não se implementa). Backend: `../basketIQ-backend/specs/014-visao-geral-inicio` (US4 totais por mês, US5 produtos; `contracts/api.md`). Specs relacionadas: `004-resumo-analises`, `005-produtos`, `006-definicoes-dados` (eliminar compra e original, reestilizadas aqui), `009-navegacao-5-botoes` (`TaloesLayout`, `SegmentedTabs`).
 
@@ -35,6 +35,10 @@ Respostas deduzidas dos documentos (plano UX v2, README de design, spec 014 do b
 - Q: Como se invalida a cache dos totais? → A: **D-T16 (por confirmar pela Liz)**: um auxiliar `invalidateReceiptData(qc)` (`receipts`, `months`, `overview`) nos quatro pontos da spec 011 (apagar compra, decidir duplicado, editar e confirmar, fim do envio) em vez de repetir chamadas; eliminar só o original não altera totais e fica de fora.
 - Q: `RECEIVED` fica em «Requer ação»? → A: **D-T17 (por confirmar pela Liz)**: sim, como hoje; aparece com «…» e conta no N.
 
+### Emendas de 2026-10-31 (decisões da Liz e correções do analyze)
+
+A Liz decidiu a 2026-10-31, ao pedir a implementação: **D-T14**: o ano por defeito é o do talão enviado mais recentemente (o primeiro da lista, que a API ordena por envio; o ano de um talão é o da data da compra, ou o do envio se faltar); sem talões, o ano corrente. **D-T15, D-T16 e D-T17 aceites** (D-T16: o auxiliar `invalidateReceiptData` invalida `receipts`, `months` e `overview`; eliminar só o original fica de fora). **A1**: o ano carrega por páginas com «Carregar mais», **sem** carregamento automático (substitui a regra «pedir páginas até chegar ao ano» de D-T1). **D-T1 a D-T13**: adotadas as recomendações desta spec; ficam listadas, com o que se escolheu, em `Documentation/DECISOES_012_para_rever_2026-10-31.md` para a Liz rever. Correções do analyze: o seletor é um `<select>` nativo com a etiqueta «Ano» (B1); o contador do chip refaz-se com a lista (B3); o chip «Requer ação» sem «· 0» quando N é 0 (F1); o rótulo do filtro de mercado do Resumo é «Mercado» com a opção «Todos os mercados» (F2); as datas curtas («28 out.») vêm de `formatDayMonth` (B2).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Aba Compras (Priority: P1)
@@ -52,7 +56,7 @@ Respostas deduzidas dos documentos (plano UX v2, README de design, spec 014 do b
 5. **Given** os dois estados, **When** são lidos por leitor de ecrã, **Then** o estado é dito por texto e ícone, nunca só por cor. — §8
 6. **Given** uma compra confirmada, **When** é tocada, **Then** abre o detalhe `/compras/:id` como hoje. — RF-12
 7. **Given** a lista paginada ou filtrada, **When** muda, **Then** a contagem e o total de cada mês vêm de `GET /v1/analytics/months`, nunca do que está carregado; só contam compras confirmadas. — §8, RF-12
-8. **Given** o seletor de ano «2026» no cabeçalho de Talões (só nesta aba), **When** é alterado, **Then** a lista mostra as compras desse ano, pedindo mais páginas até chegar ao ano (a API não tem parâmetro de ano), e as opções são os anos com compras confirmadas e o ano corrente. — §8, D-T1, D-T12
+8. **Given** o seletor de ano «2026» no cabeçalho de Talões (só nesta aba), **When** é alterado, **Then** a lista mostra as compras já carregadas desse ano (a API não tem parâmetro de ano) e, se ainda não chegou a esse ano, diz-o e oferece «Carregar mais»; as opções são os anos com compras confirmadas, o ano corrente e o ano por defeito. — §8, D-T1, D-T12, A1
 9. **Given** eliminar uma compra ou só o original, **When** a pessoa o faz, **Then** continua a funcionar como na spec 006 (`F-22`, `F-22a`), e as caches da lista e dos totais invalidam-se. — F-22, F-22a
 10. **Given** compras em processamento, **When** a lista está aberta, **Then** continua a atualizar-se (sondagem de 3 s) e, ao confirmar-se uma, o total do mês atualiza-se. — RF-12
 
@@ -136,7 +140,7 @@ O `DashboardPage` atual, reestilizado, sem alterar a lógica nem os pedidos.
 - **FR-003**: Cada linha MUST mostrar a inicial do mercado, o nome (ou «Nota em processamento» sem mercado), a data, o número de itens (`line_count`) e o total; uma compra em `REVIEW_REQUIRED` ou `COMPLETED` MUST levar o emblema «!» e o texto «rever valores»; uma compra em processamento (`RECEIVED`, `VALIDATING`, `EXTRACTING`) MUST levar «…», «a ler o talão…» e o total «—». Estados de erro mantêm o texto do estado atual. — US1.3 a US1.5
 - **FR-004**: Os estados MUST ser transmitidos por texto e ícone, com o emblema `aria-hidden` e o texto lido pelo leitor de ecrã; nunca só por cor. — US1.5, US5.2
 - **FR-005**: A lista MUST continuar a paginar por cursor e a atualizar-se enquanto houver compras em processamento; eliminar uma compra ou o original MUST invalidar as caches de compras e de totais por mês. — US1.9, US1.10
-- **FR-006**: O seletor de ano MUST aparecer só na aba Compras, com os anos de `GET /v1/analytics/months` e o ano corrente, e MUST filtrar a lista no cliente pedindo páginas até chegar ao ano; MUST NOT aparecer onde não tem efeito. — US1.8, D-T1
+- **FR-006**: O seletor de ano MUST aparecer só na aba Compras, com os anos de `GET /v1/analytics/months`, o ano corrente e o ano por defeito (o do talão enviado mais recentemente), e MUST filtrar no cliente os itens carregados, sem carregamento automático de páginas («Carregar mais»); MUST NOT aparecer onde não tem efeito. — US1.8, D-T1, D-T14, A1
 - **FR-007**: A aba Resumo MUST manter os pedidos, o URL (`periodo`, `de`, `ate`, `mercado`, `produto`) e a lógica atuais, mudando só a apresentação segundo o desenho; MUST manter «Consumo habitual», o filtro por produto a partir dos rankings e a tabela alternativa «Gasto por período». — US2
 - **FR-008**: A aba Produtos MUST mostrar, por produto, o nome, «N compras · M mercados» e o preço médio com a base (`/kg`, `/l`, `/un.`) a partir de `avg_price_cents` e `price_basis`; com `avg_price_cents` nulo MUST NOT mostrar preço. — US3.1, US3.2
 - **FR-009**: A lista de produtos MUST pedir até 100 produtos e poder ordenar-se por «Mais comprados» (por defeito), «Mais gastos» e «A–Z» sem novo pedido à API, sobre os produtos devolvidos. — US3.3, D-T4

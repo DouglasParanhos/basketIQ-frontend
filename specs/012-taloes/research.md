@@ -16,6 +16,8 @@ Fonte dos factos de contrato: `../basketIQ-backend/openapi.json` (commit `4e327d
 - **Consequência**: uma compra confirmada sem `purchase_at` não entra em nenhum total (não deve existir) e uma compra em processamento nunca entra.
 - **Falha do pedido**: a lista aparece sem totais (só o nome do mês); sem erro bloqueante (Edge Cases).
 
+> **Emenda de 2026-10-31:** o carregamento automático até ao ano (A1) foi **retirado** e o ano por defeito é o do primeiro item da lista (D-T14, decidido pela Liz); ver as «Emendas» em `spec.md` e em `tasks.md`.
+
 ## R3. Ano: a API ordena por data de envio, não por data da compra
 
 - **Facto verificado**: `GET /v1/receipts` ordena por `created_at` decrescente (`order_by(Receipt.created_at.desc(), Receipt.id.desc())`), tem cursor, `status`, `merchant` e `limit` (máx. 100), e **nenhum** parâmetro de mês ou ano.
