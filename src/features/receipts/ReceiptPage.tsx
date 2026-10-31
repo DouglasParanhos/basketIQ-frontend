@@ -6,6 +6,7 @@ import { ApiError, api, unwrap, type Schemas } from "../../api/client";
 import { Button, LinkButton, Notice, Select, Spinner, StatusBadge } from "../../components/ui";
 import { formatAmount, formatCents, formatDate, formatDateTime, formatQuantity, MERCHANT_OPTIONS, merchantName } from "../../lib/format";
 import { EDITABLE, IN_PROGRESS } from "../../lib/status";
+import { invalidateReceiptData } from "./cache";
 import { ReviewEditor } from "./ReviewEditor";
 
 type Receipt = Schemas["ReceiptOut"];
@@ -157,7 +158,7 @@ function DuplicateChoice({ receipt: r }: { receipt: Receipt }) {
     mutationFn: async (action: "keep" | "discard") =>
       unwrap(await api.POST("/v1/receipts/{receipt_id}/duplicate-decision", { params: { path: { receipt_id: r.id } }, body: { action } })),
     onSuccess: (_, action) => {
-      void qc.invalidateQueries({ queryKey: ["receipts"] });
+      void invalidateReceiptData(qc);
       if (action === "discard") navigate("/compras", { replace: true });
       else void qc.invalidateQueries({ queryKey: ["receipt", r.id] });
     },
@@ -307,7 +308,7 @@ function ManageOriginal({ receipt: r }: { receipt: Receipt }) {
       if (!res.response.ok) unwrap(res);
     },
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["receipts"] });
+      void invalidateReceiptData(qc);
       void qc.invalidateQueries({ queryKey: ["summary"] });
       navigate("/compras", { replace: true });
     },

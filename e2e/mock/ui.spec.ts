@@ -9,7 +9,9 @@ async function noA11yViolations(page: Page) {
 }
 
 async function noHorizontalScroll(page: Page) {
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  // The mock project emulates a phone, where the layout viewport grows with the content: measure against the width asked for.
+  const width = page.viewportSize()?.width ?? 0;
+  const overflow = await page.evaluate((expected) => document.documentElement.scrollWidth - (expected || window.innerWidth), width);
   expect(overflow).toBeLessThanOrEqual(0);
 }
 
@@ -125,7 +127,8 @@ test.describe("flows with a fake API", () => {
     await expect(page).toHaveURL(/\/privacidade$/);
     await page.getByRole("button", { name: "Aceitar e continuar" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
-    await page.getByRole("link", { name: "Ver resumo" }).click();
+    await page.getByRole("link", { name: "Talões" }).click();
+    await page.getByRole("tab", { name: "Resumo" }).click();
     await expect(page.getByText("Gasto total")).toBeVisible();
   });
 
@@ -585,5 +588,92 @@ test.describe("adicionar (spec 013)", () => {
     await walkAdd(page, async () => undefined);
     const stored = await page.evaluate(() => ({ local: Object.keys(localStorage), session: Object.keys(sessionStorage) }));
     expect(stored).toEqual({ local: [], session: [] });
+  });
+});
+
+// ---------------------------------------------------------------- Início (spec 011)
+
+const OVERVIEW_STATES = ["green", "orange", "red", "over", "nogoal", "fewdata", "notrend", "zero", "empty"] as const;
+
+test.describe("início (spec 011)", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    for (const width of [320, 375, 430, 820]) {
+      test(`F-187: every state of the Início has no axe violations and no horizontal scroll (${scheme}, ${width}px)`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.setViewportSize({ width, height: 800 });
+        const state = await fakeApi(page);
+        for (const kind of OVERVIEW_STATES) {
+          state.overview = kind;
+          await page.goto("/");
+          await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeAttached();
+          await expect(page.getByText("Este mês", { exact: true })).toBeVisible();
+          await expect(page.getByRole("status")).toHaveCount(0); // finished loading
+          await noA11yViolations(page);
+          await noHorizontalScroll(page);
+        }
+        state.overviewFail = true;
+        await page.goto("/");
+        await expect(page.getByText("Não foi possível carregar o Início.")).toBeVisible();
+        await noA11yViolations(page);
+        await noHorizontalScroll(page);
+      });
+    }
+  }
+
+  test("F-187: every control of the Início has a touch target of at least 44 px", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    const state = await fakeApi(page);
+    for (const kind of ["green", "nogoal", "empty"] as const) {
+      state.overview = kind;
+      await page.goto("/");
+      await expect(page.getByText("Este mês", { exact: true })).toBeVisible();
+      const small = await page
+        .locator("main button:visible, main a:visible")
+        .evaluateAll((nodes) =>
+          nodes
+            .map((node) => ({ text: (node.textContent ?? "").trim().slice(0, 30) || node.getAttribute("aria-label") || node.tagName, box: node.getBoundingClientRect() }))
+            .filter(({ box }) => box.height < 43.5 || box.width < 43.5)
+            .map(({ text, box }) => `${text}: ${Math.round(box.width)}x${Math.round(box.height)}`),
+        );
+      expect(small, kind).toEqual([]);
+    }
+  });
+
+  test("F-187: the Início asks for the overview once per month, and the month in the URL survives a reload", async ({ page }) => {
+    const state = await fakeApi(page);
+    await page.goto("/");
+    await expect(page.getByText("Este mês", { exact: true })).toBeVisible();
+    expect(state.overviewRequests).toHaveLength(1);
+    await page.getByRole("button", { name: "Mês anterior" }).click();
+    await expect(page).toHaveURL(/\?mes=\d{4}-\d{2}$/);
+    await expect(page.getByRole("button", { name: "Mês seguinte" })).toBeEnabled();
+    const month = new URL(page.url()).searchParams.get("mes")!;
+    await page.reload();
+    await expect(page.getByRole("button", { name: "Mês seguinte" })).toBeEnabled();
+    await expect(page.getByText("Meta atual")).toBeVisible();
+    expect(new URL(page.url()).searchParams.get("mes")).toBe(month);
+  });
+
+  test("F-187: while it loads there is only the indicator, and an error offers «Tentar de novo»", async ({ page }) => {
+    const state = await fakeApi(page, { overviewDelayMs: 800 });
+    await page.goto("/");
+    await expect(page.getByRole("status")).toContainText("A carregar");
+    await expect(page.getByText(/\d,\d\d €/)).toHaveCount(0);
+    await expect(page.getByRole("img", { name: /anel verde/i })).toBeVisible();
+    state.overviewFail = true;
+    state.overviewDelayMs = 0;
+    await page.getByRole("button", { name: "Mês anterior" }).click();
+    await expect(page.getByText("Não foi possível carregar o Início.")).toBeVisible();
+    state.overviewFail = false;
+    await page.getByRole("button", { name: "Tentar de novo" }).click();
+    await expect(page.getByRole("img", { name: /anel verde/i })).toBeVisible();
+  });
+
+  test("F-183: «Definir a minha meta pessoal» opens the Perfil already editing the goal", async ({ page }) => {
+    await fakeApi(page, { overview: "nogoal" });
+    await page.goto("/");
+    await page.getByRole("link", { name: "Definir a minha meta pessoal" }).click();
+    await expect(page).toHaveURL(/\/definicoes\/perfil\?editar=meta$/);
+    await expect(page.getByRole("textbox", { name: /Meta pessoal do mês/ })).toBeFocused();
   });
 });

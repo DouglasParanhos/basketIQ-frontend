@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-30
 
-**Status**: Especificada em 2026-10-31; decisões da Liz aplicadas no mesmo dia (D-P1 a D-P12). **Bloqueada pelo backend:** depende de `GET /v1/analytics/overview` (spec 014 do backend, por implementar). O contrato existe como texto no backend (`specs/014-visao-geral-inicio/contracts/api.md`); não há OpenAPI publicado nem `schema.d.ts` com `overview`. Falta o `status` das últimas compras (Q7 mudou).
+**Status**: Implementada em 2026-10-31 (as decisões D-P1 a D-P14 da Liz aplicadas; o backend já publica `GET /v1/analytics/overview`, tipos gerados com `gen:api`). Lint, tipos, Vitest e `e2e:mock` verdes; jornada `stack` por correr.
 
 **Input**: Especificação Funcional v1.4 RF-15, RF-13, RF-12; `Documentation/Super Mercado_—_Plano_de_Implementação_UX_v2.md` (Fase 3, D4, D5, D7, decisões 9, 13 e 17); `Documentation/design-ux-v2/HomeF.dc.html` e `HomeG.dc.html` (layout, estados e dados de exemplo; textos conforme a tabela de substituições do `README.md`). Backend: `../basketIQ-backend/specs/014-visao-geral-inicio` (US1 a US3 e US6).
 

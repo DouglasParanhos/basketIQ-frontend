@@ -18,12 +18,12 @@ function renderHome(initial: string) {
   ).router;
 }
 
-describe("provisional Início and old Resumo addresses (spec 009)", () => {
-  it("F-95: / shows the title, «Adicionar talão» and «Ver resumo»", () => {
+describe("Início and old Resumo addresses (specs 009 and 011)", () => {
+  it("F-95: / is the Início, with its title and the month, not the provisional page with a link to the Resumo", async () => {
     renderHome("/");
     expect(screen.getByRole("heading", { level: 1, name: "Início" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Adicionar talão" })).toHaveAttribute("href", "/adicionar");
-    expect(screen.getByRole("link", { name: "Ver resumo" })).toHaveAttribute("href", "/compras/resumo");
+    expect(await screen.findByText("Este mês")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Ver resumo" })).not.toBeInTheDocument();
   });
 
   it("F-95: parameters that are not the Resumo's do not redirect", () => {

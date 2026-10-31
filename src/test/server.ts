@@ -1,7 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import type { Schemas } from "../api/client";
-import { consumption, emptyProfile, me, merchants, profile, receipt, summary } from "./fixtures";
+import { consumption, emptyProfile, me, merchants, overviewGreen, profile, receipt, summary } from "./fixtures";
 
 export const API = "http://localhost:3000";
 
@@ -17,6 +17,7 @@ export const server = setupServer(
   http.get(`${API}/v1/receipts/:id`, () => HttpResponse.json(receipt())),
   http.get(`${API}/v1/analytics/summary`, () => HttpResponse.json(summary())),
   http.get(`${API}/v1/analytics/consumption`, () => HttpResponse.json(consumption())),
+  http.get(`${API}/v1/analytics/overview`, () => HttpResponse.json(overviewGreen)),
 );
 
 export function errorBody(code: string, message: string, extra: Record<string, unknown> = {}) {
@@ -68,4 +69,22 @@ export function servePatch() {
     }),
   );
   return bodies;
+}
+
+/**
+ * GET /v1/analytics/overview for one test: a fixed answer, or one per month. Returns the months asked for, in order.
+ * `delayMs` makes it slow (the loading state); "error" makes it fail with a 500.
+ */
+export function serveOverview(answer: Schemas["OverviewOut"] | ((month: string) => Schemas["OverviewOut"]) | "error", options: { delayMs?: number } = {}) {
+  const months: string[] = [];
+  server.use(
+    http.get(`${API}/v1/analytics/overview`, async ({ request }) => {
+      const month = new URL(request.url).searchParams.get("month") ?? "";
+      months.push(month);
+      if (options.delayMs) await new Promise((resolve) => setTimeout(resolve, options.delayMs));
+      if (answer === "error") return HttpResponse.json(errorBody("internal_error", "x"), { status: 500 });
+      return HttpResponse.json(typeof answer === "function" ? answer(month) : answer);
+    }),
+  );
+  return months;
 }

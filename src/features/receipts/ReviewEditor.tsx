@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ApiError, api, unwrap, type Merchant, type Schemas } from "../../api/client";
 import { Button, Field, Notice, Select } from "../../components/ui";
 import { centsToInput, formatCents, formatQuantity, MERCHANT_NAMES, parseEurToCents } from "../../lib/format";
+import { invalidateReceiptData } from "./cache";
 import {
   emptyLine,
   lineNet,
@@ -67,7 +68,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
 
   const refresh = (updated: Receipt) => {
     qc.setQueryData(["receipt", receipt.id], updated);
-    void qc.invalidateQueries({ queryKey: ["receipts"] });
+    void invalidateReceiptData(qc);
     void qc.invalidateQueries({ queryKey: ["summary"] });
   };
 

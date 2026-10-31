@@ -186,3 +186,81 @@ export const merchants: Schemas["MerchantOut"][] = [
   { id: "MERCADONA", name: "Mercadona" },
   { id: "EL_CORTE_INGLES", name: "El Corte Inglés" },
 ];
+
+// ---------------------------------------------------------------- Início (spec 011): GET /v1/analytics/overview, synthetic
+
+type Overview = Schemas["OverviewOut"];
+
+/** October 2026, a goal of 400 €, 152 € spent (38 %, green), an average that is 7 % below, one purchase of each state. */
+export const overviewGreen: Overview = {
+  month: "2026-10",
+  spent_cents: 15200,
+  goal_cents: 40000,
+  goal_pct: 38,
+  band: "ok",
+  monthly_average_cents: 31800,
+  recent_vs_average_pct: -7,
+  average_trend: "below",
+  average_months: 5,
+  average_min_months: 2,
+  purchases_this_month: 7,
+  purchases_last_month: 11,
+  weeks: [
+    { index: 1, from: "2026-10-01", to: "2026-10-07", spent_cents: 1900 },
+    { index: 2, from: "2026-10-08", to: "2026-10-14", spent_cents: 5800 },
+    { index: 3, from: "2026-10-15", to: "2026-10-21", spent_cents: 3100 },
+    { index: 4, from: "2026-10-22", to: "2026-10-28", spent_cents: 3200 },
+    { index: 5, from: "2026-10-29", to: "2026-10-31", spent_cents: 1200 },
+  ],
+  by_merchant: [
+    { merchant: "PINGO_DOCE", name: "Pingo Doce", spent_cents: 6200, purchases: 3, share_pct: 41 },
+    { merchant: "LIDL", name: "Lidl", spent_cents: 5000, purchases: 2, share_pct: 33 },
+    { merchant: "MERCADONA", name: "Mercadona", spent_cents: 4000, purchases: 2, share_pct: 26 },
+  ],
+  recent_receipts: [
+    { id: "c1", merchant: null, name: "Outros", date: "2026-10-29", total_cents: null, status: "RECEIVED" },
+    { id: "c2", merchant: null, name: "Outros", date: "2026-10-28", total_cents: null, status: "REVIEW_REQUIRED" },
+    { id: "c3", merchant: "PINGO_DOCE", name: "Pingo Doce", date: "2026-10-27", total_cents: 4120, status: "CONFIRMED" },
+  ],
+  empty: false,
+};
+
+/** 248 € of 400 € (62 %, orange), average on target. */
+export const overviewOrange: Overview = { ...overviewGreen, spent_cents: 24800, goal_pct: 62, band: "attention", recent_vs_average_pct: 2, average_trend: "on_average" };
+/** 352 € of 400 € (88 %, red), average 12 % above. */
+export const overviewRed: Overview = { ...overviewGreen, spent_cents: 35200, goal_pct: 88, band: "high", recent_vs_average_pct: 12, average_trend: "above" };
+/** 452 € of 400 € (113 %, red, above the goal). */
+export const overviewOver: Overview = { ...overviewGreen, spent_cents: 45200, goal_pct: 113, band: "high" };
+/** No goal defined (also an account from before the onboarding). */
+export const overviewNoGoal: Overview = { ...overviewGreen, spent_cents: 24800, goal_cents: null, goal_pct: null, band: "none" };
+/** Less than the minimum months: no average and no trend yet. */
+export const overviewFewData: Overview = { ...overviewGreen, monthly_average_cents: null, recent_vs_average_pct: null, average_trend: null, average_months: 0 };
+/** Two months: an average but still no trend (the backend needs a third month for it). */
+export const overviewNoTrend: Overview = { ...overviewGreen, recent_vs_average_pct: null, average_trend: null, average_months: 2 };
+/** A month with no confirmed purchase, in an account that has some elsewhere: zeros, with the goal. */
+export const overviewZeroMonth: Overview = {
+  ...overviewGreen,
+  spent_cents: 0,
+  goal_pct: 0,
+  band: "ok",
+  purchases_this_month: 0,
+  weeks: overviewGreen.weeks.map((w) => ({ ...w, spent_cents: 0 })),
+  by_merchant: [],
+  recent_receipts: [],
+};
+/** An account with no confirmed purchase in any month. */
+export const overviewEmpty: Overview = {
+  ...overviewZeroMonth,
+  monthly_average_cents: null,
+  recent_vs_average_pct: null,
+  average_trend: null,
+  average_months: 0,
+  purchases_last_month: 0,
+  empty: true,
+};
+
+/** Spending against a 400 € goal as the backend 014 rounds it: percentage half up, band from the rounded percentage (50 and 75 inclusive). */
+export function overviewFor(spentCents: number, goalCents = 40000): Overview {
+  const pct = Math.floor((spentCents * 100) / goalCents + 0.5);
+  return { ...overviewGreen, spent_cents: spentCents, goal_cents: goalCents, goal_pct: pct, band: pct <= 50 ? "ok" : pct <= 75 ? "attention" : "high" };
+}

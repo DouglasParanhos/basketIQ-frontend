@@ -32,6 +32,73 @@ export interface FakeState {
   duplicate?: boolean;
   /** The presigned storage drops the connection (a network failure). */
   storageFails?: boolean;
+  /** The state of GET /v1/analytics/overview (the green ring with a goal when absent). */
+  overview?: OverviewKind;
+  /** Milliseconds GET /v1/analytics/overview waits before answering (the loading state). */
+  overviewDelayMs?: number;
+  /** GET /v1/analytics/overview answers 500. */
+  overviewFail?: boolean;
+  /** The months GET /v1/analytics/overview was asked for, in order. */
+  overviewRequests: string[];
+}
+
+export type OverviewKind = "green" | "orange" | "red" | "over" | "nogoal" | "fewdata" | "notrend" | "zero" | "empty";
+
+/** Synthetic answers of GET /v1/analytics/overview (October 2026, a goal of 400 euros). */
+function overviewBody(kind: OverviewKind, month: string) {
+  const base = {
+    month,
+    spent_cents: 15200,
+    goal_cents: 40000 as number | null,
+    goal_pct: 38 as number | null,
+    band: "ok" as string,
+    monthly_average_cents: 31800 as number | null,
+    recent_vs_average_pct: -7 as number | null,
+    average_trend: "below" as string | null,
+    average_months: 5,
+    average_min_months: 2,
+    purchases_this_month: 7,
+    purchases_last_month: 11,
+    weeks: [
+      { index: 1, from: `${month}-01`, to: `${month}-07`, spent_cents: 1900 },
+      { index: 2, from: `${month}-08`, to: `${month}-14`, spent_cents: 5800 },
+      { index: 3, from: `${month}-15`, to: `${month}-21`, spent_cents: 3100 },
+      { index: 4, from: `${month}-22`, to: `${month}-28`, spent_cents: 3200 },
+      { index: 5, from: `${month}-29`, to: `${month}-31`, spent_cents: 1200 },
+    ],
+    by_merchant: [
+      { merchant: "PINGO_DOCE", name: "Pingo Doce", spent_cents: 6200, purchases: 3, share_pct: 41 },
+      { merchant: "LIDL", name: "Lidl", spent_cents: 5000, purchases: 2, share_pct: 33 },
+      { merchant: "MERCADONA", name: "Mercadona", spent_cents: 4000, purchases: 2, share_pct: 26 },
+    ],
+    recent_receipts: [
+      { id: "c1", merchant: null, name: "Outros", date: `${month}-29`, total_cents: null as number | null, status: "RECEIVED" },
+      { id: "c2", merchant: null, name: "Outros", date: `${month}-28`, total_cents: null as number | null, status: "REVIEW_REQUIRED" },
+      { id: "c3", merchant: "PINGO_DOCE", name: "Pingo Doce", date: `${month}-27`, total_cents: 4120 as number | null, status: "CONFIRMED" },
+    ],
+    empty: false,
+  };
+  const zero = { ...base, spent_cents: 0, goal_pct: 0, purchases_this_month: 0, weeks: base.weeks.map((w) => ({ ...w, spent_cents: 0 })), by_merchant: [], recent_receipts: [] };
+  switch (kind) {
+    case "orange":
+      return { ...base, spent_cents: 24800, goal_pct: 62, band: "attention", recent_vs_average_pct: 2, average_trend: "on_average" };
+    case "red":
+      return { ...base, spent_cents: 35200, goal_pct: 88, band: "high", recent_vs_average_pct: 12, average_trend: "above" };
+    case "over":
+      return { ...base, spent_cents: 45200, goal_pct: 113, band: "high" };
+    case "nogoal":
+      return { ...base, spent_cents: 24800, goal_cents: null, goal_pct: null, band: "none" };
+    case "fewdata":
+      return { ...base, monthly_average_cents: null, recent_vs_average_pct: null, average_trend: null, average_months: 0 };
+    case "notrend":
+      return { ...base, recent_vs_average_pct: null, average_trend: null, average_months: 2 };
+    case "zero":
+      return zero;
+    case "empty":
+      return { ...zero, monthly_average_cents: null, recent_vs_average_pct: null, average_trend: null, average_months: 0, purchases_last_month: 0, empty: true };
+    default:
+      return base;
+  }
 }
 
 const MERCHANTS = [
@@ -181,6 +248,7 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     profilePatches: [],
     storedFilesDeletes: 0,
     uploads: { inits: 0, photos: 0, stored: 0, processed: 0, names: [], hints: [] },
+    overviewRequests: [],
     ...overrides,
   };
   let purchasesWithFiles = Math.ceil((state.storedFiles ?? 0) / 3);
@@ -247,6 +315,13 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     if (path === "/v1/receipts" && method === "GET") {
       const items = state.empty ? [] : state.receipts.map((r) => ({ id: r.id, status: r.status, merchant: r.merchant, purchase_at: r.purchase_at, total_cents: 313, line_count: 2, overall_confidence: 0.6, needs_action: true, created_at: r.created_at }));
       return json(route, { items, next_cursor: null });
+    }
+    if (path === "/v1/analytics/overview" && method === "GET") {
+      const month = url.searchParams.get("month") ?? "";
+      state.overviewRequests.push(month);
+      if (state.overviewDelayMs) await new Promise((resolve) => setTimeout(resolve, state.overviewDelayMs));
+      if (state.overviewFail) return json(route, { code: "internal_error", message: "Erro.", request_id: "r" }, 500);
+      return json(route, overviewBody(state.overview ?? "green", month));
     }
     if (path === "/v1/receipts/upload-init" && method === "POST") {
       const body = route.request().postDataJSON() as { filename: string; allow_duplicate: boolean; merchant_hint: string | null };

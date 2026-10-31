@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
 import { ApiError, api, unwrap, type Merchant, type Schemas } from "../../api/client";
 import { postToStorage, sha256Hex, UploadError } from "../../lib/upload";
+import { invalidateReceiptData } from "../receipts/cache";
 
 export type Phase = "idle" | "hashing" | "uploading" | "starting" | "done" | "duplicate" | "failed";
 
@@ -106,7 +107,7 @@ export function useUpload() {
           }),
         );
         setPhase("done");
-        await qc.invalidateQueries({ queryKey: ["receipts"] });
+        await invalidateReceiptData(qc);
         return p.receiptId;
       } catch (e) {
         if (e instanceof ApiError && e.code === "duplicate_suspected") {
