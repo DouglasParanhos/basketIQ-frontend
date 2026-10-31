@@ -26,7 +26,7 @@ Resultado esperado: tudo verde; os testes que abrem `/` passam a receber um `ove
 | 5 | Conta sem meta (por exemplo anterior ao onboarding) | anel vazio, «—», «Sem meta pessoal definida», botão «Definir a minha meta pessoal» que vai a `/definicoes` |
 | 6 | Gastos de 200,00, 201,60, 202,00, 300,00, 301,60 e 302,00 € para 400 € | 50 %, 50 %, 51 %, 75 %, 75 %, 76 % e as faixas da US1.10 |
 | 7 | Conta com 3 ou mais meses completos de compras | cartão da média com valor, tendência, fundo suave e texto (palavra e tom de `average_trend`) |
-| 7b | Conta com exatamente 2 meses completos | valor da média e «Tendência: ainda sem meses suficientes», sem fundo colorido |
+| 7b | Conta com exatamente 2 meses completos | valor da média e «A tendência aparece com mais um mês completo de compras.», sem fundo colorido |
 | 8 | Conta com menos meses do que `average_min_months` | «— €» e «Aparece com 2 meses de histórico» (o 2 vem da resposta), sem fundo colorido |
 | 9 | Conta sem nenhuma compra confirmada | cartões tracejados, «A aguardar o seu primeiro talão», «Adicionar talão» leva a `/adicionar` |
 | 10 | Conta com compras e um mês sem compras | zeros, não o estado vazio |

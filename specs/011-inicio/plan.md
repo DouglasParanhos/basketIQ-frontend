@@ -66,14 +66,14 @@ Decididas pela Liz a 2026-10-31 (as recomendações do plano foram aceites, salv
 | D-P11 | Navegação entre meses | mantida (P2, separável) | spec |
 | D-P12 | Intervalo de «na média» | do backend (`average_trend`, ±5 %) | R6 |
 
-## Decisões novas por confirmar pela Liz
+## Decisões novas (decididas pela Liz a 2026-10-31)
 
-Surgiram ao aplicar o contrato escrito do backend; não foram decididas pelo plano.
+Surgiram ao aplicar o contrato escrito do backend.
 
 | # | Decisão | Recomendação | Onde |
 |---|---|---|---|
-| D-P13 | Média presente e tendência nula (só 2 meses de dados): que texto? | valor da média e «Tendência: ainda sem meses suficientes» (sem número, porque a API não o expõe; pedir o mínimo da tendência ao backend, C16) | copy, C16 |
-| D-P14 | Média por semana: a API não a devolve | não mostrar (o cliente não a calcula); alternativa: pedir `weekly_average_cents` ao backend | copy, C15 |
+| D-P13 | Média presente e tendência nula (só 2 meses de dados): que texto? | decidido: «A tendência aparece com mais um mês completo de compras.» | copy, C16 |
+| D-P14 | Média por semana: a API não a devolve | decidido: não mostrar (o cliente não a calcula) | copy, C15 |
 
 ## Project Structure
 

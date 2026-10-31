@@ -1,6 +1,6 @@
 # Textos do Início (português europeu)
 
-Fonte: tabela do `Documentation/design-ux-v2/README.md` aplicada ao `HomeF` e ao `HomeG`. Valores em euros pelo `formatCents` («248,00 €»; decisão D-P4 da Liz, 2026-10-31). Os textos de produto da primeira versão foram aprovados a 2026-10-31 (D-P1, D-P2, D-P10); os marcados ⚠ são propostas novas, por confirmar.
+Fonte: tabela do `Documentation/design-ux-v2/README.md` aplicada ao `HomeF` e ao `HomeG`. Valores em euros pelo `formatCents` («248,00 €»; decisão D-P4 da Liz, 2026-10-31). Os textos de produto da primeira versão foram aprovados a 2026-10-31 (D-P1, D-P2, D-P10); todos os textos estão decididos (D-P13 e D-P14 incluídos).
 
 | Elemento | Texto | Notas |
 |---|---|---|
@@ -20,7 +20,7 @@ Fonte: tabela do `Documentation/design-ux-v2/README.md` aplicada ao `HomeF` e ao
 | Nota fixa | A meta pessoal é um objetivo seu, não um limite. Pode mudá-la quando quiser. | README; a primeira frase é a da spec, a segunda a do protótipo |
 | Média, título | Média mensal | |
 | Média, com tendência | «Últimos 2 meses: 7 % abaixo da média» (`average_trend` `below`) / «12 % acima da média» (`above`) / «na média» (`on_average`) | o número é o valor absoluto de `recent_vs_average_pct`; a palavra e o tom vêm de `average_trend`, não de um limiar do cliente (D-P12) |
-| Média, sem tendência ⚠ | valor da média e «Tendência: ainda sem meses suficientes» | média presente e `average_trend` nulo (2 meses; C16). Sem fundo colorido. Não cita o número de meses porque a API não o expõe (D-P13) |
+| Média, sem tendência | valor da média e «A tendência aparece com mais um mês completo de compras.» | média presente e `average_trend` nulo (2 meses; C16). Sem fundo colorido (D-P13, decidido) |
 | Média, sem média | «— €» e «Aparece com 2 meses de histórico» | o «2» é `average_min_months`; «0/2 meses» usa `average_months` |
 | Média, meses passados | igual ao mês corrente | a média e a tendência não dependem do mês mostrado (C11) |
 | Compras | Compras no mês · «Mês passado: 11» | |

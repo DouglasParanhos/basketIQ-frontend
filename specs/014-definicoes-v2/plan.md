@@ -42,16 +42,16 @@ Sem bloqueio de contrato: `schema.d.ts` já tem o perfil, os mercados e os fiche
 | IV. Privacidade no cliente | Passa: perfil e rascunho só em memória; a cache apaga-se no logout/eliminação (`qc.clear()`); sem `localStorage` |
 | V. Mobile-first e acessível | Passa com verificação: alvos ≥ 44 px, `SegmentedTabs` com teclado, vistos além da cor nas escolhas, regiões `status` para a contagem e o guardado, foco gerido, axe claro e escuro |
 | VI. Contrato tipado | Passa: tipos de `schema.d.ts`; nenhum à mão |
-| VII. Rastreabilidade | Passa: F-189 a F-194, um por história (por confirmar, D-Q10); cenários do perfil e dos originais «Verificado no Backend» |
+| VII. Rastreabilidade | Passa: F-189 a F-194, um por história (aprovados, D-Q10); cenários do perfil e dos originais «Verificado no Backend» |
 | VIII. Simplicidade | Passa: sem biblioteca de formulários, sem estado global novo, sem diálogos novos; as abas e a ligação da meta no URL |
 
 Resultado: **sem violações**; decisões de produto registadas abaixo.
 
-## Decisões por confirmar pela Liz
+## Decisões de produto (aceites pela Liz a 2026-10-31)
 
-Não foram decididas pelo plano. Cada uma tem a recomendação em `research.md` e na secção Clarifications da spec.
+Cada uma tem a justificação em `research.md` e na secção Clarifications da spec.
 
-| # | Decisão | Recomendação | Onde |
+| # | Decisão | Resultado | Onde |
 |---|---|---|---|
 | D-Q1 | Abas como rotas; `/definicoes` redireciona para `/definicoes/perfil` | sim (muda o teste F-98) | R1 |
 | D-Q2 | Ligação do Início à meta: `/definicoes/perfil?editar=meta` | sim | rotas |
@@ -60,9 +60,9 @@ Não foram decididas pelo plano. Cada uma tem a recomendação em `research.md` 
 | D-Q5 | Cancelar com alterações pede confirmação | sim | spec |
 | D-Q6 | Meta: campo livre em euros, 50 € a 800 €, vazio = sem meta | sim | R4 |
 | D-Q7 | Pessoas: contador com «Não indicar» (envia `null`) | sim | R2 |
-| D-Q8 | Consentimento em falta ao guardar: levar à política e perder as alterações | sim | R5 |
+| D-Q8 | Consentimento em falta ao guardar: levar à política e perder as alterações | aceite e confirmada | R5 |
 | D-Q9 | Apagar originais repete até `remaining` 0 | sim | R6 |
-| D-Q10 | Identificadores F-189 a F-194 | aprovar | spec |
+| D-Q10 | Identificadores F-189 a F-194 | aprovados | spec |
 
 ## Project Structure
 

@@ -16,7 +16,7 @@
 
 ### Session 2026-10-31
 
-Respostas deduzidas dos documentos (HANDOFF, plano UX v2, README de design, spec 014 do backend, spec 010), dadas sem supervisão. **A 2026-10-31 a Liz decidiu D-P1 a D-P12** (ver a última entrada desta secção); onde uma resposta abaixo dizia «por confirmar», vale a decisão. O relatório está em `Documentation/ANALISE_spec011_frontend_2026-10-31.md`.
+Respostas deduzidas dos documentos (HANDOFF, plano UX v2, README de design, spec 014 do backend, spec 010), dadas sem supervisão. **A 2026-10-31 a Liz decidiu D-P1 a D-P14** (ver a última entrada desta secção); onde uma resposta abaixo dizia «por confirmar», vale a decisão. O relatório está em `Documentation/ANALISE_spec011_frontend_2026-10-31.md`.
 
 - Q: Para onde vai «Definir a minha meta pessoal»? → A: para a edição da meta no Perfil das Definições (spec 014 do frontend). O passo 4 do onboarding deixou de ser opção: `/boas-vindas` leva quem já concluiu para o Início (spec 010, decisão 17). Até o Perfil existir (Fase 6), o botão aponta para `/definicoes`. O lançamento espera pelo Perfil (decisão da Liz, 2026-10-30).
 - Q: Quem vê o anel sem meta? → A: **todas as contas anteriores ao onboarding** (a migração do backend marca-as como concluídas, sem meta) e quem saltou o passo da meta. É o estado normal de muita gente, não um caso raro.
@@ -29,8 +29,8 @@ Respostas deduzidas dos documentos (HANDOFF, plano UX v2, README de design, spec
 - Q: Quem decide o intervalo de «na média» e qual é? → A: o backend, porque é regra de negócio com limiares configuráveis como as faixas do anel (a spec 014 só devolve `recent_vs_average_pct`, um número). **Resolvido (D-P12):** o backend expõe `average_trend` (`below`, `on_average`, `above`; limiar `AVERAGE_ON_TARGET_PCT` = 5). O cliente mapeia o campo e não aplica limiares.
 - Q: «Mês seguinte» fica ativo no mês corrente? → A: não, fica desativado; num mês passado leva ao mês seguinte. Um mês futuro escrito à mão no URL mostra zeros (a API aceita-o). **Aprovado (D-P5).**
 - Q: Decisões da Liz de 2026-10-31 → A: D-P1, D-P2, D-P4, D-P5, D-P8, D-P9, D-P10, D-P11 e D-P12 aceites como recomendadas; D-P3 aprovada (`--color-warn`); D-P7: os meses passados mostram a meta atual com a nota «Meta atual»; D-P6: os identificadores passam a **F-183 a F-188** (o backend 014 usa F-176 a F-182); Q7 do backend mudou: as últimas compras incluem as que requerem revisão ou estão em processamento, com `status`.
-- Q: Que texto mostra o cartão da média com média e sem tendência (só 2 meses de dados)? → A: o valor da média e «Tendência: ainda sem meses suficientes», sem fundo colorido e sem citar um número de meses que a API não expõe. **Por confirmar pela Liz (D-P13).**
-- Q: Mostra-se a «média por semana» do HomeF? → A: não, enquanto a API não a devolver: o cliente não calcula médias (constituição III). **Por confirmar pela Liz (D-P14).**
+- Q: Que texto mostra o cartão da média com média e sem tendência (só 2 meses de dados)? → A: o valor da média e «A tendência aparece com mais um mês completo de compras.», sem fundo colorido. **Decidido pela Liz (D-P13).**
+- Q: Mostra-se a «média por semana» do HomeF? → A: não, enquanto a API não a devolver: o cliente não calcula médias (constituição III). **Decidido pela Liz (D-P14).**
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -69,7 +69,7 @@ Respostas deduzidas dos documentos (HANDOFF, plano UX v2, README de design, spec
 4. **Given** menos meses do que o mínimo, **When** abre, **Then** mostra «— €» e «Aparece com 2 meses de histórico», sem fundo colorido; o «2» é `average_min_months` da resposta e não um valor fixo no cliente. — RF-15
 5. **Given** o fundo colorido, **When** medido, **Then** o contraste do texto é pelo menos 4,5:1 em claro e escuro. — §8
 6. **Given** o cartão da média, **When** é lido, **Then** a cor do fundo nunca é o único sinal: o texto diz «abaixo», «acima» ou «na média». — §8, RF-15
-7. **Given** média disponível e `average_trend` nulo (só 2 meses de dados), **When** abre, **Then** o cartão mostra o valor da média e «Tendência: ainda sem meses suficientes», sem fundo colorido. — RF-15, RF-11 (texto por confirmar pela Liz, D-P13)
+7. **Given** média disponível e `average_trend` nulo (só 2 meses de dados), **When** abre, **Then** o cartão mostra o valor da média e «A tendência aparece com mais um mês completo de compras.», sem fundo colorido. — RF-15, RF-11 (D-P13, decidido)
 8. **Given** um mês passado, **When** o cartão da média é mostrado, **Then** é igual ao do mês corrente: a média e a tendência não dependem do mês mostrado. — RF-15
 
 ---

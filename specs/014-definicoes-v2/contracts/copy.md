@@ -1,6 +1,6 @@
 # Textos das Definições (português europeu)
 
-Fonte: `DefinicoesV2.dc.html` com a tabela de substituições do `README.md` de `design-ux-v2`. Os textos de produto são propostas por confirmar pela Liz (D-Q); os que vêm do protótipo ou do código atual estão indicados.
+Fonte: `DefinicoesV2.dc.html` com a tabela de substituições do `README.md` de `design-ux-v2`. Os textos foram aceites com as decisões D-Q de 2026-10-31; os que vêm do protótipo ou do código atual estão indicados.
 
 | Elemento | Texto | Notas |
 |---|---|---|
@@ -17,7 +17,7 @@ Fonte: `DefinicoesV2.dc.html` com a tabela de substituições do `README.md` de 
 | Guardado | Perfil guardado. | região `status` |
 | **Perfil, edição** | | |
 | Título | Editar perfil | |
-| Pessoas | «Menos uma pessoa» / «Mais uma pessoa»; sem valor: «—» e «Não indicar» | sem «Ajusta as comparações» (spec 015) |
+| Pessoas | «Menos uma pessoa» / «Mais uma pessoa»; sem valor: «—» (aí «Mais uma pessoa» passa a 1 e «Menos uma pessoa» está desativado) e «Não indicar» | sem «Ajusta as comparações» (spec 015) |
 | Mercados | caixas de seleção com inicial, nome e visto | de `GET /v1/merchants` |
 | Meta | campo «Meta pessoal do mês (€)», dica «Um objetivo seu, não um limite. Deixe vazio para não ter meta.» | |
 | Erro da meta | A meta tem de estar entre 50 € e 800 €. | |

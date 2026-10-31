@@ -66,7 +66,7 @@ Regra do cliente: uma compra não confirmada **nunca** entra em valores do ecrã
 | C10 | nomes e nulos finais no OpenAPI | — | **aberta**: confirmar com `gen:api` (T001) |
 | C11 | média e tendência dependem de `month`? | **não**: são sobre os meses completos anteriores ao mês corrente de Lisboa, seja qual for o `month` (R4) | respondida; o cartão é igual em todos os meses |
 | C15 | média por semana | não vem; o cliente não a calcula (constituição III) | **aberta**: pedir `weekly_average_cents` ou aceitar que o ecrã não a mostra (D-P14) |
-| C16 | tendência nula com média presente (2 meses) | `recent_vs_average_pct` e `average_trend` nulos, `average_months` = 2; a regra «3 meses» não está exposta | **aberta**: o texto do cartão não pode citar o número (D-P13) |
+| C16 | tendência nula com média presente (2 meses) | `recent_vs_average_pct` e `average_trend` nulos, `average_months` = 2; a regra «3 meses» não está exposta | texto decidido (D-P13); o número de meses da regra não é exposto e o texto não o cita |
 
 **Estado de bloqueio:** a implementação só começa com `overview` publicado no OpenAPI e com os tipos gerados a bater com este ficheiro (T001, C10). C15 e C16 têm resposta provisória (copy.md).
 

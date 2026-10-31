@@ -11,7 +11,7 @@
 - Decisão: um só `GET /v1/analytics/overview?month=YYYY-MM` por mês mostrado (US5.6). O cliente não usa `summary` nem `consumption` no Início.
 - Porquê: é o contrato da 014 («núcleo do Início») e mantém o p95 medido no backend.
 - Cache: chave `["overview", month]`, `staleTime` 30 s, releitura ao focar a janela.
-- **Invalidação (tarefa nesta spec):** As mutações atuais invalidam `["summary"]` e/ou `["receipts"]` e nada invalida `["overview"]` (verificado: `ReceiptPage.tsx:152` e `302-303`, `ReviewEditor.tsx:70-71`, `useUpload.ts:109`, que só invalida `receipts`; `useSaveProfile` só grava o perfil na cache). Com `staleTime` de 30 s, confirmar ou eliminar uma compra e abrir o Início logo a seguir mostraria valores antigos como atuais. Decisão: invalidar também `["overview"]` nos cinco pontos: apagar compra (`ReceiptPage`), editar/confirmar (`ReviewEditor`), decisão de duplicado (`DuplicateChoice`), fim do envio (`useUpload`, porque as últimas compras passaram a incluir as que estão em processamento) e `useSaveProfile.onSuccess` (a meta muda o anel). São as tarefas T035 a T039 desta spec, não das specs 013 e 014 do frontend. Alternativa rejeitada: `staleTime` 0 (um pedido a cada visita ao Início, contra o US5.6 «um pedido por mês mostrado»).
+- **Invalidação (tarefa nesta spec):** As mutações atuais invalidam `["summary"]` e/ou `["receipts"]` e nada invalida `["overview"]` (verificado: `ReceiptPage.tsx:152` e `302-303`, `ReviewEditor.tsx:70-71`, `useUpload.ts:109`, que só invalida `receipts`; `useSaveProfile` só grava o perfil na cache). Com `staleTime` de 30 s, confirmar ou eliminar uma compra e abrir o Início logo a seguir mostraria valores antigos como atuais. Decisão: invalidar também `["overview"]` nos quatro pontos desta spec: apagar compra (`ReceiptPage`), editar/confirmar (`ReviewEditor`), decisão de duplicado (`DuplicateChoice`), fim do envio (`useUpload`, porque as últimas compras passaram a incluir as que estão em processamento) (o `useSaveProfile.onSuccess`, que muda o anel, é da spec 014 do frontend, decisão da Liz de 2026-10-31). São as tarefas T035 a T037 desta spec. Alternativa rejeitada: `staleTime` 0 (um pedido a cada visita ao Início, contra o US5.6 «um pedido por mês mostrado»).
 
 **R3. Composição e ordem dos cartões (D-P9, aprovado).**
 - Decisão: seguindo o HomeF sem os cartões da lista e da comparação: cabeçalho de mês; anel; média mensal e compras no mês lado a lado (em 320 px, em coluna); gasto por semana; «Onde gasta mais»; últimas compras.
@@ -34,7 +34,7 @@
 - «Na média»: o backend decide (`average_trend`, limiar `AVERAGE_ON_TARGET_PCT` = 5). O cliente mapeia `below`/`on_average`/`above` e mostra o valor absoluto de `recent_vs_average_pct`; não aplica limiares.
 - Sinal: negativo = abaixo (C2 respondida).
 - A média e a tendência não dependem do mês pedido (C11 respondida, backend R4): o cartão é igual em todos os meses.
-- Média presente com tendência nula (2 meses de dados): D-P13, texto proposto «Tendência: ainda sem meses suficientes».
+- Média presente com tendência nula (2 meses de dados): D-P13, texto decidido pela Liz: «A tendência aparece com mais um mês completo de compras.»
 
 **R7. Formato dos euros (D-P4, aprovado).**
 - `formatCents` (já existe; «248,00 €»). O protótipo mostra «€ 248» (convenção brasileira, sem cêntimos); o pt-PT escreve «248,00 €» e uma soma gasto + saldo com euros arredondados pode não bater no ecrã (201,60 € + 198,40 € mostrados como 202 + 198).

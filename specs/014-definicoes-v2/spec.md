@@ -8,7 +8,7 @@
 
 **Input**: Especificação Funcional v1.4 §8, RF-12, RF-13, RF-14; `Documentation/Super Mercado_—_Plano_de_Implementação_UX_v2.md` (Fase 6, D3, D8, decisão 17); `Documentation/design-ux-v2/DefinicoesV2.dc.html` (layout) e `README.md` (textos pt-PT e o que não se implementa). Backend: `../basketIQ-backend/specs/013-perfil-utilizador` (`contracts/api.md`). Specs relacionadas: `006-definicoes-dados` (reestilizada aqui), `009-navegacao-5-botoes` (`SegmentedTabs`), `010-onboarding` (perfil, mercados, guarda), `011-inicio` (liga aqui «Definir a minha meta pessoal»).
 
-**Convenção de rastreabilidade**: cada critério cita o RF da Especificação Funcional. Os testes do frontend levam o identificador no nome (`F-xx: …`). Identificadores **F-189 a F-194**, um por história (o backend 014 usa F-176 a F-182 e o frontend 011 usa F-183 a F-188); por confirmar pela Liz (D-Q10). Os cenários do perfil, dos ficheiros originais e do consentimento são «Verificado no Backend» (F-100 a F-112); aqui verifica-se o que o ecrã mostra e envia.
+**Convenção de rastreabilidade**: cada critério cita o RF da Especificação Funcional. Os testes do frontend levam o identificador no nome (`F-xx: …`). Identificadores **F-189 a F-194**, um por história (o backend 014 usa F-176 a F-182 e o frontend 011 usa F-183 a F-188). Os cenários do perfil, dos ficheiros originais e do consentimento são «Verificado no Backend» (F-100 a F-112); aqui verifica-se o que o ecrã mostra e envia.
 
 **Fora desta spec:** os lembretes semanais («Lembretes para lançar talões»): não existem na v1 e o interruptor não aparece (README, decisão de 2026-10-30). O texto «Ajusta as comparações» do protótipo também não: as comparações entre mercados são da spec 015. A lista de dados apagados com a lista inteligente ativa (spec 015) acrescenta-se lá.
 
@@ -16,21 +16,21 @@
 
 ### Session 2026-10-31
 
-Respostas deduzidas dos documentos (plano UX v2, README de design, spec 013 do backend, specs 009, 010 e 011, código atual), dadas sem supervisão: a recomendada fica registada e as de produto levam «por confirmar pela Liz» com o código D-Q. Vão todas para o relatório `Documentation/ANALISE_spec014_frontend_2026-10-31.md`.
+Respostas deduzidas dos documentos (plano UX v2, README de design, spec 013 do backend, specs 009, 010 e 011, código atual), dadas sem supervisão; **a 2026-10-31 a Liz aceitou D-Q1 a D-Q10** (D-Q8 confirmada: as alterações por guardar perdem-se e nada vai para `localStorage`) e decidiu A1 e A2 do `analyze`. Vão todas para o relatório `Documentation/ANALISE_spec014_frontend_2026-10-31.md`.
 
 - Q: Os lembretes semanais aparecem? → A: não (README: «Não aparece na v1»). Fecha o NEEDS CLARIFICATION da Fase 0.
 - Q: Que versão da política se mostra? → A: a real, a que a pessoa aceitou (`privacy_version` de `GET /v1/me`, por exemplo «2026-10-15»), não «versão 1.0» do protótipo (README). A data é `privacy_accepted_at`.
-- Q: As abas são rotas ou estado? → A: rotas, como Compras · Resumo · Produtos (spec 009): `/definicoes/perfil`, `/definicoes/privacidade`, `/definicoes/conta`; `/definicoes` redireciona (substituindo) para `/definicoes/perfil`. O ecrã de eliminar é a rota própria `/definicoes/conta/eliminar`, fora do layout das abas. O teste F-98 («`/definicoes` mantém-se») passa a verificar o redirecionamento. **Por confirmar pela Liz (D-Q1).**
-- Q: Como é que o Início leva à edição da meta? → A: `/definicoes/perfil?editar=meta` abre o Perfil já em modo de edição, com o foco no campo da meta. Substitui o `/definicoes` provisório do botão «Definir a minha meta pessoal» (spec 011, D-P8). **Por confirmar pela Liz (D-Q2).**
-- Q: Cada «Editar» abre o seu bloco ou o perfil todo? → A: o perfil todo: qualquer «Editar» entra no modo «Editar perfil» (como o protótipo, com «Cancelar» e «Guardar alterações») com o foco no bloco escolhido. Não há quatro modos de edição independentes. **Por confirmar pela Liz (D-Q3).**
-- Q: O que conta como «alteração»? → A: cada diferença em relação ao perfil guardado: pessoas alteradas = 1; meta alterada ou apagada = 1; cada mercado ou objetivo acrescentado ou retirado = 1. «3 alterações por guardar» no protótipo (meta e dois mercados) é coerente com isto. Com 0 alterações, «Guardar alterações» fica desativado. **Por confirmar pela Liz (D-Q4).**
-- Q: «Cancelar» com alterações pede confirmação? → A: sim, no próprio ecrã: «Descartar as N alterações?» com «Descartar» e «Continuar a editar». Sem alterações, cancela de imediato. A spec diz que ações que perdem trabalho pedem confirmação explícita; o custo é um toque. **Por confirmar pela Liz (D-Q5).**
+- Q: As abas são rotas ou estado? → A: rotas, como Compras · Resumo · Produtos (spec 009): `/definicoes/perfil`, `/definicoes/privacidade`, `/definicoes/conta`; `/definicoes` redireciona (substituindo) para `/definicoes/perfil`. O ecrã de eliminar é a rota própria `/definicoes/conta/eliminar`, fora do layout das abas. O teste F-98 («`/definicoes` mantém-se») passa a verificar o redirecionamento. **Aprovado (D-Q1).**
+- Q: Como é que o Início leva à edição da meta? → A: `/definicoes/perfil?editar=meta` abre o Perfil já em modo de edição, com o foco no campo da meta. Substitui o `/definicoes` provisório do botão «Definir a minha meta pessoal» (spec 011, D-P8). **Aprovado (D-Q2).**
+- Q: Cada «Editar» abre o seu bloco ou o perfil todo? → A: o perfil todo: qualquer «Editar» entra no modo «Editar perfil» (como o protótipo, com «Cancelar» e «Guardar alterações») com o foco no bloco escolhido. Não há quatro modos de edição independentes. **Aprovado (D-Q3).**
+- Q: O que conta como «alteração»? → A: cada diferença em relação ao perfil guardado: pessoas alteradas = 1; meta alterada ou apagada = 1; cada mercado ou objetivo acrescentado ou retirado = 1. «3 alterações por guardar» no protótipo (meta e dois mercados) é coerente com isto. Com 0 alterações, «Guardar alterações» fica desativado. **Aprovado (D-Q4).**
+- Q: «Cancelar» com alterações pede confirmação? → A: sim, no próprio ecrã: «Descartar as N alterações?» com «Descartar» e «Continuar a editar». Sem alterações, cancela de imediato. A spec diz que ações que perdem trabalho pedem confirmação explícita; o custo é um toque. **Aprovado (D-Q5).**
 - Q: O que se envia ao guardar? → A: só os campos alterados (constituição III): `household_size`, `merchants`, `goals`, `monthly_goal_cents`. Apagar a meta envia `monthly_goal_cents: null`; tirar todos os mercados ou objetivos envia `[]` (é o que a API aceita, ao contrário do onboarding, que nunca envia `null` nem `[]`). **Nunca** se envia `onboarding_completed`: o Perfil não mexe nele. Um pedido inválido não grava nada (backend, regra 2).
-- Q: Como se introduz a meta? → A: um campo em euros (aceita «450», «450,50»), validado antes de enviar: de 50,00 € a 800,00 €, senão «A meta tem de estar entre 50 € e 800 €.» e não envia. Campo vazio = sem meta. O onboarding usa passos de 10 €; no Perfil a pessoa pode escrever o valor exato. **Por confirmar pela Liz (D-Q6).**
-- Q: E as pessoas? → A: dois botões «Menos uma pessoa» e «Mais uma pessoa» de 1 a 12, como no onboarding; o valor atual é o guardado (sem sugestão de 2). Para apagar o número de pessoas há a ação «Não indicar»: envia `household_size: null`. **Por confirmar pela Liz (D-Q7).**
+- Q: Como se introduz a meta? → A: um campo em euros (aceita «450», «450,50»), validado antes de enviar: de 50,00 € a 800,00 €, senão «A meta tem de estar entre 50 € e 800 €.» e não envia. Campo vazio = sem meta. O onboarding usa passos de 10 €; no Perfil a pessoa pode escrever o valor exato. **Aprovado (D-Q6).**
+- Q: E as pessoas? → A: dois botões «Menos uma pessoa» e «Mais uma pessoa» de 1 a 12, como no onboarding; o valor atual é o guardado (sem sugestão de 2). Para apagar o número de pessoas há a ação «Não indicar»: envia `household_size: null`. **Aprovado (D-Q7).** Com pessoas «—», «Mais uma pessoa» passa a 1 (sem sugerir 2) e «Menos uma pessoa» fica desativado.
 - Q: Os objetivos têm o atalho «Todas as anteriores»? → A: não; são três caixas, com os mesmos rótulos do onboarding.
-- Q: Que acontece se a política mudou a meio (403 `privacy_consent_required`)? → A: o comportamento que já existe: `["me"]` fica invalidada, a guarda leva a pessoa a `/privacidade` e depois de aceitar volta ao Perfil. **As alterações por guardar perdem-se** (nada de rascunhos em `localStorage`, constituição IV). Como a versão da política só sobe no lançamento (T033 da spec 013), é raro. O texto «A política de privacidade mudou. Confirme-a para continuar.» aparece na página de consentimento, não aqui. **Por confirmar pela Liz (D-Q8).**
-- Q: «Apagar agora» apaga tudo de uma vez? → A: o servidor apaga no máximo 500 compras por chamada e devolve `remaining`. O cliente repete a chamada até `remaining` ser 0, com «A apagar…» e o contador; se uma chamada falhar, mostra quantas compras ficam por apagar e «Tentar de novo». **Por confirmar pela Liz (D-Q9)** (alternativa: uma chamada e «Apagar mais»).
+- Q: Que acontece se a política mudou a meio (403 `privacy_consent_required`)? → A: o comportamento que já existe: `["me"]` fica invalidada, a guarda leva a pessoa a `/privacidade` e depois de aceitar volta ao Perfil. **As alterações por guardar perdem-se** (nada de rascunhos em `localStorage`, constituição IV). Como a versão da política só sobe no lançamento (T033 da spec 013), é raro. O texto «A política de privacidade mudou. Confirme-a para continuar.» aparece na página de consentimento, não aqui. **Aprovado (D-Q8).**
+- Q: «Apagar agora» apaga tudo de uma vez? → A: o servidor apaga no máximo 500 compras por chamada e devolve `remaining`. O cliente repete a chamada até `remaining` ser 0, com «A apagar…» e o contador; se uma chamada falhar, mostra quantas compras ficam por apagar e «Tentar de novo». **Aprovado (D-Q9)** (alternativa: uma chamada e «Apagar mais»).
 - Q: Onde fica o painel do operador? → A: na aba Conta, só para quem tem o papel de operador, como hoje (não muda). O rodapé com o nome e a versão da aplicação mantém-se em todas as abas.
 - Q: Que texto tem a lista da eliminação? → A: a do protótipo: compras e talões lidos, ficheiros originais, perfil/meta/preferências, acesso com a conta Google. Com a lista inteligente ativa (spec 015) passa a incluir as listas; fica para essa spec.
 
@@ -61,7 +61,7 @@ Respostas deduzidas dos documentos (plano UX v2, README de design, spec 013 do b
 
 **Acceptance Scenarios**:
 
-1. **Given** um perfil, **When** abre a aba, **Then** vê quatro blocos: pessoas na casa, onde faz compras, meta pessoal do mês («Um objetivo seu, não um limite.») e objetivos, cada um com «Editar». — RF-13
+1. **Given** um perfil, **When** abre a aba, **Then** vê quatro blocos: pessoas na casa, onde faz compras, meta pessoal do mês («Um objetivo seu, não um limite.») e objetivos, cada um com «Editar»; os nomes dos mercados vêm de `GET /v1/merchants` e, se este falhar, de `merchantName` (`src/lib/format.ts`), nunca os identificadores. — RF-13
 2. **Given** um perfil vazio (conta anterior ao onboarding ou que saltou os passos), **When** abre, **Then** cada bloco diz que ainda não está definido e o botão diz «Definir». — RF-13, RF-14
 3. **Given** «Editar» num bloco, **When** a pessoa o toca, **Then** entra no modo «Editar perfil» com os valores guardados, com o foco no bloco escolhido, e «Guardar alterações» está desativado até haver uma alteração. — RF-13
 4. **Given** o modo de edição, **When** a pessoa altera pessoas, mercados, meta ou objetivos, **Then** vê «N alterações por guardar» (singular «1 alteração por guardar») e «Guardar alterações» fica ativo. — RF-13 (contagem: D-Q4)
@@ -74,6 +74,7 @@ Respostas deduzidas dos documentos (plano UX v2, README de design, spec 013 do b
 11. **Given** `/definicoes/perfil?editar=meta`, **When** abre, **Then** o Perfil está em edição com o foco no campo da meta. — RF-13, RF-15 (D-Q2)
 12. **Given** a lista de mercados não carrega, **When** a pessoa edita, **Then** vê o aviso «Não foi possível carregar os mercados.» com «Tentar de novo»; os restantes campos continuam editáveis e os mercados guardados não se perdem. — RF-13
 13. **Given** mercados guardados que a API já não lista (deixaram de ser suportados), **When** a pessoa edita e guarda sem mexer nos mercados, **Then** o campo `merchants` não é enviado; se mexer nos mercados, os não suportados deixam de constar, porque a API só aceita os suportados. — RF-13, backend regra 5
+15. **Given** pessoas «—» (nunca indicadas), **When** a pessoa toca «Mais uma pessoa», **Then** o valor passa a 1 (a aplicação não sugere 2) e «Menos uma pessoa» está desativado; com 1, «Menos uma pessoa» continua desativado e com 12, «Mais uma pessoa» também. — RF-13, constituição III
 14. **Given** o perfil, **When** é mostrado ou guardado, **Then** a meta nunca é calculada nem sugerida pela aplicação e nada de perfil fica em `localStorage`. — constituição III e IV
 
 ---
@@ -164,7 +165,7 @@ Respostas deduzidas dos documentos (plano UX v2, README de design, spec 013 do b
 - **FR-006**: A validação MUST fazer-se antes de enviar: pessoas de 1 a 12; meta de 50,00 a 800,00 € em cêntimos inteiros (`parseEurToCents`); a mensagem diz o limite. O servidor pode devolver 422 e a mensagem do campo mostra-se. — US2.8, constituição II
 - **FR-007**: Em erro de rede ou 5xx o modo de edição MUST manter as alterações; em 403 `privacy_consent_required` aplica-se o comportamento existente da guarda. — US2.7, US2.10
 - **FR-008**: `?editar=meta` MUST abrir o Perfil em edição com o foco na meta. — US2.11, US5.2
-- **FR-009**: Os mercados MUST vir de `GET /v1/merchants` (os 7 suportados, com nome); mercados guardados desconhecidos MUST conservar-se se não forem retirados. — US2.12, US2.13
+- **FR-009**: Os mercados MUST vir de `GET /v1/merchants` (os 7 suportados, com nome); na leitura, se este falhar, os nomes vêm de `merchantName`; mercados guardados desconhecidos MUST conservar-se se não forem retirados. — US2.12, US2.13
 - **FR-010**: A aba Privacidade MUST mostrar a versão e a data da política aceite (reais), a retenção de 30 dias, a contagem de ficheiros guardados (`GET /v1/receipts/stored-files`), «Apagar agora» com confirmação (`DELETE`, repetido até `remaining` = 0) e «Os seus direitos». — US3
 - **FR-011**: Depois de apagar originais, as caches `["stored-files"]`, `["receipts"]` e `["receipt"]` MUST invalidar-se; as compras e os valores não mudam. — US3.5
 - **FR-012**: A aba Conta MUST ter «Terminar sessão», «Eliminar conta…» e, para operadores, a ligação ao painel; a eliminação MUST ter ecrã próprio (`/definicoes/conta/eliminar`) com a lista do que desaparece, a caixa de compreensão e «Cancelar», e MUST manter o pedido `DELETE /v1/me`, a limpeza da cache e o redirecionamento para `/login`. — US4
@@ -197,14 +198,14 @@ Respostas deduzidas dos documentos (plano UX v2, README de design, spec 013 do b
 - A migração do backend que marca as contas existentes como concluídas está desenhada (spec 013, `f6b9c4e2a3d8`) e **ainda não aplicada**; até ser, uma conta antiga na base de desenvolvimento vê o onboarding. Isto não afeta o Perfil.
 - A versão da política só sobe no lançamento (T033 da spec 013); por isso o 403 por consentimento é raro e as alterações não guardadas perdem-se (D-Q8).
 - O botão «Definir a minha meta pessoal» da spec 011 aponta para `/definicoes/perfil?editar=meta` quando esta spec for implementada; até lá aponta para `/definicoes`.
-- **Identificadores de teste propostos (por confirmar pela Liz, D-Q10):** F-189 a F-194; ficam F-195 a F-205 para as specs 012 e 013 do frontend e a 015. `traceability.py` do backend não muda.
+- **Identificadores de teste (aprovados pela Liz, D-Q10):** F-189 a F-194; ficam F-195 a F-205 para as specs 012 e 013 do frontend e a 015. `traceability.py` do backend não muda.
 
 ## Identificadores de teste (constituição VII)
 
 | ID | O que verifica | Critérios | Tarefas |
 |---|---|---|---|
 | F-189 | Cabeçalho, abas como rotas, redirecionamento, teclado, sem lembretes, barra ativa | US1.1 a US1.6 | T006 a T008 |
-| F-190 | Perfil: leitura, vazio, edição, contagem, cancelar, guardar só o alterado, erros, validação, mercados | US2.1 a US2.14 | T004, T005, T009 a T011 |
+| F-190 | Perfil: leitura, vazio, edição, contagem, cancelar, guardar só o alterado, erros, validação, mercados | US2.1 a US2.15 | T004, T005, T009 a T011 |
 | F-191 | Privacidade: versão real, retenção, contagem, apagar com confirmação, repetir até `remaining` 0, erros | US3.1 a US3.10 | T012 a T014 |
 | F-192 | Conta: sessão, eliminar em ecrã próprio, F-23 adaptado | US4.1 a US4.8 | T015 a T017, T024 |
 | F-193 | Contas anteriores ao onboarding: Perfil vazio, ligação do Início, só a meta, guarda | US5.1 a US5.6 | T018, T019 |

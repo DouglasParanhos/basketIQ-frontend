@@ -27,6 +27,7 @@ Funções puras:
 |---|---|
 | `initialDraft(profile)` | copia o perfil guardado para o rascunho |
 | `goalCents(draft)` | `null` se `goalText` estiver vazio; `undefined` se for ilegível; senão os cêntimos inteiros de `parseEurToCents` |
+| `stepPeople(people, delta)` | `null` + 1 = 1; `null` − 1 = `null`; entre 1 e 12 nos limites |
 | `validate(draft)` | `{ goal?: "…" }`: a meta fora de 5 000 a 80 000 cêntimos ou ilegível dá «A meta tem de estar entre 50 € e 800 €.»; pessoas fora de 1 a 12 não acontecem (botões) |
 | `countChanges(draft, saved)` | pessoas diferentes = 1; meta diferente = 1; cada mercado ou objetivo acrescentado ou retirado = 1 |
 | `buildPatch(draft, saved, knownMerchants)` | só os campos alterados: `household_size` (inteiro ou `null`), `merchants` (só os conhecidos, quando a lista mudou), `goals` (ordem canónica, quando mudou), `monthly_goal_cents` (inteiro ou `null`); `{}` sem alterações |

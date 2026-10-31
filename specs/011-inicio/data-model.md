@@ -36,7 +36,7 @@ Só existe estado de apresentação; nada é gravado. Os tipos da resposta vêm 
 - `RingView` não decide a faixa: usa `band`. Escolhe o texto «acima da meta» pelo sinal de `goal_cents − spent_cents` (inteiros), não por `goal_pct`.
 - Traço do anel: `min(goal_pct, 100)` de 100 do perímetro; sem meta, tracejado fixo.
 - Mês que não é o corrente: junta-se a nota «Meta atual» ao valor da meta (a API devolve sempre a meta de hoje).
-- `AverageView.tone` vem de `average_trend`: `below` → `good`; `above` → `high`; `on_average` → `neutral`. Média presente e `average_trend` nulo → `neutral` com «Tendência: ainda sem meses suficientes». Sem média → `none`. O cliente não aplica limiares.
+- `AverageView.tone` vem de `average_trend`: `below` → `good`; `above` → `high`; `on_average` → `neutral`. Média presente e `average_trend` nulo → `neutral` com «A tendência aparece com mais um mês completo de compras.». Sem média → `none`. O cliente não aplica limiares.
 - A média e a tendência não dependem de `month`: o cartão é igual em todos os meses.
 - Nenhuma percentagem, média, faixa, meta ou média por semana é calculada no cliente. A única conta é o saldo da meta (inteiros).
 - Cache de servidor `["overview", month]`; invalidada por `["overview"]` nas mutações (R2); sem `localStorage`.
