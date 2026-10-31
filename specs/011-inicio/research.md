@@ -4,7 +4,7 @@
 - Decisão: de lado nenhum. Não se escrevem tipos à mão nem se alarga `schema.d.ts`. A implementação (tarefas de código) só começa quando o backend publicar `overview` no OpenAPI e se correr `corepack pnpm@9 gen:api`. Até lá faz-se especificação, plano, tarefas, análise e a lista de perguntas.
 - Porquê: constituição VI («alterações de contrato começam no backend») e a regra «não inventes campos». Tipos à mão esconderiam um desvio do contrato real e os testes do msw passariam contra uma resposta que o backend não devolve.
 - Alternativa rejeitada: um tipo local provisório (como se fez com `smart_list_enabled` na spec 009, depois removido na T023). Aceitável para um campo; para uma resposta com três listas, o risco de desvio é grande.
-- Estado a 2026-10-31: o backend 014 já tem o contrato **escrito** (`contracts/api.md`, commit `ff3a090`), que responde a C1 a C9 e C11 (ver `contracts/overview-api.md`). Falta o OpenAPI publicado e o `status` das últimas compras (Q7 mudou: C12 a C14).
+- Estado a 2026-10-31: o backend 014 já tem o contrato **escrito** (`contracts/api.md`, commits `ff3a090` e `ba3512f`), que responde a C1 a C9 e C11 e já traz o `status` das últimas compras (Q7) (ver `contracts/overview-api.md`). Falta o OpenAPI publicado.
 - Consequência: a T001 das tarefas é uma verificação de pré-requisito («`overview` existe em `schema.d.ts` e os tipos batem com o contrato escrito»); se falhar, parar.
 
 **R2. Um pedido ou vários? E a cache?**
@@ -59,7 +59,7 @@
 - Registar o anel de três faixas como exceção a «gráficos de série única» na spec 004 (US5.5, D7), na implementação. Sem alteração da Funcional além da nota RF-15 já feita.
 
 **R13. Últimas compras com estado (Q7 mudou, decisão da Liz 2026-10-31).**
-- As últimas compras incluem as que requerem revisão ou estão em processamento, com `status`. O backend ainda não atualizou o contrato escrito (C12 a C14). O ecrã mostra o estado como texto e ícone, nunca só cor (US4.6), e uma compra não confirmada só aparece na sua linha: o gasto, as semanas e os mercados são de confirmadas.
+- As últimas compras incluem as que requerem revisão ou estão em processamento, com `status`. O backend já o registou (`status`: `ReceiptStatus`, sem os estados de erro). O ecrã mostra o estado como texto e ícone, com os rótulos de `STATUS` (`src/lib/status.ts`), nunca só cor (US4.6), e uma compra não confirmada só aparece na sua linha: o gasto, as semanas e os mercados são de confirmadas.
 - O total pode ser nulo (compra em processamento): «—».
 
 **R14. Identificadores de teste (D-P6, decidido).**

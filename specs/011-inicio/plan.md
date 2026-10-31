@@ -8,7 +8,7 @@
 
 Substituir a página provisória de `/` pelo **Início** de `HomeF`/`HomeG` (`Documentation/design-ux-v2`): anel da meta pessoal com três faixas e estado sem meta, cartão da média mensal, compras no mês, gasto por semana, «Onde gasta mais», últimas compras, estados vazios e navegação entre meses. Os dados vêm de **um só** `GET /v1/analytics/overview?month=YYYY-MM`, com os campos que a **spec 014 do backend** nomeia; o cliente mostra `goal_pct` e `band` tal como vêm e só traduz a faixa em texto e estilo. Textos em português europeu (tabela do `README.md`), tokens do repositório, axe em claro e escuro.
 
-**Bloqueada pelo backend:** o endpoint ainda não existe e `src/api/schema.d.ts` não o tem. Pela constituição VI não se escreve código antes de o OpenAPI do backend ter `overview` e de se correr `gen:api`. O contrato existe como texto (backend 014, `contracts/api.md`, que responde a C1 a C9 e C11); o que falta está em `contracts/overview-api.md` (C10, C12 a C16: o `status` das últimas compras, a média por semana e o texto da tendência nula). Não se inventam campos. Só frontend, sem dependências novas.
+**Bloqueada pelo backend:** o endpoint ainda não existe e `src/api/schema.d.ts` não o tem. Pela constituição VI não se escreve código antes de o OpenAPI do backend ter `overview` e de se correr `gen:api`. O contrato existe como texto (backend 014, `contracts/api.md`, que responde a C1 a C9 e C11); o que falta está em `contracts/overview-api.md` (C10, C15 e C16: os tipos gerados, a média por semana e o texto da tendência nula). Não se inventam campos. Só frontend, sem dependências novas.
 
 ## Technical Context
 
@@ -74,7 +74,6 @@ Surgiram ao aplicar o contrato escrito do backend; não foram decididas pelo pla
 |---|---|---|---|
 | D-P13 | Média presente e tendência nula (só 2 meses de dados): que texto? | valor da média e «Tendência: ainda sem meses suficientes» (sem número, porque a API não o expõe; pedir o mínimo da tendência ao backend, C16) | copy, C16 |
 | D-P14 | Média por semana: a API não a devolve | não mostrar (o cliente não a calcula); alternativa: pedir `weekly_average_cents` ao backend | copy, C15 |
-| D-P15 | Rótulos dos estados das últimas compras («Requer revisão», «Em processamento») | alinhar com os da lista de Compras, quando C12 definir os valores de `status` | copy, C12 |
 
 ## Project Structure
 
@@ -87,7 +86,7 @@ specs/011-inicio/
 ├── data-model.md        # Phase 1
 ├── quickstart.md        # Phase 1
 ├── contracts/
-│   ├── overview-api.md  # contrato escrito da 014 e o que falta (C10, C12–C16)
+│   ├── overview-api.md  # contrato escrito da 014 e o que falta (C10, C15, C16)
 │   ├── routes.md        # rota, URL e redirecionamentos
 │   └── copy.md          # textos em português europeu
 └── tasks.md             # /speckit-tasks

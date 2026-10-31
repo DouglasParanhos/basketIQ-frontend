@@ -98,7 +98,7 @@ Respostas deduzidas dos documentos (HANDOFF, plano UX v2, README de design, spec
 3. **Given** «Onde gasta mais», **When** abre, **Then** vê cada mercado com valor e percentagem em texto e inicial, sem depender da cor da barra. — RF-15, §8
 4. **Given** «Últimas compras», **When** abre, **Then** vê até 5, com mercado, data e total (nulo → «—»), e «Ver todas» leva a `/compras`. — RF-15
 5. **Given** o ecrã, **When** é revisto, **Then** não mostra preços de outros sites, «poupou X», «mais comprados» nem gasto acumulado por dia, nem os cartões da lista e da comparação entre mercados. — RF-15
-6. **Given** uma compra recente que requer revisão ou está em processamento (a API devolve-as com `status`, decisão da Liz de 2026-10-31), **When** aparece nas últimas compras, **Then** o estado é texto e ícone, não só cor, e a compra não entra em nenhum valor do ecrã além da sua linha. — §8 — [os valores de `status` estão por definir: C12]
+6. **Given** uma compra recente que requer revisão ou está em processamento (a API devolve-as com `status`, decisão da Liz de 2026-10-31), **When** aparece nas últimas compras, **Then** o estado é texto e ícone, não só cor, e a compra não entra em nenhum valor do ecrã além da sua linha. — §8 (`status` é `ReceiptStatus`; rótulos de `STATUS` em `src/lib/status.ts`)
 
 ---
 
@@ -161,7 +161,7 @@ Respostas deduzidas dos documentos (HANDOFF, plano UX v2, README de design, spec
 
 ### Key Entities
 
-- **Visão geral do mês** (resposta de `overview`): os campos do contrato escrito do backend 014 — `month`, `spent_cents`, `goal_cents`, `goal_pct`, `band`, `monthly_average_cents`, `recent_vs_average_pct`, `average_trend`, `average_months`, `average_min_months`, `purchases_this_month`, `purchases_last_month`, `weeks[]`, `by_merchant[]`, `recent_receipts[]`, `empty`. Os itens e as perguntas que ficam (C10, C12 a C16) estão em `contracts/overview-api.md`.
+- **Visão geral do mês** (resposta de `overview`): os campos do contrato escrito do backend 014 — `month`, `spent_cents`, `goal_cents`, `goal_pct`, `band`, `monthly_average_cents`, `recent_vs_average_pct`, `average_trend`, `average_months`, `average_min_months`, `purchases_this_month`, `purchases_last_month`, `weeks[]`, `by_merchant[]`, `recent_receipts[]`, `empty`. Os itens e as perguntas que ficam (C10, C15, C16) estão em `contracts/overview-api.md`.
 - **Faixa** (`band`): `ok`, `attention`, `high` ou `none` (sem meta). O cliente só traduz a faixa em texto e estilo.
 - **Mês mostrado**: `YYYY-MM` no URL; por omissão o mês corrente de Lisboa.
 

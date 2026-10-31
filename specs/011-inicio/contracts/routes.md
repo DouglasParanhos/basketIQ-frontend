@@ -17,7 +17,7 @@
 | «Adicionar talão» (estado vazio) | `/adicionar` |
 | «Ver todas» (últimas compras) | `/compras` |
 | «Definir a minha meta pessoal» | `/definicoes` até a spec 014 do frontend fixar a edição da meta no Perfil (D-P8) |
-| uma última compra | `/compras/:id`; as que requerem revisão ou estão em processamento: a confirmar com C14 |
+| uma última compra | `/compras/:id`; serve todos os estados, também os em revisão e em processamento (a confirmar na T001) |
 
 ## Foco e título
 

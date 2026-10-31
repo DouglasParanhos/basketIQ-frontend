@@ -1,6 +1,6 @@
 # Data Model: Início
 
-Só existe estado de apresentação; nada é gravado. Os tipos da resposta vêm de `src/api/schema.d.ts` quando o backend publicar `overview` (R1). Esta tabela segue o contrato escrito do backend 014 (`contracts/api.md`); ver `contracts/overview-api.md` para o que ainda falta (C10, C12 a C16).
+Só existe estado de apresentação; nada é gravado. Os tipos da resposta vêm de `src/api/schema.d.ts` quando o backend publicar `overview` (R1). Esta tabela segue o contrato escrito do backend 014 (`contracts/api.md`); ver `contracts/overview-api.md` para o que ainda falta (C10, C15, C16).
 
 ## Resposta (`OverviewOut`, nome do tipo a confirmar no OpenAPI)
 
@@ -20,7 +20,7 @@ Só existe estado de apresentação; nada é gravado. Os tipos da resposta vêm 
 | `purchases_last_month` | inteiro | nunca | «Mês passado: N» / «Mês anterior: N» |
 | `weeks[]` | `{ index, from, to, spent_cents }` | — | gasto por semana e tabela |
 | `by_merchant[]` | `{ merchant, name, spent_cents, purchases, share_pct }` | lista vazia com gasto 0 | «Onde gasta mais» |
-| `recent_receipts[]` | `{ id, merchant, name, date, total_cents, status }`; `total_cents` pode ser nulo; `status` por definir (C12) | lista vazia | «Últimas compras» |
+| `recent_receipts[]` | `{ id, merchant, name, date, total_cents, status }`; `total_cents` pode ser nulo; `status` é `ReceiptStatus` (CONFIRMED, REVIEW_REQUIRED, COMPLETED, RECEIVED, VALIDATING, EXTRACTING) | lista vazia | «Últimas compras» |
 | `empty` | booleano | — | `true`: conta sem nenhuma compra confirmada → estado final com cartões tracejados |
 
 ## Estado de apresentação (não vem da API)

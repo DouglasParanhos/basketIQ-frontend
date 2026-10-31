@@ -29,7 +29,7 @@ Fonte: tabela do `Documentation/design-ux-v2/README.md` aplicada ao `HomeF` e ao
 | Semanas | Gasto por semana · «Sem. 1» … «Sem. 5», cada uma com o intervalo («1–7 out.») e o valor · «Ver como tabela» | tabela alternativa obrigatória; a 5.ª semana pode ter 1 a 3 dias. **Sem «média por semana»** enquanto a API não a devolver (C15, D-P14) |
 | Mercados | Onde gasta mais | `name` da API; inicial + nome + valor + percentagem (`share_pct`) em texto |
 | Últimas | Últimas compras · «Ver todas» | até 5; mercado (`name`), data e total; total nulo → «—» |
-| Últimas, estado ⚠ | texto e ícone por `status`: confirmada sem selo; «Requer revisão» e «Em processamento» com selo | os valores de `status` estão por definir (C12); os rótulos são propostos e alinham com os da lista de Compras |
+| Últimas, estado | `StatusBadge` com o rótulo de `STATUS`: confirmada sem selo; «Revisão necessária», «Pronta a confirmar», «A aguardar», «A validar», «A extrair» com selo | os mesmos da lista de Compras (`src/lib/status.ts`); texto, não só cor |
 | Vazio, título | A aguardar o seu primeiro talão | |
 | Vazio, texto | Quanto mais talões registar, mais aprendemos sobre as suas compras. | |
 | Vazio, botão | Adicionar talão | |
