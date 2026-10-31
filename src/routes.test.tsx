@@ -13,7 +13,8 @@ const renderApp = (initial: string) => ({ ...renderRoutes(routes, initial), user
 describe("route table (spec 009)", () => {
   it("F-97: /compras/resumo is the Resumo, with the Talões tabs and Talões as the current destination", async () => {
     renderApp("/compras/resumo");
-    expect(await screen.findByRole("heading", { level: 1, name: "Resumo" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 2, name: "Resumo" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Talões" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Resumo", selected: true })).toBeInTheDocument();
     expect(currentDestinations()).toEqual(["Talões"]);
   });
@@ -30,7 +31,7 @@ describe("route table (spec 009)", () => {
 
   it("F-97: «resumo» is never taken as the id of a purchase", async () => {
     renderApp("/compras/resumo");
-    await screen.findByRole("heading", { level: 1, name: "Resumo" });
+    await screen.findByRole("heading", { level: 2, name: "Resumo" });
     expect(screen.queryByRole("link", { name: "Voltar às compras" })).not.toBeInTheDocument();
   });
 
@@ -40,10 +41,12 @@ describe("route table (spec 009)", () => {
       http.get(`${API}/v1/products/p1/analytics`, () => HttpResponse.json(errorBody("not_found", "Produto não encontrado."), { status: 404 })),
     );
     const { router } = renderApp("/compras");
-    expect(await screen.findByRole("heading", { level: 1, name: "Compras" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Talões" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 2, name: "Compras" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Compras", selected: true })).toBeInTheDocument();
     await router.navigate("/produtos");
-    expect(await screen.findByRole("heading", { level: 1, name: "Produtos" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 2, name: "Produtos" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Talões" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Produtos", selected: true })).toBeInTheDocument();
     await router.navigate("/produtos/p1");
     expect(await screen.findByText("Produto não encontrado.")).toBeInTheDocument();

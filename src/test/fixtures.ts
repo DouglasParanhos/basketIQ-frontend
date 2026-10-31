@@ -264,3 +264,86 @@ export function overviewFor(spentCents: number, goalCents = 40000): Overview {
   const pct = Math.floor((spentCents * 100) / goalCents + 0.5);
   return { ...overviewGreen, spent_cents: spentCents, goal_cents: goalCents, goal_pct: pct, band: pct <= 50 ? "ok" : pct <= 75 ? "attention" : "high" };
 }
+
+// ---------------------------------------------------------------- Talões (spec 012): months, receipts and products, synthetic
+
+/** GET /v1/analytics/months: confirmed purchases and spending per month, newest first. */
+export const monthTotals: Schemas["MonthTotalOut"][] = [
+  { month: "2026-10", confirmed_count: 7, total_cents: 24800 },
+  { month: "2026-09", confirmed_count: 5, total_cents: 32200 },
+  { month: "2025-12", confirmed_count: 2, total_cents: 5000 },
+];
+
+/** One line of GET /v1/receipts: confirmed, from a Lidl, by default. */
+export function receiptItem(overrides: Partial<Schemas["ReceiptSummaryOut"]> = {}): Schemas["ReceiptSummaryOut"] {
+  return {
+    id: "r1",
+    status: "CONFIRMED",
+    merchant: "LIDL",
+    merchant_name: null,
+    store_label: null,
+    purchase_at: "2026-10-24T10:00:00Z",
+    total_cents: 2895,
+    line_count: 9,
+    overall_confidence: 1,
+    needs_action: false,
+    created_at: "2026-10-24T12:00:00Z",
+    ...overrides,
+  };
+}
+
+/** One line of GET /v1/products, with the average price and the counts. */
+export function productItem(overrides: Partial<Schemas["ProductSearchItem"]> = {}): Schemas["ProductSearchItem"] {
+  return {
+    id: "p1",
+    name: "Peito de frango",
+    unit_type: "kg",
+    lines: 4,
+    spent_cents: 2650,
+    last_purchase_at: "2026-10-27T10:00:00Z",
+    avg_price_cents: 552,
+    price_basis: "kg",
+    purchases: 4,
+    merchants: 3,
+    ...overrides,
+  };
+}
+
+/** GET /v1/products/{id}/analytics: three merchants (in the code order the API gives), four purchases. */
+export function productAnalytics(overrides: Partial<Schemas["ProductAnalyticsOut"]> = {}): Schemas["ProductAnalyticsOut"] {
+  const point = (id: string, date: string, merchant: string, unitCents: number, quantity: string, raw: string): Schemas["PricePoint"] => ({
+    receipt_id: id,
+    date,
+    merchant,
+    quantity,
+    unit: "kg",
+    unit_price_cents: unitCents,
+    price_basis: "kg",
+    net_cents: Math.round(unitCents * Number(quantity)),
+    raw_description: raw,
+  });
+  return {
+    product: { id: "p1", name: "Peito de frango", unit_type: "kg" },
+    price_basis: "kg",
+    mixed_units: false,
+    total_quantity: "4.8",
+    total_spent_cents: 2650,
+    avg_price_cents: 552,
+    min_price_cents: 499,
+    max_price_cents: 589,
+    purchases: 4,
+    insufficient_data: false,
+    history: [
+      point("a", "2026-06-10", "PINGO_DOCE", 589, "1.2", "PEITO FRANGO 1KG"),
+      point("b", "2026-08-12", "LIDL", 499, "1.1", "FRANGO PEITO"),
+      point("c", "2026-09-20", "MERCADONA", 579, "1.3", "PEITO DE FRANGO"),
+      point("d", "2026-10-15", "PINGO_DOCE", 549, "1.2", "PEITO FRANGO"),
+    ],
+    by_merchant: [
+      { merchant: "LIDL", purchases: 1, avg_price_cents: 499, min_price_cents: 499, max_price_cents: 499, last_price_cents: 499, last_date: "2026-08-12" },
+      { merchant: "MERCADONA", purchases: 1, avg_price_cents: 579, min_price_cents: 579, max_price_cents: 579, last_price_cents: 579, last_date: "2026-09-20" },
+      { merchant: "PINGO_DOCE", purchases: 2, avg_price_cents: 569, min_price_cents: 549, max_price_cents: 589, last_price_cents: 549, last_date: "2026-10-15" },
+    ],
+    ...overrides,
+  };
+}

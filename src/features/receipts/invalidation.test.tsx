@@ -9,14 +9,14 @@ import { pdf, serveUpload } from "../../test/upload";
 import { AddPage } from "../upload/AddPage";
 import { ReceiptPage } from "./ReceiptPage";
 
-// Home, Talões and the lists must not show old values as current after a purchase changes (constituição III).
+// Home, Talões and the lists must not show old values as current after a purchase changes (constituição III). Deleting only the original does not change totals and is left out.
 const detail = [
   { path: "/compras/:id", element: <ReceiptPage /> },
   { path: "/compras", element: <p>lista</p> },
 ];
 
-describe("the cache of the Início after a purchase changes (spec 011, R2)", () => {
-  it("F-185: deleting the purchase invalidates the overview", async () => {
+describe("the cache of the Início and of the totals by month after a purchase changes (specs 011 and 012)", () => {
+  it("F-185: deleting the purchase invalidates the overview and the totals by month", async () => {
     server.use(
       http.get(`${API}/v1/receipts/r1`, () => HttpResponse.json(receipt({ status: "CONFIRMED", review_reasons: [] }))),
       http.delete(`${API}/v1/receipts/r1`, () => new HttpResponse(null, { status: 204 })),
@@ -29,9 +29,10 @@ describe("the cache of the Início after a purchase changes (spec 011, R2)", () 
     await user.click(within(confirm).getByRole("button", { name: "Eliminar compra" }));
     expect(await screen.findByText("lista")).toBeInTheDocument();
     expect(spy).toHaveBeenCalledWith({ queryKey: ["overview"] });
+    expect(spy).toHaveBeenCalledWith({ queryKey: ["months"] });
   });
 
-  it("F-185: deciding a duplicate invalidates the overview", async () => {
+  it("F-185: deciding a duplicate invalidates the overview and the totals by month", async () => {
     server.use(
       http.get(`${API}/v1/receipts/r1`, () => HttpResponse.json(receipt({ duplicate_of_receipt_id: "r0", duplicate_acknowledged: false }))),
       http.post(`${API}/v1/receipts/r1/duplicate-decision`, () => HttpResponse.json(receipt())),
@@ -40,14 +41,16 @@ describe("the cache of the Início after a purchase changes (spec 011, R2)", () 
     const spy = vi.spyOn(client, "invalidateQueries");
     await userEvent.setup().click(await screen.findByRole("button", { name: "Manter as duas" }));
     await vi.waitFor(() => expect(spy).toHaveBeenCalledWith({ queryKey: ["overview"] }));
+    expect(spy).toHaveBeenCalledWith({ queryKey: ["months"] });
   });
 
-  it("F-185: editing and confirming invalidates the overview", async () => {
+  it("F-185: editing and confirming invalidates the overview and the totals by month", async () => {
     server.use(http.post(`${API}/v1/receipts/r1/confirm`, () => HttpResponse.json(receipt({ status: "CONFIRMED", confirmed_by: "USER", confirmed_at: "2026-09-15T13:00:00Z" }))));
     const { client } = renderRoutes(detail, "/compras/r1");
     const spy = vi.spyOn(client, "invalidateQueries");
     await userEvent.setup().click(await screen.findByRole("button", { name: /^confirmar$/i }));
     await vi.waitFor(() => expect(spy).toHaveBeenCalledWith({ queryKey: ["overview"] }));
+    expect(spy).toHaveBeenCalledWith({ queryKey: ["months"] });
   });
 
   it("F-185: finishing an upload invalidates the overview, because the latest purchases include the ones being read", async () => {
@@ -65,5 +68,6 @@ describe("the cache of the Início after a purchase changes (spec 011, R2)", () 
     await user.click(await screen.findByRole("button", { name: /^enviar talão$/i }));
     expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
     expect(spy).toHaveBeenCalledWith({ queryKey: ["overview"] });
+    expect(spy).toHaveBeenCalledWith({ queryKey: ["months"] });
   });
 });

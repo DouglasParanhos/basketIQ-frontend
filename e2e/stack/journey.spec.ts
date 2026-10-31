@@ -74,10 +74,10 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
 
   // F-18 / F-19: September 2026 dashboard, then filtered by Lidl.
   await page.goto("/?de=2026-09-01&ate=2026-09-30");
-  await expect(page.getByText("Gasto total")).toBeVisible();
-  const total = page.getByRole("heading", { name: "Gasto total" }).locator("..").locator("p").first();
+  await expect(page.getByRole("heading", { name: /^Gasto em mercado/ })).toBeVisible();
+  const total = page.getByRole("heading", { name: /^Gasto em mercado/ }).locator("..").locator("p").first();
   await expect(total).toHaveText("45,39 €"); // 18,17 + 18,17 (Pingo Doce) + 9,05 (Lidl photo)
-  await page.getByLabel("Supermercado", { exact: true }).selectOption("PINGO_DOCE");
+  await page.getByLabel("Mercado", { exact: true }).selectOption("PINGO_DOCE");
   await expect(total).toHaveText("36,34 €");
 
   // F-20: product history.

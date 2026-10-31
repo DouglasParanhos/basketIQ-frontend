@@ -6,7 +6,6 @@ import { DataTable, SpendBars, type Point } from "../../components/charts";
 import { LinkButton, Notice, Select, Spinner } from "../../components/ui";
 import { formatCents, formatMonth, formatVariation, merchantName, MERCHANT_NAMES } from "../../lib/format";
 import { describePeriod, lisbonToday, periodFor, type Period, type PeriodKind } from "../../lib/period";
-import { useMe } from "../auth/session";
 import { PeriodPicker } from "./PeriodPicker";
 
 type Summary = Schemas["SummaryOut"];
@@ -48,7 +47,6 @@ function points(summary: Summary): Point[] {
 }
 
 export function DashboardPage() {
-  const { data: me } = useMe();
   const { period, merchant, product, update } = usePeriodParams();
   const merchantFilter = (merchant ?? undefined) as Merchant | undefined;
   // Fired next to the summary so the two requests run in parallel.
@@ -84,13 +82,11 @@ export function DashboardPage() {
     queryFn: async () => unwrap(await api.GET("/v1/receipts", { params: { query: { limit: 1 } } })),
   });
 
-  const firstName = me?.display_name?.split(" ")[0];
   const s = query.data;
 
   return (
-    <div className="flex flex-col gap-5 pt-6">
-      <h1 className="sr-only">Resumo</h1>
-      <p className="text-ink-soft">{firstName ? `Olá, ${firstName}.` : "Olá."}</p>
+    <div className="flex flex-col gap-5 pt-3">
+      <h2 className="sr-only">Resumo</h2>
 
       {anyReceipts.data && anyReceipts.data.items.length === 0 ? (
         <section className="flex flex-col items-start gap-4 rounded-surface bg-paper p-6">
@@ -108,12 +104,12 @@ export function DashboardPage() {
           />
           <div className="flex flex-wrap items-end gap-3">
             <Select
-              label="Supermercado"
+              label="Mercado"
               value={merchant ?? ""}
               onChange={(e) => update({ mercado: e.target.value || null })}
               className="min-w-44 flex-1"
             >
-              <option value="">Todos</option>
+              <option value="">Todos os mercados</option>
               {Object.entries(MERCHANT_NAMES)
                 .filter(([c]) => c !== "UNKNOWN")
                 .map(([code, name]) => (
@@ -156,7 +152,7 @@ function Consumption({ data }: { data: Schemas["ConsumptionOut"] | undefined }) 
         {data.items.map((p) => (
           <li key={p.product_id} className="flex items-center justify-between gap-3 border-b border-line py-2 text-sm last:border-0">
             <span className="flex min-w-0 flex-col">
-              <Link to={`/produtos/${p.product_id}`} className="flex min-h-7 items-center truncate font-semibold hover:underline">
+              <Link to={`/produtos/${p.product_id}`} className="flex min-h-11 items-center truncate font-semibold hover:underline">
                 {p.name}
               </Link>
               <span className="text-xs text-ink-soft">
@@ -197,9 +193,9 @@ function SummaryView({
   const pts = points(s);
   return (
     <div className={`flex flex-col gap-5 transition-opacity ${stale ? "opacity-60" : ""}`} aria-busy={stale}>
-      <section aria-labelledby="gasto">
-        <h2 id="gasto" className="text-sm font-medium text-ink-soft">
-          Gasto total
+      <section aria-labelledby="gasto" className="rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
+        <h2 id="gasto" className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-soft">
+          Gasto em mercado · {s.cards.purchases} {s.cards.purchases === 1 ? "talão" : "talões"}
         </h2>
         <p className="amount text-[3.25rem] font-extrabold leading-none tracking-tight">{formatCents(s.cards.total_spent_cents)}</p>
         <p className="mt-2 text-sm text-ink-soft">
@@ -235,7 +231,7 @@ function SummaryView({
 
       <section aria-labelledby="mercados" className="rounded-surface bg-paper p-4">
         <h2 id="mercados" className="mb-3 font-bold">
-          Por supermercado
+          Por mercado
         </h2>
         <ul className="flex flex-col gap-3">
           {s.by_merchant.map((m) => (
@@ -288,10 +284,10 @@ function Ranking({
           <li key={p.product_id ?? p.name} className="flex items-center justify-between gap-3 border-b border-line py-2 text-sm last:border-0">
             {p.product_id ? (
               <span className="flex min-w-0 flex-col">
-                <Link to={`/produtos/${p.product_id}`} className="flex min-h-7 items-center truncate font-semibold hover:underline">
+                <Link to={`/produtos/${p.product_id}`} className="flex min-h-11 items-center truncate font-semibold hover:underline">
                   {p.name}
                 </Link>
-                <button className="min-h-7 self-start text-xs font-medium text-brand" onClick={() => onProduct(p.product_id!, p.name)}>
+                <button className="min-h-11 self-start text-xs font-medium text-brand" onClick={() => onProduct(p.product_id!, p.name)}>
                   Filtrar resumo
                 </button>
               </span>

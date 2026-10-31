@@ -101,6 +101,55 @@ function overviewBody(kind: OverviewKind, month: string) {
   }
 }
 
+/** GET /v1/receipts: purchases in the order the API sends them (by sending), one of each state, in three years. */
+const RECEIPT_LIST = [
+  { id: "r-progress", status: "EXTRACTING", merchant: "CONTINENTE", purchase_at: null, total_cents: null, line_count: 0, needs_action: false, created_at: "2026-10-29T09:00:00Z" },
+  { id: "r1", status: "REVIEW_REQUIRED", merchant: "MERCADONA", purchase_at: "2026-10-28T10:00:00Z", total_cents: 2275, line_count: 11, needs_action: true, created_at: "2026-10-28T12:00:00Z" },
+  { id: "r-ok1", status: "CONFIRMED", merchant: "PINGO_DOCE", purchase_at: "2026-10-27T10:00:00Z", total_cents: 4120, line_count: 14, needs_action: false, created_at: "2026-10-27T12:00:00Z" },
+  { id: "r-error", status: "UNREADABLE", merchant: null, purchase_at: null, total_cents: null, line_count: 0, needs_action: true, created_at: "2026-10-26T09:00:00Z" },
+  { id: "r-ok2", status: "CONFIRMED", merchant: "LIDL", purchase_at: "2026-10-24T10:00:00Z", total_cents: 2895, line_count: 9, needs_action: false, created_at: "2026-10-24T12:00:00Z" },
+  { id: "r-sep", status: "CONFIRMED", merchant: "LIDL", purchase_at: "2026-09-12T10:00:00Z", total_cents: 3340, line_count: 1, needs_action: false, created_at: "2026-09-12T12:00:00Z" },
+  { id: "r-old", status: "CONFIRMED", merchant: "ALDI", purchase_at: "2025-12-20T10:00:00Z", total_cents: 1800, line_count: 6, needs_action: false, created_at: "2025-12-21T10:00:00Z" },
+].map((r) => ({ merchant_name: null, store_label: null, overall_confidence: 0.9, ...r }));
+
+const MONTHS = [
+  { month: "2026-10", confirmed_count: 7, total_cents: 24800 },
+  { month: "2026-09", confirmed_count: 5, total_cents: 32200 },
+  { month: "2025-12", confirmed_count: 2, total_cents: 5000 },
+];
+
+/** GET /v1/products: the average price and the counts; one product without a price. */
+const PRODUCTS = [
+  { id: "p1", name: "Peito de frango", unit_type: "kg", lines: 4, spent_cents: 2650, last_purchase_at: "2026-10-27T10:00:00Z", avg_price_cents: 552, price_basis: "kg", purchases: 4, merchants: 3 },
+  { id: "p2", name: "Leite meio-gordo", unit_type: "l", lines: 9, spent_cents: 3350, last_purchase_at: "2026-10-20T10:00:00Z", avg_price_cents: 85, price_basis: "l", purchases: 9, merchants: 3 },
+  { id: "p3", name: "Ovos M", unit_type: "un", lines: 6, spent_cents: 970, last_purchase_at: "2026-10-18T10:00:00Z", avg_price_cents: 27, price_basis: "un", purchases: 6, merchants: 2 },
+  { id: "p4", name: "Água", unit_type: null, lines: 2, spent_cents: 120, last_purchase_at: "2026-10-10T10:00:00Z", avg_price_cents: null, price_basis: "un", purchases: 2, merchants: 1 },
+];
+
+const PRODUCT_ANALYTICS = {
+  product: { id: "p1", name: "Peito de frango", unit_type: "kg" },
+  price_basis: "kg",
+  mixed_units: false,
+  total_quantity: "4.8",
+  total_spent_cents: 2650,
+  avg_price_cents: 552,
+  min_price_cents: 499,
+  max_price_cents: 589,
+  purchases: 4,
+  insufficient_data: false,
+  history: [
+    { receipt_id: "a", date: "2026-06-10", merchant: "PINGO_DOCE", quantity: "1.2", unit: "kg", unit_price_cents: 589, price_basis: "kg", net_cents: 707, raw_description: "PEITO FRANGO 1KG" },
+    { receipt_id: "b", date: "2026-08-12", merchant: "LIDL", quantity: "1.1", unit: "kg", unit_price_cents: 499, price_basis: "kg", net_cents: 549, raw_description: "FRANGO PEITO" },
+    { receipt_id: "c", date: "2026-09-20", merchant: "MERCADONA", quantity: "1.3", unit: "kg", unit_price_cents: 579, price_basis: "kg", net_cents: 753, raw_description: "PEITO DE FRANGO" },
+    { receipt_id: "d", date: "2026-10-15", merchant: "PINGO_DOCE", quantity: "1.2", unit: "kg", unit_price_cents: 549, price_basis: "kg", net_cents: 659, raw_description: "PEITO FRANGO" },
+  ],
+  by_merchant: [
+    { merchant: "LIDL", purchases: 1, avg_price_cents: 499, min_price_cents: 499, max_price_cents: 499, last_price_cents: 499, last_date: "2026-08-12" },
+    { merchant: "MERCADONA", purchases: 1, avg_price_cents: 579, min_price_cents: 579, max_price_cents: 579, last_price_cents: 579, last_date: "2026-09-20" },
+    { merchant: "PINGO_DOCE", purchases: 2, avg_price_cents: 569, min_price_cents: 549, max_price_cents: 589, last_price_cents: 549, last_date: "2026-10-15" },
+  ],
+};
+
 const MERCHANTS = [
   { id: "CONTINENTE", name: "Continente" },
   { id: "PINGO_DOCE", name: "Pingo Doce" },
@@ -313,8 +362,16 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
       return json(route, { receipts_deleted: 1, objects_deleted: 1 });
     }
     if (path === "/v1/receipts" && method === "GET") {
-      const items = state.empty ? [] : state.receipts.map((r) => ({ id: r.id, status: r.status, merchant: r.merchant, purchase_at: r.purchase_at, total_cents: 313, line_count: 2, overall_confidence: 0.6, needs_action: true, created_at: r.created_at }));
+      const statuses = url.searchParams.getAll("status");
+      const limit = Number(url.searchParams.get("limit") ?? 20);
+      const items = (state.empty ? [] : RECEIPT_LIST).filter((r) => statuses.length === 0 || statuses.includes(r.status)).slice(0, limit);
       return json(route, { items, next_cursor: null });
+    }
+    if (path === "/v1/analytics/months" && method === "GET") return json(route, state.empty ? [] : MONTHS);
+    if (path === "/v1/products/p1/analytics" && method === "GET") return json(route, PRODUCT_ANALYTICS);
+    if (path === "/v1/products" && method === "GET") {
+      const q = (url.searchParams.get("q") ?? "").toLowerCase();
+      return json(route, PRODUCTS.filter((p) => p.name.toLowerCase().includes(q)));
     }
     if (path === "/v1/analytics/overview" && method === "GET") {
       const month = url.searchParams.get("month") ?? "";
@@ -356,7 +413,6 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     if (path === "/v1/analytics/consumption") {
       return json(route, { filters: summary.filters, items: [{ product_id: "p1", name: "LEITE MEIO GORDO", purchases: 3, units: "4", units_per_month: 4.1, spent_cents: 33500, avg_interval_days: 14, first_purchase: "2026-10-02", last_purchase: "2026-10-30" }], empty: false });
     }
-    if (path === "/v1/products") return json(route, [{ id: "p1", name: "LEITE MEIO GORDO", unit_type: "un", lines: 3, spent_cents: 33500, last_purchase_at: "2026-10-20T10:00:00Z" }]);
     return json(route, { code: "not_found", message: "Não encontrado.", request_id: "r" }, 404);
   });
   return state;

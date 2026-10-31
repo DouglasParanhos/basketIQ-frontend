@@ -1,7 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import type { Schemas } from "../api/client";
-import { consumption, emptyProfile, me, merchants, overviewGreen, profile, receipt, summary } from "./fixtures";
+import { consumption, emptyProfile, me, merchants, monthTotals, overviewGreen, productAnalytics, productItem, profile, receipt, summary } from "./fixtures";
 
 export const API = "http://localhost:3000";
 
@@ -18,6 +18,9 @@ export const server = setupServer(
   http.get(`${API}/v1/analytics/summary`, () => HttpResponse.json(summary())),
   http.get(`${API}/v1/analytics/consumption`, () => HttpResponse.json(consumption())),
   http.get(`${API}/v1/analytics/overview`, () => HttpResponse.json(overviewGreen)),
+  http.get(`${API}/v1/analytics/months`, () => HttpResponse.json(monthTotals)),
+  http.get(`${API}/v1/products`, () => HttpResponse.json([productItem()])),
+  http.get(`${API}/v1/products/:id/analytics`, () => HttpResponse.json(productAnalytics())),
 );
 
 export function errorBody(code: string, message: string, extra: Record<string, unknown> = {}) {
@@ -87,4 +90,34 @@ export function serveOverview(answer: Schemas["OverviewOut"] | ((month: string) 
     }),
   );
   return months;
+}
+
+/** GET /v1/analytics/months for one test: the totals, or "error". */
+export function serveMonths(answer: Schemas["MonthTotalOut"][] | "error") {
+  server.use(http.get(`${API}/v1/analytics/months`, () => (answer === "error" ? HttpResponse.json(errorBody("internal_error", "x"), { status: 500 }) : HttpResponse.json(answer))));
+}
+
+/** The query of one GET /v1/receipts call. */
+export interface ReceiptsCall {
+  status: string[];
+  cursor: string | null;
+  limit: string | null;
+}
+
+/**
+ * GET /v1/receipts for one test, in pages by cursor (the API orders by sending). Returns the calls made, in order.
+ * `pages[0]` is the first page; the cursor of each next page is «p1», «p2»…
+ */
+export function serveReceipts(pages: Schemas["ReceiptSummaryOut"][][]) {
+  const calls: ReceiptsCall[] = [];
+  server.use(
+    http.get(`${API}/v1/receipts`, ({ request }) => {
+      const url = new URL(request.url);
+      const cursor = url.searchParams.get("cursor");
+      calls.push({ status: url.searchParams.getAll("status"), cursor, limit: url.searchParams.get("limit") });
+      const index = cursor ? Number(cursor.slice(1)) : 0;
+      return HttpResponse.json({ items: pages[index] ?? [], next_cursor: index + 1 < pages.length ? `p${index + 1}` : null });
+    }),
+  );
+  return calls;
 }

@@ -129,7 +129,7 @@ test.describe("flows with a fake API", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
     await page.getByRole("link", { name: "Talões" }).click();
     await page.getByRole("tab", { name: "Resumo" }).click();
-    await expect(page.getByText("Gasto total")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Gasto em mercado/ })).toBeVisible();
   });
 
   test("F-21: empty account explains how to import the first receipt", async ({ page }) => {
@@ -168,7 +168,7 @@ test.describe("flows with a fake API", () => {
   test("session loss sends the person to sign-in", async ({ page }) => {
     const state = await fakeApi(page);
     await page.goto("/compras");
-    await expect(page.getByText("Revisão necessária")).toBeVisible();
+    await expect(page.getByRole("link", { name: /rever valores/ }).first()).toBeVisible();
     state.signedIn = false;
     // Any next request (navigation or a background refetch) discovers the lost session.
     // The Resumo tab loads data, so it discovers the lost session (the Início makes no requests).
@@ -675,5 +675,109 @@ test.describe("início (spec 011)", () => {
     await page.getByRole("link", { name: "Definir a minha meta pessoal" }).click();
     await expect(page).toHaveURL(/\/definicoes\/perfil\?editar=meta$/);
     await expect(page.getByRole("textbox", { name: /Meta pessoal do mês/ })).toBeFocused();
+  });
+});
+
+// ---------------------------------------------------------------- Talões (spec 012)
+
+const TALOES_PAGES = ["/compras", "/compras?filtro=acao", "/compras?ano=2025", "/compras/resumo", "/produtos", "/produtos/p1"] as const;
+
+test.describe("talões (spec 012)", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    for (const width of [320, 375, 430, 820]) {
+      test(`F-199: every tab and the product detail have no axe violations and no horizontal scroll (${scheme}, ${width}px)`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.setViewportSize({ width, height: 800 });
+        await fakeApi(page);
+        for (const path of TALOES_PAGES) {
+          await page.goto(path);
+          await expect(page.locator("main")).toBeVisible();
+          await page.waitForLoadState("networkidle");
+          await noA11yViolations(page);
+          await noHorizontalScroll(page);
+        }
+      });
+    }
+  }
+
+  test("F-199: every control of the Talões has a touch target of at least 44 px", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await fakeApi(page);
+    for (const path of TALOES_PAGES) {
+      await page.goto(path);
+      await page.waitForLoadState("networkidle");
+      const small = await page
+        .locator("main button:visible, main a:visible, main select:visible, main [role=tab]:visible, main input[type=search]:visible, main summary:visible")
+        .evaluateAll((nodes) =>
+          nodes
+            .map((node) => ({ text: (node.textContent ?? "").trim().slice(0, 30) || node.getAttribute("aria-label") || node.tagName, box: node.getBoundingClientRect() }))
+            .filter(({ box }) => box.height < 43.5 || box.width < 43.5)
+            .map(({ text, box }) => `${text}: ${Math.round(box.width)}x${Math.round(box.height)}`),
+        );
+      expect(small, path).toEqual([]);
+    }
+  });
+
+  test("F-195: the list groups by month with the totals of the endpoint, and says each state with words", async ({ page }) => {
+    await fakeApi(page);
+    await page.goto("/compras");
+    await expect(page.getByRole("heading", { level: 1, name: "Talões" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 3, name: /Outubro 2026 · 7 confirmados/ })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 3, name: /Setembro 2026 · 5 confirmados/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Mercadona.*rever valores/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Continente.*a ler o talão/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Documento ilegível/ })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "Requer ação · 2" })).toBeVisible();
+  });
+
+  test("F-195: the year selector shows only that year, «Requer ação» shows all years, and a row opens the purchase", async ({ page }) => {
+    await fakeApi(page);
+    await page.goto("/compras");
+    await expect(page.getByRole("combobox", { name: "Ano" })).toHaveValue("2026");
+    await expect(page.getByRole("link", { name: /Aldi/ })).toHaveCount(0);
+    await page.getByRole("combobox", { name: "Ano" }).selectOption("2025");
+    await expect(page).toHaveURL(/\?ano=2025$/);
+    await expect(page.getByRole("link", { name: /Aldi/ })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 3, name: /Dezembro 2025 · 2 confirmados/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Pingo Doce/ })).toHaveCount(0);
+
+    await page.getByRole("radio", { name: /Requer ação/ }).click();
+    await expect(page).toHaveURL(/filtro=acao/);
+    await expect(page.getByRole("link", { name: /Mercadona/ })).toBeVisible();
+    await page.getByRole("link", { name: /Mercadona/ }).click();
+    await expect(page).toHaveURL(/\/compras\/r1$/);
+  });
+
+  test("F-195: the year selector is only in Compras", async ({ page }) => {
+    await fakeApi(page);
+    await page.goto("/compras/resumo");
+    await expect(page.getByRole("heading", { level: 2, name: "Resumo" })).toBeAttached();
+    await expect(page.getByRole("combobox", { name: "Ano" })).toHaveCount(0);
+    await page.getByRole("tab", { name: "Produtos" }).click();
+    await expect(page.getByRole("combobox", { name: "Ano" })).toHaveCount(0);
+  });
+
+  test("F-197: the products show the average price with its base and the counts, are reordered by name and never say «mais barato»", async ({ page }) => {
+    await fakeApi(page);
+    await page.goto("/produtos");
+    const chicken = page.getByRole("link", { name: /Peito de frango/ });
+    await expect(chicken).toContainText("4 compras · 3 mercados");
+    await expect(chicken).toContainText("5,52 € /kg");
+    await expect(page.getByRole("link", { name: /Água/ })).not.toContainText("€");
+    await page.getByRole("radio", { name: "A–Z" }).click();
+    await expect(page).toHaveURL(/ordem=az$/);
+    await expect(page.getByRole("main").getByRole("link").first()).toContainText("Água");
+    await chicken.click();
+    await expect(page.getByRole("heading", { level: 1, name: "Peito de frango" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Preço médio por kg" })).toContainText("Média ponderada pelas quantidades que comprou");
+    await expect(page.getByRole("heading", { name: "Por mercado, nos seus talões" })).toBeVisible();
+    await expect(page.locator("main")).not.toContainText(/mais barato/i);
+  });
+
+  test("F-199: the Talões write nothing to localStorage or sessionStorage", async ({ page }) => {
+    await fakeApi(page);
+    for (const path of TALOES_PAGES) await page.goto(path);
+    const stored = await page.evaluate(() => ({ local: Object.keys(localStorage), session: Object.keys(sessionStorage) }));
+    expect(stored).toEqual({ local: [], session: [] });
   });
 });

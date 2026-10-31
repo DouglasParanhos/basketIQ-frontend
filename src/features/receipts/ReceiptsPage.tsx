@@ -1,57 +1,76 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { ChevronRight } from "lucide-react";
-import { Link, useSearchParams } from "react-router";
-import { api, unwrap, type Schemas } from "../../api/client";
-import { Button, LinkButton, Notice, PageHeader, Spinner, StatusBadge } from "../../components/ui";
-import { formatCents, formatDate, formatDateTime, merchantName } from "../../lib/format";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router";
+import { api, unwrap } from "../../api/client";
+import { Button, LinkButton, Notice, Spinner } from "../../components/ui";
 import { IN_PROGRESS, type ReceiptStatus } from "../../lib/status";
+import { useMonths } from "../taloes/useMonths";
+import { useYear } from "../taloes/useYear";
+import { groupByMonth, headerText, yearOf, type Filter } from "./months";
+import { ReceiptRow } from "./ReceiptRow";
 
-const FILTERS: { id: string; label: string; status?: ReceiptStatus[] }[] = [
+const ACTION_STATUSES: ReceiptStatus[] = ["REVIEW_REQUIRED", "COMPLETED", "RECEIVED", "INVALID_FORMAT", "UNREADABLE", "UNSUPPORTED_MERCHANT", "TEMPORARY_FAILURE", "PERMANENT_FAILURE"];
+const FILTERS: { id: Filter; label: string; status?: ReceiptStatus[] }[] = [
   { id: "todas", label: "Todas" },
-  {
-    id: "acao",
-    label: "Requer ação",
-    status: ["REVIEW_REQUIRED", "COMPLETED", "RECEIVED", "INVALID_FORMAT", "UNREADABLE", "UNSUPPORTED_MERCHANT", "TEMPORARY_FAILURE", "PERMANENT_FAILURE"],
-  },
+  { id: "acao", label: "Requer ação", status: ACTION_STATUSES },
   { id: "confirmadas", label: "Confirmadas", status: ["CONFIRMED"] },
 ];
 
+/** The purchases by month of the purchase, with the totals of the endpoint of months; the year filters what is loaded («Carregar mais» reaches further back). */
 export function ReceiptsPage() {
   const [params, setParams] = useSearchParams();
   const filter = FILTERS.find((f) => f.id === params.get("filtro")) ?? FILTERS[0]!;
+  const { year } = useYear();
+  const months = useMonths();
   const query = useInfiniteQuery({
     queryKey: ["receipts", filter.id],
     initialPageParam: null as string | null,
     queryFn: async ({ pageParam }) =>
-      unwrap(
-        await api.GET("/v1/receipts", {
-          params: { query: { limit: 20, cursor: pageParam ?? undefined, status: filter.status } },
-        }),
-      ),
+      unwrap(await api.GET("/v1/receipts", { params: { query: { limit: 20, cursor: pageParam ?? undefined, status: filter.status } } })),
     getNextPageParam: (last) => last.next_cursor,
     // Keep polling while something is still being processed.
-    refetchInterval: (q) =>
-      q.state.data?.pages.some((p) => p.items.some((r) => IN_PROGRESS.has(r.status))) ? 3000 : false,
+    refetchInterval: (q) => (q.state.data?.pages.some((p) => p.items.some((r) => IN_PROGRESS.has(r.status))) ? 3000 : false),
   });
   const items = query.data?.pages.flatMap((p) => p.items) ?? [];
+  const reading = items.some((r) => IN_PROGRESS.has(r.status));
+
+  // How many purchases ask for action (the API has no counter): one request for up to 100, refreshed with the list.
+  const counter = useQuery({
+    queryKey: ["receipts", "action-count"],
+    queryFn: async () => unwrap(await api.GET("/v1/receipts", { params: { query: { limit: 100, status: ACTION_STATUSES } } })),
+    refetchInterval: reading ? 3000 : false,
+  });
+  const asked = counter.data?.items.length ?? 0;
+
+  // «Requer ação» shows every year (its number is for every year); the other filters show the year chosen.
+  const visible = filter.id === "acao" ? items : items.filter((r) => yearOf(r) === year);
+  const groups = groupByMonth(visible);
+  const notReached = filter.id !== "acao" && items.length > 0 && visible.length === 0 && query.hasNextPage;
+
+  function choose(id: Filter) {
+    setParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        if (id === "todas") next.delete("filtro");
+        else next.set("filtro", id);
+        return next;
+      },
+      { replace: true },
+    );
+  }
 
   return (
     <>
-      <PageHeader title="Compras">
-        <LinkButton to="/produtos" variant="quiet">
-          Produtos
-        </LinkButton>
-      </PageHeader>
-      <div role="radiogroup" aria-label="Filtrar compras" className="mb-4 flex gap-2">
+      <h2 className="sr-only">Compras</h2>
+      <div role="radiogroup" aria-label="Filtrar compras" className="mb-4 mt-3 flex gap-2 overflow-x-auto">
         {FILTERS.map((f) => (
           <button
             key={f.id}
             role="radio"
             aria-checked={f.id === filter.id}
-            onClick={() => setParams(f.id === "todas" ? {} : { filtro: f.id })}
-            className="min-h-11 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line aria-checked:bg-brand aria-checked:text-white aria-checked:ring-brand dark:aria-checked:text-ground"
+            onClick={() => choose(f.id)}
+            className="min-h-11 shrink-0 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line aria-checked:bg-brand aria-checked:text-white aria-checked:ring-brand dark:aria-checked:text-ground"
           >
-            {f.label}
+            {f.id === "acao" && asked > 0 ? `${f.label} · ${asked >= 100 ? "99+" : asked}` : f.label}
           </button>
         ))}
       </div>
@@ -67,38 +86,30 @@ export function ReceiptsPage() {
           {filter.id === "todas" ? "Fotografe uma nota ou envie o PDF da fatura para começar." : "Não há compras com este estado."}
         </Notice>
       )}
+      {notReached && <Notice tone="info">Ainda não chegou a este ano.</Notice>}
+      {!query.isLoading && items.length > 0 && visible.length === 0 && !notReached && (
+        <Notice tone="info" title="Nada nesta lista">
+          Não há compras neste ano.
+        </Notice>
+      )}
 
-      <ul className="flex flex-col gap-2">
-        {items.map((r) => (
-          <ReceiptRow key={r.id} receipt={r} />
-        ))}
-      </ul>
+      {groups.map((g) => (
+        <section key={g.key} aria-labelledby={`mes-${g.key}`} className="mb-2">
+          <h3 id={`mes-${g.key}`} className="pb-1 pt-3 text-sm font-bold">
+            {headerText(g, months.data, filter.id)}
+          </h3>
+          <ul className="flex flex-col">
+            {g.rows.map((r) => (
+              <ReceiptRow key={r.id} receipt={r} />
+            ))}
+          </ul>
+        </section>
+      ))}
       {query.hasNextPage && (
         <Button variant="secondary" className="mt-4 w-full" busy={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>
           Carregar mais
         </Button>
       )}
     </>
-  );
-}
-
-function ReceiptRow({ receipt: r }: { receipt: Schemas["ReceiptSummaryOut"] }) {
-  return (
-    <li>
-      <Link to={`/compras/${r.id}`} className="flex items-center gap-3 rounded-surface bg-paper p-4 hover:ring-1 hover:ring-brand">
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="truncate font-bold">{r.merchant ? merchantName(r.merchant, r.merchant_name) : "Nota em processamento"}</span>
-            <span className="amount shrink-0 font-bold">{formatCents(r.total_cents)}</span>
-          </div>
-          {r.store_label && <span className="truncate text-sm text-ink-soft">{r.store_label}</span>}
-          <div className="flex items-center justify-between gap-3 text-sm text-ink-soft">
-            <span>{r.purchase_at ? formatDate(r.purchase_at) : `Enviada ${formatDateTime(r.created_at)}`}</span>
-            <StatusBadge status={r.status} />
-          </div>
-        </div>
-        <ChevronRight aria-hidden className="size-5 shrink-0 text-ink-soft" />
-      </Link>
-    </li>
   );
 }

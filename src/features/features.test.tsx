@@ -407,6 +407,32 @@ describe("dashboard (RF-09, RF-11)", () => {
     expect(screen.getByRole("table", { name: /gasto por período/i })).toBeInTheDocument();
   });
 
+  it("F-196: the Resumo has its title for assistive technology as a level-2 heading, with no greeting and no heading of level 1 of its own", async () => {
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
+    expect(await screen.findByRole("heading", { level: 2, name: "Resumo" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/Olá/);
+  });
+
+  it("F-196: the period has four options and the arrows, and the merchant filter says «Todos os mercados»", async () => {
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
+    const period = await screen.findByRole("radiogroup", { name: "Período" });
+    expect(within(period).getAllByRole("radio").map((r) => r.textContent)).toEqual(["Mês", "Trimestre", "Ano", "Intervalo"]);
+    expect(screen.getByRole("button", { name: "Período anterior" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Período seguinte" })).toBeInTheDocument();
+    const merchant = screen.getByLabelText("Mercado");
+    expect(within(merchant).getByRole("option", { name: "Todos os mercados" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Supermercado")).not.toBeInTheDocument();
+  });
+
+  it("F-196: the total is the «Gasto em mercado» card with the number of receipts, and the stores are «Por mercado»", async () => {
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
+    expect(await screen.findByRole("heading", { name: /^Gasto em mercado · \d+ talões?$/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Por mercado" })).toBeInTheDocument();
+    expect(screen.queryByText("Gasto total")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Por supermercado" })).not.toBeInTheDocument();
+  });
+
   it("F-19: the merchant filter is sent with the query", async () => {
     const seen: (string | null)[] = [];
     server.use(
@@ -417,7 +443,7 @@ describe("dashboard (RF-09, RF-11)", () => {
     );
     const user = userEvent.setup();
     renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
-    await user.selectOptions(await screen.findByLabelText("Supermercado"), "LIDL");
+    await user.selectOptions(await screen.findByLabelText("Mercado"), "LIDL");
     await waitFor(() => expect(seen).toContain("LIDL"));
   });
 

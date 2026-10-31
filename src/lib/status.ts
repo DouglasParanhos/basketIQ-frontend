@@ -24,3 +24,21 @@ export const EDITABLE: ReadonlySet<ReceiptStatus> = new Set(["REVIEW_REQUIRED", 
 export function isTerminal(status: ReceiptStatus): boolean {
   return !IN_PROGRESS.has(status);
 }
+
+/** The purchases the person has to look at: the values need a review, or only the confirmation is left. */
+export const ATTENTION: ReadonlySet<ReceiptStatus> = new Set(["REVIEW_REQUIRED", "COMPLETED"]);
+/** The reading failed. */
+export const ERRORS: ReadonlySet<ReceiptStatus> = new Set(["INVALID_FORMAT", "UNREADABLE", "UNSUPPORTED_MERCHANT", "TEMPORARY_FAILURE", "PERMANENT_FAILURE"]);
+
+export type RowState = "attention" | "progress" | "error" | "confirmed";
+
+/**
+ * How a purchase shows in a list. From the status: the API's `needs_action` is also true for the failures, so it
+ * cannot tell «rever valores» (a purchase to review) from «Documento ilegível» (a purchase that failed).
+ */
+export function rowState(status: ReceiptStatus): RowState {
+  if (ATTENTION.has(status)) return "attention";
+  if (IN_PROGRESS.has(status)) return "progress";
+  if (ERRORS.has(status)) return "error";
+  return "confirmed";
+}

@@ -42,7 +42,7 @@ describe("the onboarding guard (spec 010, US3)", () => {
   it("F-115: an account from before the onboarding (finished and empty) is not interrupted", async () => {
     serveProfileResponse(migrated);
     const { router } = renderApp("/compras");
-    expect(await screen.findByRole("heading", { level: 1, name: "Compras" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Talões" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/compras");
     expect(screen.getByRole("navigation", { name: NAV_NAME })).toBeInTheDocument();
   });
