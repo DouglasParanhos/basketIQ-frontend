@@ -781,3 +781,34 @@ test.describe("talões (spec 012)", () => {
     expect(stored).toEqual({ local: [], session: [] });
   });
 });
+
+// ---------------------------------------------------------------- Lista provisória (spec 015)
+
+test.describe("lista provisória (spec 015)", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    for (const width of [320, 375, 430, 820]) {
+      test(`F-146: /lista has no axe violations and no horizontal scroll (${scheme}, ${width}px)`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.setViewportSize({ width, height: 800 });
+        await fakeApi(page, { smartList: true });
+        await page.goto("/lista");
+        await expect(page.getByRole("heading", { level: 1, name: "Lista" })).toBeVisible();
+        await expect(page.getByText("Em breve")).toBeVisible();
+        await noA11yViolations(page);
+        await noHorizontalScroll(page);
+      });
+    }
+  }
+
+  test("F-146: /lista is reached from the fifth button, and with the smart list off it does not exist", async ({ page }) => {
+    await fakeApi(page, { smartList: true });
+    await page.goto("/");
+    await page.getByRole("navigation", { name: "Navegação principal" }).getByRole("link", { name: "Lista" }).click();
+    await expect(page).toHaveURL(/\/lista$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Lista" })).toBeVisible();
+    const off = await page.context().newPage();
+    await fakeApi(off, { smartList: false });
+    await off.goto("/lista");
+    await expect(off.getByText("Não foi possível mostrar esta página")).toBeVisible();
+  });
+});

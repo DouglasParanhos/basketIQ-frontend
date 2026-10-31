@@ -4,11 +4,12 @@ import { createBrowserRouter, isRouteErrorResponse, Navigate, Outlet, RouterProv
 import { ApiError, setSessionExpiredHandler } from "./api/client";
 import { AppShell } from "./components/AppShell";
 import { Notice, Spinner } from "./components/ui";
-import { DocumentTitle } from "./config/appConfig";
+import { DocumentTitle, useAppConfig } from "./config/appConfig";
 import { LoginPage } from "./features/auth/LoginPage";
 import { RequireSession } from "./features/auth/session";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { HomeRoute } from "./features/home/HomeRoute";
+import { ListaPage } from "./features/lista/ListaPage";
 import { RequireOnboarding } from "./features/onboarding/RequireOnboarding";
 import { PrivacyPage } from "./features/privacy/PrivacyPage";
 import { ReceiptPage } from "./features/receipts/ReceiptPage";
@@ -41,6 +42,13 @@ function RouteError() {
       </Notice>
     </main>
   );
+}
+
+/** The Lista exists only with the smart list on; off (or the config did not arrive) it is the same «page not found» as any unknown route. */
+function ListaRoute() {
+  const config = useAppConfig();
+  if (config.isPending) return <Spinner />;
+  return config.data?.smart_list_enabled === true ? <ListaPage /> : <RouteError />;
 }
 
 function Protected({ admin = false }: { admin?: boolean }) {
@@ -82,6 +90,7 @@ export const routes: RouteObject[] = [
               },
               { path: "/compras/:id", element: <ReceiptPage /> },
               { path: "/adicionar", element: <AddPage /> },
+              { path: "/lista", element: <ListaRoute /> },
               { path: "/produtos/:id", element: <ProductPage /> },
               {
                 path: "/definicoes",
