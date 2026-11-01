@@ -1,7 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import type { Schemas } from "../api/client";
-import { consumption, emptyProfile, me, merchants, monthTotals, overviewGreen, productAnalytics, productItem, profile, receipt, summary } from "./fixtures";
+import { consumption, emptyProfile, listArticles, me, merchants, monthTotals, overviewGreen, productAnalytics, productItem, profile, receipt, summary } from "./fixtures";
 
 export const API = "http://localhost:3000";
 
@@ -21,6 +21,7 @@ export const server = setupServer(
   http.get(`${API}/v1/analytics/months`, () => HttpResponse.json(monthTotals)),
   http.get(`${API}/v1/products`, () => HttpResponse.json([productItem()])),
   http.get(`${API}/v1/products/:id/analytics`, () => HttpResponse.json(productAnalytics())),
+  http.get(`${API}/v1/lists/articles`, () => HttpResponse.json(listArticles())),
 );
 
 export function errorBody(code: string, message: string, extra: Record<string, unknown> = {}) {

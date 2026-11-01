@@ -14,7 +14,33 @@
 
 **Regra de comparação (D11 e D12):** janela de 90 dias; só se compara com 2 mercados de pelo menos 3 compras cada, diferença de pelo menos 15 % da média do grupo e de 0,20 € na compra típica; **sem ranking de mercados**; o ecrã mostra sempre a janela e o número de compras. Texto: «preço médio que pagou» ou «pelo que costuma pagar»; «sem diferença clara»; «faltam X compras para comparar».
 
+**Incremento 1 (2026-11-01):** a US-A constrói-se **antes do passo C**. O item da lista é o **artigo**, isto é, o mesmo produto na mesma
+cadeia (`Documentation/BRAINSTORM_lista_inteligente_2026-11-01.md`). Este incremento não compara cadeias e não gera listas. Lê
+`GET /v1/lists/articles` (backend, spec 015 US-A). As restantes histórias continuam a depender do passo C.
+
 ## User Scenarios & Testing *(mandatory)*
+
+### User Story A - Artigos comprados na janela (Priority: P1, incremento 1)
+
+**Acceptance Scenarios**:
+
+1. **Given** a opção ligada, **When** a pessoa abre Lista, **Then** vê sempre «Valores calculados com os seus talões dos últimos N dias. Não
+   são preços de hoje.», com o N que vem da API. — F-153, RF-16
+2. **Given** os itens, **When** são mostrados, **Then** aparece um cartão por produto, na ordem da API, com ligação à página do produto
+   (onde está a evolução do preço), o número de compras e o preço médio que pagou na base. As embalagens e o ritmo por mês só aparecem
+   em produtos à unidade. — F-153, RF-16
+3. **Given** um artigo (uma cadeia), **When** é listado, **Then** mostra o número de compras, a média, o mais baixo e o mais alto com a
+   data e «com desconto» quando o houve, e a última compra. Com uma só compra não mostra o mais baixo nem o mais alto. Uma loja não
+   suportada aparece com o nome que tem. — F-153, RF-16
+4. **Given** o texto, **When** é revisto, **Then** está em português europeu e em tom neutro: sem «poupa», «perda», «caro», «mais barato»
+   nem ordenação de cadeias. — F-153, RF-16
+5. **Given** nenhuma compra na janela, **Then** a pessoa vê uma mensagem clara e nenhuma lista. **Given** linhas sem produto
+   identificado, **Then** vê quantas ficaram de fora. **Given** um erro, **Then** vê «Tentar de novo», que volta a pedir. — F-154,
+   constituição III
+6. **Given** cada vista, **When** corre o axe em claro e escuro de 320 a 820 px, **Then** não há violações nem scroll horizontal. — F-153,
+   §8
+
+---
 
 ### User Story 1 - Escolher o modo e ver o progresso (Priority: P1)
 
