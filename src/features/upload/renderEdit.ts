@@ -24,5 +24,10 @@ export async function renderEdit(src: string, edit: Pick<Edit, "rotation" | "are
   out.width = Math.round(area.width);
   out.height = Math.round(area.height);
   out.getContext("2d")!.drawImage(rotated, area.x, area.y, area.width, area.height, 0, 0, area.width, area.height);
-  return new Promise((resolve, reject) => out.toBlob((b) => (b ? resolve(b) : reject(new Error("render failed"))), "image/jpeg", 0.92));
+  return canvasToJpeg(out);
+}
+
+/** The picture on `canvas` as the JPEG that is uploaded (an edited part, a photo from the in-app camera). */
+export function canvasToJpeg(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("render failed"))), "image/jpeg", 0.92));
 }

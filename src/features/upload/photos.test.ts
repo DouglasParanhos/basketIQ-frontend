@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { NO_EDIT } from "./edit";
-import { add, canAdd, move, nextPartText, remove, setEdit, toUploadFiles, type Part } from "./photos";
+import { add, canAdd, move, nextPartText, remove, replace, setEdit, toUploadFiles, type Part } from "./photos";
 
 const part = (id: string, over: Partial<Part> = {}): Part => ({
   id,
@@ -9,6 +9,7 @@ const part = (id: string, over: Partial<Part> = {}): Part => ({
   previewUrl: `blob:${id}`,
   previewError: false,
   edit: NO_EDIT,
+  warnings: [],
   ...over,
 });
 const pdfPart = (id: string): Part => part(id, { file: new File(["%PDF"], `${id}.pdf`, { type: "application/pdf" }), type: "application/pdf", previewUrl: null });
@@ -85,5 +86,12 @@ describe("parts of one receipt (spec 013)", () => {
   it("F-203: the text for the next part follows the number of parts", () => {
     expect(nextPartText([part("a")])).toBe("Parte 2 · comece onde a parte 1 acabou");
     expect(nextPartText([part("a"), part("b")])).toBe("Parte 3 · comece onde a parte 2 acabou");
+  });
+});
+
+describe("replace", () => {
+  it("puts a part taken again where the old one was", () => {
+    const parts = [part("a"), part("b"), part("c")];
+    expect(replace(parts, "b", part("b2")).map((p) => p.id)).toEqual(["a", "b2", "c"]);
   });
 });

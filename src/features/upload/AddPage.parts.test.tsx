@@ -1,15 +1,18 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderRoutes } from "../../test/render";
 import { API, errorBody, server } from "../../test/server";
 import { jpg, pdf, serveUpload, stubPreviewUrls } from "../../test/upload";
+import { analyzeStill } from "../capture/analyzeStill";
 import { AddPage } from "./AddPage";
 
 vi.mock("./ImageEditor", async () => ({ ImageEditor: (await import("../../test/upload")).FakeImageEditor }));
 vi.mock("./renderEdit", () => ({ renderEdit: vi.fn(async (_url: string, edit: { rotation: number }) => new Blob([`editado:${edit.rotation}`])) }));
 vi.mock("heic2any", () => ({ default: vi.fn(async () => new Blob(["jpeg"])) }));
+// jsdom cannot decode images: the post-capture check is driven by each test (empty: nothing to say).
+vi.mock("../capture/analyzeStill", () => ({ analyzeStill: vi.fn(async () => []) }));
 
 const { released } = stubPreviewUrls();
 
@@ -222,6 +225,7 @@ describe("Adicionar: the parts of one receipt (spec 013, US2)", () => {
     await pick("input-camera", jpg("b.jpg"));
     await screen.findByText("b.jpg");
     expect(screen.getByText("Parte 3 · comece onde a parte 2 acabou")).toBeInTheDocument();
+    // The live advice is on the in-app camera (CameraCapture), not on this screen.
     expect(screen.queryByText(/captura automática|talão detetado/i)).not.toBeInTheDocument();
   });
 
@@ -244,5 +248,58 @@ describe("Adicionar: the parts of one receipt (spec 013, US2)", () => {
     expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
     expect(bodies["init:a.jpg"]!.merchant_hint).toBe("ALDI");
     view.unmount();
+  });
+});
+
+describe("Adicionar: the in-app camera and the check of each photo (spec 013, US4 and US5)", () => {
+  afterEach(() => {
+    Reflect.deleteProperty(navigator, "mediaDevices");
+    vi.unstubAllGlobals();
+  });
+
+  it("F-203: Fotografar and «Adicionar outra parte» open the in-app camera where the browser has one", async () => {
+    Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia: () => new Promise(() => {}) } });
+    vi.stubGlobal("isSecureContext", true);
+    const user = userEvent.setup();
+    renderRoutes(routes, "/adicionar");
+    await user.click(button(/fotografar/i));
+    expect(screen.getByRole("dialog", { name: "Fotografar o talão" })).toBeInTheDocument();
+    await user.click(button("Fechar a câmara"));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("F-203: refused, the camera offers the phone's own, used from then on, and nothing is stored", async () => {
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: () => Promise.reject(new DOMException("no", "NotAllowedError")) },
+    });
+    vi.stubGlobal("isSecureContext", true);
+    const user = userEvent.setup();
+    renderRoutes(routes, "/adicionar");
+    const nativeCamera = vi.spyOn(screen.getByTestId("input-camera") as HTMLInputElement, "click");
+    await user.click(button(/fotografar/i));
+    await user.click(await screen.findByRole("button", { name: /usar a câmara do telemóvel/i }));
+    expect(nativeCamera).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.click(button(/fotografar/i)); // straight to the phone's camera now
+    expect(nativeCamera).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(sessionStorage.length + localStorage.length).toBe(0);
+  });
+
+  it("F-204: a part the backend would warn about says so, never blocks, and is taken again in its place", async () => {
+    vi.mocked(analyzeStill).mockResolvedValueOnce(["too_far", "blurry"]);
+    const { user } = await withParts(jpg("a.jpg"));
+    await pick("input-image", jpg("b.jpg"));
+    await screen.findByText("b.jpg");
+    expect(await screen.findByText(/o talão ficou pequeno na foto.*tremida ou desfocada.*pode enviá-la na mesma/i)).toBeInTheDocument();
+    expect(button("Enviar talão · 2 fotos")).toBeEnabled();
+    // No in-app camera in jsdom: the phone's camera opens, and the new photo replaces part 1.
+    await user.click(button("Fotografar de novo a parte 1"));
+    await pick("input-camera", jpg("a2.jpg"));
+    await screen.findByText("a2.jpg");
+    const names = screen.getAllByRole("listitem").map((li) => within(li).queryByText(/\.jpg$/)?.textContent);
+    expect(names).toEqual(["a2.jpg", "b.jpg"]);
+    expect(screen.queryByText(/o talão ficou pequeno/i)).not.toBeInTheDocument();
   });
 });

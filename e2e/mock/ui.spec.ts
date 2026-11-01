@@ -1,12 +1,7 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { noA11yViolations } from "./a11y";
 import { fakeApi } from "./api";
-
-async function noA11yViolations(page: Page) {
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
-  const found = results.violations.flatMap((v) => v.nodes.map((n) => `${v.id}: ${n.html.slice(0, 120)} ${n.failureSummary?.split("\n")[1] ?? ""}`));
-  expect(found).toEqual([]);
-}
+import { noCamera } from "./fakeCamera";
 
 async function noHorizontalScroll(page: Page) {
   // The mock project emulates a phone, where the layout viewport grows with the content: measure against the width asked for.
@@ -144,9 +139,13 @@ test.describe("flows with a fake API", () => {
     await fakeApi(page);
     await page.goto("/adicionar");
     await expect(page.getByTestId("input-camera")).toHaveAttribute("capture", "environment");
-    // The capture input is a native picker: with the permission denied the browser offers files instead.
-    const chooser = page.waitForEvent("filechooser");
+    // No camera access here: the in-app camera offers the phone's own (a native picker that, without the
+    // permission, offers files instead).
     await page.getByRole("button", { name: /Fotografar/ }).click();
+    const fallback = page.getByRole("button", { name: /usar a câmara do telemóvel/i });
+    await expect(fallback).toBeVisible();
+    const chooser = page.waitForEvent("filechooser");
+    await fallback.click();
     expect((await chooser).isMultiple()).toBe(false);
   });
 
@@ -455,6 +454,7 @@ async function choose(page: Page, button: string | RegExp, file: ReturnType<type
 
 /** Walks the first screen, the parts screen (two parts), the editor of a part and the discard question. */
 async function walkAdd(page: Page, check: () => Promise<void>) {
+  await noCamera(page); // «Adicionar outra parte» opens the native picker (the in-app camera: camera.spec.ts)
   await page.goto("/adicionar");
   await expect(page.getByRole("heading", { level: 1, name: "Adicionar talão" })).toBeVisible();
   await expect(page.getByRole("radio", { name: "Lidl" })).toBeAttached();
@@ -518,13 +518,16 @@ test.describe("adicionar (spec 013)", () => {
     await fakeApi(page);
     await page.goto("/adicionar");
     await expect(page.getByTestId("input-camera")).toHaveAttribute("capture", "environment");
-    const chooser = page.waitForEvent("filechooser");
+    // The in-app camera has no access here: it offers the phone's own, a native picker.
     await page.getByRole("button", { name: /Fotografar/ }).click();
+    const chooser = page.waitForEvent("filechooser");
+    await page.getByRole("button", { name: /usar a câmara do telemóvel/i }).click();
     expect((await chooser).isMultiple()).toBe(false);
   });
 
   test("F-201: two parts make one receipt, sent in the order shown, within five taps after the first photo", async ({ page }) => {
     const state = await fakeApi(page);
+    await noCamera(page);
     await page.goto("/adicionar");
     await choose(page, "Escolher imagem", png("a.png"));
     await choose(page, "Adicionar outra parte", png("b.png")); // tap 1
@@ -536,6 +539,7 @@ test.describe("adicionar (spec 013)", () => {
 
   test("F-201 (A5): the edit of a part is kept when switching parts, with the real editor, and the edited part is what is sent", async ({ page }) => {
     const state = await fakeApi(page);
+    await noCamera(page);
     await page.goto("/adicionar");
     await choose(page, "Escolher imagem", png("a.png"));
     await choose(page, "Adicionar outra parte", png("b.png"));

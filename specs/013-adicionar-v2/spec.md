@@ -90,26 +90,30 @@ A deteção é do backend e acontece depois do envio, por isso a mensagem vive n
 
 ---
 
-### User Story 4 - Orientação sem moldura (Priority: P3)
+### User Story 4 - Câmara própria com orientação ao vivo (Priority: P2)
+
+*Decisão (2026-11-01, Douglas): a câmara própria (`getUserMedia`) avança sem o spike; a deteção é um porte em TypeScript das regras do backend (`preprocess.py`, `quality.py`), sem OpenCV.js, calibrado nas fotos reais e nas suas variantes. Código: `src/features/capture/`. Substitui a «Orientação sem moldura» e o spike (US5) desta spec.*
 
 **Acceptance Scenarios**:
 
-1. **Given** a segunda parte, **When** a pessoa vai fotografar, **Then** vê a instrução «Parte 2 · comece onde a parte 1 acabou» (e «Parte 3», …) junto a «Adicionar outra parte», no ecrã das partes. — §4.2
-2. **Given** a câmara do sistema (`capture="environment"`), **When** abre, **Then** o ecrã não finge uma moldura que não pode desenhar; o texto de orientação ocupa o lugar dela. — §4.2
-3. **Given** a câmara própria rejeitada pelo spike, **When** a spec é aplicada, **Then** o texto de orientação continua a ser a solução. — plano Fase 5
+1. **Given** «Fotografar» (ou «Adicionar outra parte») num navegador com câmara, **When** é tocado, **Then** abre a câmara própria (traseira) em ecrã inteiro, com a imagem rodeada por uma borda amarela que fica verde quando o talão está bem. — §4.2
+2. **Given** a câmara aberta, **When** o talão está longe, perto demais, cortado de lado, a sair em cima ou em baixo (foto única), sobre um fundo claro, com pouca luz ou tremido, **Then** o ecrã diz o que fazer com o texto de `contracts/copy.md`, um conselho de cada vez, sem piscar. — §4.2, RF-05
+3. **Given** o talão inteiro, perto o suficiente e nítido, **When** a câmara o vê, **Then** mostra «Talão detetado · pode fotografar». — §4.2
+4. **Given** qualquer conselho, **When** a pessoa toca no obturador, **Then** a foto é tirada: a orientação avisa, nunca bloqueia; só o limite de fotos desativa o obturador. — RF-05, RF-04
+5. **Given** a segunda parte (ou a terceira, …), **When** a pessoa fotografa, **Then** vê no topo o fundo da parte anterior com «Linhas já fotografadas» e `nextPartText` («Parte 2 · comece onde a parte 1 acabou»); numa parte o talão pode sair em cima e em baixo sem aviso. O ecrã das partes continua a mostrar `nextPartText` junto a «Adicionar outra parte». — §4.2, RF-04
+6. **Given** a câmara própria recusada ou indisponível, **When** a pessoa toca «Fotografar», **Then** vê porquê e «Usar a câmara do telemóvel», que abre a câmara do sistema (`capture="environment"`, F-06); na mesma sessão não volta a pedir. — F-06
+7. **Given** a câmara aberta, **When** a aplicação vai para segundo plano ou a câmara fecha, **Then** a câmara é desligada e volta ao regressar. — constituição IV
+8. **Given** um leitor de ecrã, **When** o conselho muda, **Then** é anunciado (no máximo a cada 2,5 s); alvos de pelo menos 44 px; o ecrã passa o axe. — §8
 
 ---
 
-### User Story 5 - Spike escrito da câmara própria (Priority: P3)
-
-*Entregável: um documento, sem integração. **Não se implementa nesta entrega.***
+### User Story 5 - Verificação de cada foto antes do envio (Priority: P2)
 
 **Acceptance Scenarios**:
 
-1. **Given** o spike, **When** termina, **Then** conclui se compensa a câmara própria (`getUserMedia`) com moldura, deteção de contorno e captura automática. — §4.2
-2. **Given** o documento, **When** é lido, **Then** traz o peso da biblioteca (OpenCV.js ou equivalente), o desempenho em telemóveis médios e o comportamento em PWA no iOS. — §8
-3. **Given** a conclusão, **When** é negativa, **Then** a Fase 5 fica só com a orientação e o documento diz porquê. — plano Fase 5
-4. **Given** o spike, **When** é entregue, **Then** não há código de produção integrado. — plano Fase 5
+1. **Given** uma foto (câmara própria, câmara do sistema ou galeria), **When** entra nas partes, **Then** o dispositivo verifica-a com as regras de que o backend avisa (talão pequeno na foto — menos de 600 px de largura —, escura, tremida). — RF-05
+2. **Given** uma parte com aviso, **When** aparece no ecrã das partes, **Then** vê o motivo, «Pode enviá-la na mesma.» e «Fotografar de novo», que põe a nova foto no lugar dela; o envio nunca é bloqueado. — RF-05
+3. **Given** uma imagem que o navegador não descodifica (HEIC) ou uma captura de ecrã, **When** é escolhida, **Then** não há aviso falso. — RF-05
 
 ---
 

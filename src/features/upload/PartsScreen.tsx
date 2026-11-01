@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { FullScreen } from "../../components/FullScreen";
 import { Button, Notice, ROUND_NEUTRAL } from "../../components/ui";
 import { formatCents, formatDate, merchantName } from "../../lib/format";
+import { stillText } from "../capture/hints";
 import { MAX_PHOTOS } from "../../lib/upload";
 import type { Edit } from "./edit";
 import { MerchantField } from "./MerchantPicker";
@@ -35,6 +36,7 @@ export function PartsScreen(props: {
   onEdit: (id: string | null) => void;
   onEditChange: (edit: Edit) => void;
   onRemove: (id: string) => void;
+  onRetake: (id: string) => void;
   onMove: (id: string, by: -1 | 1) => void;
   onLeave: () => void;
   onKeep: () => void;
@@ -126,6 +128,25 @@ export function PartsScreen(props: {
               />
             ))}
           </ul>
+
+          {/* What the backend would warn about a photo: said before sending, never blocking it (US5). */}
+          {parts.map(
+            (part, i) =>
+              part.warnings.length > 0 && (
+                <Notice
+                  key={part.id}
+                  tone="warning"
+                  title={`A parte ${i + 1} pode ser melhorada`}
+                  action={
+                    <Button type="button" variant="secondary" aria-label={`Fotografar de novo a parte ${i + 1}`} disabled={busy} onClick={() => props.onRetake(part.id)}>
+                      <Camera aria-hidden className="size-5" /> Fotografar de novo
+                    </Button>
+                  }
+                >
+                  {stillText(part.warnings)} Pode enviá-la na mesma.
+                </Notice>
+              ),
+          )}
 
           {props.fileError && <Notice tone="error">{props.fileError}</Notice>}
 
