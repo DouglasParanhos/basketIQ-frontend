@@ -8,6 +8,8 @@
 
 **Input**: Especificação Funcional RF-09, RF-11, §4.3; Plano de Testes F-18, F-19, F-21, §10. Backend: `../Backend/specs/005-analises`.
 
+**Nota (2026-10-31):** o Início (spec 011, `specs/011-inicio`) tem um anel de três faixas (verde, laranja, vermelha), uma exceção a «gráficos de série única» desta spec; as faixas usam sempre texto além da cor e o anel tem alternativa em texto. O Resumo deste ecrã continua com gráficos de série única.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Ver o gasto do período (Priority: P1)

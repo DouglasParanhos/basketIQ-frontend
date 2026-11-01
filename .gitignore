@@ -11,3 +11,10 @@ blob-report/
 *.tsbuildinfo
 .playwright-mcp/
 *.log
+
+# Local-only material that must never reach the repository
+/Receipts/
+/patches/
+/Documentation/
+*.dump
+*.sql

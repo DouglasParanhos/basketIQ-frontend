@@ -18,6 +18,14 @@ export function useAppConfig() {
   });
 }
 
+/**
+ * Whether the smart-list destination is shown (GET /v1/config → smart_list_enabled, key
+ * SMART_LIST_ENABLED). Anything other than `true` (missing field, pending or failed request) is off.
+ */
+export function useSmartListEnabled(): boolean {
+  return useAppConfig().data?.smart_list_enabled === true;
+}
+
 export function useAppName(): string {
   return useAppConfig().data?.app_name ?? FALLBACK_APP_NAME;
 }

@@ -1,54 +1,60 @@
-import { Camera, FileText, ImageIcon, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { Button, Notice, PageHeader, Select, Surface } from "../../components/ui";
-import { formatCents, formatDate, merchantName } from "../../lib/format";
+import { useNavigate } from "react-router";
+import { Notice } from "../../components/ui";
 import { effectiveType, validateFile } from "../../lib/upload";
-import { ImageEditor, renderEdit, type Edit } from "./ImageEditor";
+import { analyzeStill } from "../capture/analyzeStill";
+import { CameraCapture } from "../capture/CameraCapture";
+import { cameraSupported } from "../capture/useCamera";
+import type { Edit } from "./edit";
+import { MerchantChips } from "./MerchantPicker";
+import { PartsScreen, type FocusTarget } from "./PartsScreen";
+import { add, canAdd, move, newPart, remove, replace, setCheck, setEdit, toUploadFiles, type Part } from "./photos";
+import { previewFor } from "./preview";
+import { renderEdit } from "./renderEdit";
+import { SOURCES, SourceButtons, type Source } from "./SourceButtons";
 import { useUpload } from "./useUpload";
 
-interface Selected {
-  file: File;
-  type: string;
-  previewUrl: string | null;
-  previewError: boolean;
-}
-
-const SOURCES = [
-  { id: "camera", label: "Fotografar", hint: "Use a câmara do telemóvel", icon: Camera, accept: "image/*", capture: true },
-  { id: "image", label: "Escolher imagem", hint: "JPEG, PNG ou HEIC", icon: ImageIcon, accept: "image/jpeg,image/png,image/heic,image/heif,.heic,.heif" },
-  { id: "pdf", label: "Escolher PDF", hint: "Fatura em PDF da app ou do e-mail", icon: FileText, accept: "application/pdf,.pdf" },
-] as const;
-
-async function previewFor(file: File, type: string): Promise<string | null> {
-  if (type === "application/pdf") return null;
-  if (type === "image/heic" || type === "image/heif") {
-    // Most browsers cannot display HEIC: convert a copy for the preview only.
-    const { default: heic2any } = await import("heic2any");
-    const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
-    return URL.createObjectURL(Array.isArray(converted) ? converted[0]! : converted);
-  }
-  return URL.createObjectURL(file);
-}
-
+/** Adicionar talão: the first screen (sources and store) until there is a part, then «Confirme as partes». */
 export function AddPage() {
   const navigate = useNavigate();
   const inputs = useRef<Record<string, HTMLInputElement | null>>({});
-  const [selected, setSelected] = useState<Selected | null>(null);
+  const [parts, setParts] = useState<Part[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [merchant, setMerchant] = useState("");
-  const [edit, setEdit] = useState<Edit>({ rotation: 0, area: null, changed: false });
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+  const [focus, setFocus] = useState<FocusTarget | null>(null);
+  // The in-app camera, open with the parts before the one being taken (null: closed).
+  const [cameraBefore, setCameraBefore] = useState<Part[] | null>(null);
+  // Refused in this visit: the phone's own camera from then on. Kept in memory, as the Adicionar writes
+  // nothing to the browser's storage (F-205).
+  const [cameraRefused, setCameraRefused] = useState(false);
+  const retakeId = useRef<string | null>(null); // the part the next photo replaces («Fotografar de novo»)
+  /** The part the photo arriving now replaces, if any; it is replaced once. */
+  const takeRetake = () => {
+    const id = retakeId.current;
+    retakeId.current = null;
+    return id;
+  };
   const upload = useUpload();
+  const urls = useRef<string[]>([]);
+  urls.current = parts.flatMap((p) => (p.previewUrl ? [p.previewUrl] : []));
+  useEffect(() => () => urls.current.forEach((u) => URL.revokeObjectURL(u)), []);
+  useEffect(() => {
+    // The phone's camera closed without a photo: the next photo is a new part, not a retake.
+    const camera = inputs.current.camera;
+    const cancelled = () => (retakeId.current = null);
+    camera?.addEventListener("cancel", cancelled);
+    return () => camera?.removeEventListener("cancel", cancelled);
+  }, []);
 
-  useEffect(() => () => void (selected?.previewUrl && URL.revokeObjectURL(selected.previewUrl)), [selected]);
-
-  async function onPick(file: File | undefined) {
+  async function onPick(file: File | undefined, replaces: string | null) {
     if (!file) return;
-    const problem = validateFile(file);
+    const type = effectiveType(file);
+    const problem = validateFile(file) ?? canAdd(replaces ? remove(parts, replaces) : parts, type);
     setFileError(problem);
     if (problem) return;
-    upload.reset();
-    const type = effectiveType(file);
+    upload.reset(); // a different selection is a different upload
     let previewUrl: string | null = null;
     let previewError = false;
     try {
@@ -56,29 +62,68 @@ export function AddPage() {
     } catch {
       previewError = true;
     }
-    setEdit({ rotation: 0, area: null, changed: false });
-    setSelected({ file, type, previewUrl, previewError });
+    const part = newPart(file, previewUrl, previewError);
+    const old = parts.find((p) => p.id === replaces);
+    if (old?.previewUrl) URL.revokeObjectURL(old.previewUrl);
+    setParts((all) => (old ? replace(all, old.id, part) : add(all, part)));
+    // The first part opens the parts screen, which focuses its own title.
+    if (parts.length > 0) setFocus({ to: "part", id: part.id });
+    if (type !== "application/pdf") {
+      // The part shows at once; the check (warnings, the whole receipt in it) follows when it is done.
+      const check = await analyzeStill(file);
+      setParts((all) => setCheck(all, part.id, check));
+    }
+  }
+
+  /** The in-app camera with its advice where the browser has one; otherwise the phone's own camera. `before`:
+   * the parts before the one being taken (all of them for a new part). */
+  function openCamera(before: Part[] = parts) {
+    if (cameraSupported() && !cameraRefused) setCameraBefore(before);
+    else inputs.current.camera?.click();
+  }
+
+  /** Take a part again: the new photo takes its place when it arrives. */
+  function retake(id: string) {
+    retakeId.current = id;
+    openCamera(parts.slice(0, parts.findIndex((p) => p.id === id)));
+  }
+
+  function removePart(id: string) {
+    const gone = parts.find((p) => p.id === id);
+    if (gone?.previewUrl) URL.revokeObjectURL(gone.previewUrl);
+    upload.reset();
+    setFileError(null);
+    setParts((all) => remove(all, id));
+    setFocus({ to: "title" });
+  }
+
+  function movePart(id: string, by: -1 | 1) {
+    upload.reset();
+    setParts((all) => move(all, id, by));
+  }
+
+  function discard() {
+    urls.current.forEach((u) => URL.revokeObjectURL(u));
+    upload.reset();
+    setParts([]);
+    setEditingId(null);
+    setFileError(null);
+    setConfirmingDiscard(false);
   }
 
   async function submit(allowDuplicate = false) {
-    if (!selected) return;
-    let blob: Blob = selected.file;
-    let name = selected.file.name;
-    let type = selected.type;
-    if (selected.previewUrl && edit.changed) {
-      blob = await renderEdit(selected.previewUrl, edit);
-      name = name.replace(/\.[^.]+$/, "") + ".jpg";
-      type = "image/jpeg";
-    }
-    const id = await upload.start(blob, name, type, merchant || null, allowDuplicate);
+    if (parts.length === 0) return;
+    const files = await toUploadFiles(parts, renderEdit);
+    const id = await upload.start(files, merchant || null, allowDuplicate);
     if (id) navigate(`/compras/${id}`);
   }
 
-  const busy = ["hashing", "uploading", "starting"].includes(upload.phase);
+  const onEditChange = (edit: Edit) => {
+    if (editingId) setParts((all) => setEdit(all, editingId, edit));
+  };
 
   return (
     <>
-      <PageHeader title="Adicionar compra" />
       {SOURCES.map((s) => (
         <input
           key={s.id}
@@ -93,124 +138,71 @@ export function AddPage() {
           aria-hidden
           data-testid={`input-${s.id}`}
           onChange={(e) => {
-            void onPick(e.target.files?.[0]);
+            void onPick(e.target.files?.[0], s.id === "camera" ? takeRetake() : null);
             e.target.value = "";
           }}
         />
       ))}
 
-      {!selected && (
-        <div className="flex flex-col gap-3">
-          <p className="pb-2 text-ink-soft">Uma nota de cada vez. Pode sair do ecrã enquanto é processada.</p>
-          {SOURCES.map(({ id, label, hint, icon: Icon }, i) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => inputs.current[id]?.click()}
-              className={`flex min-h-20 items-center gap-4 rounded-surface p-4 text-left ${
-                i === 0 ? "bg-brand text-white dark:text-ground" : "bg-paper text-ink ring-1 ring-inset ring-line"
-              }`}
-            >
-              <Icon aria-hidden className="size-7 shrink-0" />
-              <span className="flex flex-col">
-                <span className="text-lg font-bold">{label}</span>
-                <span className={i === 0 ? "text-white/80 dark:text-ground/80" : "text-sm text-ink-soft"}>{hint}</span>
-              </span>
-            </button>
-          ))}
+      {parts.length === 0 ? (
+        <div className="flex flex-col gap-4">
+          <header className="pb-1 pt-6">
+            <h1 className="text-[1.875rem] font-extrabold leading-tight tracking-tight">Adicionar talão</h1>
+            <p className="mt-1.5 text-ink-soft">Lemos o talão e confirma os valores.</p>
+          </header>
+          <MerchantChips value={merchant} onChange={setMerchant} />
+          <SourceButtons onPick={(id: Source) => (id === "camera" ? openCamera() : inputs.current[id]?.click())} />
           {fileError && <Notice tone="error">{fileError}</Notice>}
-          <p className="pt-2 text-sm text-ink-soft">
-            Para uma boa leitura: nota inteira na imagem, sobre um fundo escuro, sem sombras nem reflexos.
-          </p>
+          <p className="pt-2 text-sm text-ink-soft">Para uma boa leitura: talão inteiro na imagem, sobre um fundo escuro, sem sombras nem reflexos.</p>
         </div>
+      ) : (
+        <PartsScreen
+          parts={parts}
+          editingId={editingId}
+          merchant={merchant}
+          fileError={fileError}
+          confirmingDiscard={confirmingDiscard}
+          upload={upload}
+          focus={focus}
+          onFocused={() => setFocus(null)}
+          onMerchant={setMerchant}
+          onAddCamera={() => openCamera()}
+          onAddGallery={() => inputs.current.image?.click()}
+          onEdit={(id) => {
+            setEditingId(id);
+            if (id === null && editingId) setFocus({ to: "part", id: editingId });
+          }}
+          onEditChange={onEditChange}
+          onRemove={removePart}
+          onRetake={retake}
+          onMove={movePart}
+          onLeave={() => setConfirmingDiscard(true)}
+          onKeep={() => {
+            setConfirmingDiscard(false);
+            setFocus({ to: "title" });
+          }}
+          onDiscard={discard}
+          onSubmit={(allowDuplicate) => void submit(allowDuplicate)}
+        />
       )}
 
-      {selected && (
-        <form
-          className="flex flex-col gap-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void submit();
+      {cameraBefore && (
+        <CameraCapture
+          before={cameraBefore}
+          onCapture={(file) => {
+            void onPick(file, takeRetake());
+            setCameraBefore(null); // one photo, then the parts screen («Adicionar outra parte» for the next)
           }}
-        >
-          <Surface className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate font-semibold">{selected.file.name}</p>
-              <p className="text-sm text-ink-soft">{(selected.file.size / 1024 / 1024).toLocaleString("pt-PT", { maximumFractionDigits: 1 })} MB</p>
-            </div>
-            <Button
-              type="button"
-              variant="quiet"
-              aria-label="Escolher outro ficheiro"
-              disabled={busy}
-              onClick={() => {
-                setSelected(null);
-                upload.reset();
-              }}
-            >
-              <X aria-hidden className="size-5" />
-            </Button>
-          </Surface>
-
-          {selected.previewUrl && <ImageEditor src={selected.previewUrl} onChange={setEdit} />}
-          {selected.previewError && (
-            <Notice tone="info">Não é possível pré-visualizar esta imagem neste navegador. Pode enviá-la na mesma.</Notice>
-          )}
-
-          <Select label="Supermercado (opcional)" value={merchant} onChange={(e) => setMerchant(e.target.value)} disabled={busy}>
-            <option value="">Detetar automaticamente</option>
-            <option value="CONTINENTE">Continente</option>
-            <option value="PINGO_DOCE">Pingo Doce</option>
-            <option value="LIDL">Lidl</option>
-            <option value="AUCHAN">Auchan</option>
-          </Select>
-
-          {upload.phase === "uploading" && (
-            <div>
-              <div className="mb-1 flex justify-between text-sm">
-                <span>A enviar</span>
-                <span>{Math.round(upload.progress * 100)} %</span>
-              </div>
-              <progress className="h-2 w-full accent-brand" max={1} value={upload.progress} aria-label="Progresso do envio" />
-            </div>
-          )}
-
-          {upload.phase === "duplicate" && (
-            <Notice
-              tone="warning"
-              title="Esta nota parece já ter sido importada"
-              action={
-                <>
-                  <Button type="button" variant="secondary" onClick={() => void submit(true)}>
-                    Guardar nova versão
-                  </Button>
-                  {upload.duplicate && (
-                    <Link className="inline-flex min-h-12 items-center px-2 font-semibold text-brand underline" to={`/compras/${upload.duplicate.receipt_id}`}>
-                      Ver a compra existente
-                    </Link>
-                  )}
-                </>
-              }
-            >
-              {upload.duplicate && (
-                <>
-                  {merchantName(upload.duplicate.merchant)}, {formatDate(upload.duplicate.purchase_at)}, {formatCents(upload.duplicate.total_cents)}.
-                </>
-              )}{" "}
-              Se não quiser importar de novo, escolha outro ficheiro.
-            </Notice>
-          )}
-
-          {upload.phase === "failed" && (
-            <Notice tone="error" title="O envio não terminou">
-              {upload.error} {upload.hasPending() && "A compra fica guardada e o envio retoma de onde parou."}
-            </Notice>
-          )}
-
-          <Button type="submit" busy={busy} disabled={upload.phase === "duplicate"}>
-            {upload.phase === "failed" ? "Tentar novamente" : busy ? "A enviar…" : "Enviar nota"}
-          </Button>
-        </form>
+          onSystemCamera={() => {
+            setCameraRefused(true);
+            setCameraBefore(null);
+            inputs.current.camera?.click(); // still inside the tap: the browser lets it open the picker
+          }}
+          onClose={() => {
+            retakeId.current = null;
+            setCameraBefore(null);
+          }}
+        />
       )}
     </>
   );

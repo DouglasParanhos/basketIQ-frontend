@@ -1,13 +1,8 @@
 import { RotateCcw, RotateCw } from "lucide-react";
-import { useCallback, useState } from "react";
-import Cropper, { type Area } from "react-easy-crop";
+import { useRef, useState } from "react";
+import Cropper from "react-easy-crop";
 import { Button } from "../../components/ui";
-
-export interface Edit {
-  rotation: number;
-  area: Area | null;
-  changed: boolean;
-}
+import type { Edit } from "./edit";
 
 const ASPECTS = [
   { label: "Original", value: null },
@@ -15,41 +10,43 @@ const ASPECTS = [
   { label: "Talão largo", value: 1 / 2 },
 ] as const;
 
-/** Preview with crop (zoom) and rotation. The original file is uploaded unless the person edits it. */
-export function ImageEditor({ src, onChange }: { src: string; onChange: (edit: Edit) => void }) {
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [rotation, setRotation] = useState(0);
-  const [aspect, setAspect] = useState<number | null>(null);
+/**
+ * Preview with crop (zoom), rotation and format. The edit belongs to the part, not to this component: it comes in as
+ * `value` and every change goes out through `onChange`, so it survives switching, reordering and deleting parts.
+ * The original file is uploaded unless the person edits it.
+ */
+export function ImageEditor({ src, value, onChange }: { src: string; value: Edit; onChange: (edit: Edit) => void }) {
+  // Where the image has no format of its own (aspect null) the cropper uses the image's own shape: that comes from the image, not from the edit.
   const [natural, setNatural] = useState(3 / 4);
-
-  const report = useCallback(
-    (area: Area | null, r: number, z: number, a: number | null) =>
-      onChange({ rotation: r, area, changed: r !== 0 || z !== 1 || a !== null }),
-    [onChange],
-  );
+  // The cropper reports several changes in the same turn (a new crop, then its area): each one builds on the latest.
+  const latest = useRef(value);
+  latest.current = value;
+  const emit = (patch: Partial<Edit>) => {
+    latest.current = { ...latest.current, ...patch };
+    onChange(latest.current);
+  };
 
   return (
     <div className="flex flex-col gap-3">
       <div className="relative h-[55dvh] overflow-hidden rounded-surface bg-ink">
         <Cropper
           image={src}
-          crop={crop}
-          zoom={zoom}
-          rotation={rotation}
-          aspect={aspect ?? natural}
-          onCropChange={setCrop}
-          onZoomChange={setZoom}
+          crop={value.crop}
+          zoom={value.zoom}
+          rotation={value.rotation}
+          aspect={value.aspect ?? natural}
+          onCropChange={(crop) => emit({ crop })}
+          onZoomChange={(zoom) => emit({ zoom })}
           onMediaLoaded={(m) => setNatural(m.naturalWidth / m.naturalHeight)}
-          onCropComplete={(_, pixels) => report(pixels, rotation, zoom, aspect)}
+          onCropComplete={(_, area) => Object.values(area).every(Number.isFinite) && emit({ area })}
           objectFit="contain"
         />
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="secondary" type="button" onClick={() => setRotation((r) => (r + 270) % 360)} aria-label="Rodar para a esquerda">
+        <Button variant="secondary" type="button" onClick={() => emit({ rotation: (value.rotation + 270) % 360 })} aria-label="Rodar para a esquerda">
           <RotateCcw aria-hidden className="size-5" />
         </Button>
-        <Button variant="secondary" type="button" onClick={() => setRotation((r) => (r + 90) % 360)} aria-label="Rodar para a direita">
+        <Button variant="secondary" type="button" onClick={() => emit({ rotation: (value.rotation + 90) % 360 })} aria-label="Rodar para a direita">
           <RotateCw aria-hidden className="size-5" />
         </Button>
         <fieldset className="flex flex-wrap gap-1">
@@ -57,45 +54,18 @@ export function ImageEditor({ src, onChange }: { src: string; onChange: (edit: E
           {ASPECTS.map((a) => (
             <label
               key={a.label}
-              className="cursor-pointer rounded-full px-3 py-2 text-sm font-medium ring-1 ring-line has-checked:bg-brand has-checked:text-white has-checked:ring-brand"
+              className="inline-flex min-h-11 cursor-pointer items-center rounded-full px-4 text-sm font-medium ring-1 ring-line has-checked:bg-brand has-checked:text-white has-checked:ring-brand has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand dark:has-checked:text-ground"
             >
-              <input type="radio" name="aspect" className="sr-only" checked={aspect === a.value} onChange={() => setAspect(a.value)} />
+              <input type="radio" name="aspect" className="sr-only" checked={value.aspect === a.value} onChange={() => emit({ aspect: a.value })} />
               {a.label}
             </label>
           ))}
         </fieldset>
       </div>
-      <label className="flex items-center gap-3 text-sm text-ink-soft">
+      <label className="flex min-h-11 items-center gap-3 text-sm text-ink-soft">
         Zoom
-        <input type="range" min={1} max={4} step={0.05} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="flex-1 accent-brand" />
+        <input type="range" min={1} max={4} step={0.05} value={value.zoom} onChange={(e) => emit({ zoom: Number(e.target.value) })} className="h-11 flex-1 accent-brand" />
       </label>
     </div>
   );
-}
-
-/** Render the edited image to a JPEG blob (rotation first, then the crop area). */
-export async function renderEdit(src: string, edit: Edit): Promise<Blob> {
-  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-  const rad = (edit.rotation * Math.PI) / 180;
-  const rotW = Math.abs(Math.cos(rad) * image.width) + Math.abs(Math.sin(rad) * image.height);
-  const rotH = Math.abs(Math.sin(rad) * image.width) + Math.abs(Math.cos(rad) * image.height);
-  const rotated = document.createElement("canvas");
-  rotated.width = Math.round(rotW);
-  rotated.height = Math.round(rotH);
-  const rctx = rotated.getContext("2d")!;
-  rctx.translate(rotW / 2, rotH / 2);
-  rctx.rotate(rad);
-  rctx.drawImage(image, -image.width / 2, -image.height / 2);
-
-  const area = edit.area ?? { x: 0, y: 0, width: rotated.width, height: rotated.height };
-  const out = document.createElement("canvas");
-  out.width = Math.round(area.width);
-  out.height = Math.round(area.height);
-  out.getContext("2d")!.drawImage(rotated, area.x, area.y, area.width, area.height, 0, 0, area.width, area.height);
-  return new Promise((resolve, reject) => out.toBlob((b) => (b ? resolve(b) : reject(new Error("render failed"))), "image/jpeg", 0.92));
 }

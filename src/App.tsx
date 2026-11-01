@@ -1,23 +1,32 @@
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, useState } from "react";
-import { createBrowserRouter, isRouteErrorResponse, Outlet, RouterProvider, useRouteError } from "react-router";
+import { createBrowserRouter, isRouteErrorResponse, Navigate, Outlet, RouterProvider, useRouteError, type RouteObject } from "react-router";
 import { ApiError, setSessionExpiredHandler } from "./api/client";
 import { AppShell } from "./components/AppShell";
 import { Notice, Spinner } from "./components/ui";
-import { DocumentTitle } from "./config/appConfig";
+import { DocumentTitle, useAppConfig } from "./config/appConfig";
 import { LoginPage } from "./features/auth/LoginPage";
 import { RequireSession } from "./features/auth/session";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
+import { HomeRoute } from "./features/home/HomeRoute";
+import { ListaPage } from "./features/lista/ListaPage";
+import { RequireOnboarding } from "./features/onboarding/RequireOnboarding";
 import { PrivacyPage } from "./features/privacy/PrivacyPage";
 import { ReceiptPage } from "./features/receipts/ReceiptPage";
 import { ReceiptsPage } from "./features/receipts/ReceiptsPage";
-import { SettingsPage } from "./features/settings/SettingsPage";
+import { AccountTab } from "./features/settings/AccountTab";
+import { DeleteAccountPage } from "./features/settings/DeleteAccountPage";
+import { PrivacyTab } from "./features/settings/PrivacyTab";
+import { ProfileTab } from "./features/settings/ProfileTab";
+import { SettingsLayout } from "./features/settings/SettingsLayout";
+import { TaloesLayout } from "./features/taloes/TaloesLayout";
 import { AddPage } from "./features/upload/AddPage";
 
 // Heavier, less used screens are split out of the main bundle.
 const ProductsPage = lazy(() => import("./features/products/ProductsPage"));
 const ProductPage = lazy(() => import("./features/products/ProductPage"));
 const AdminPage = lazy(() => import("./features/admin/AdminPage"));
+const OnboardingPage = lazy(() => import("./features/onboarding/OnboardingPage"));
 
 function RouteError() {
   const error = useRouteError();
@@ -28,11 +37,18 @@ function RouteError() {
       : "Ocorreu um erro inesperado.";
   return (
     <main className="mx-auto max-w-md p-6">
-      <Notice tone="error" title="Não foi possível mostrar esta página" action={<a className="font-semibold text-brand underline" href="/">Voltar ao resumo</a>}>
+      <Notice tone="error" title="Não foi possível mostrar esta página" action={<a className="font-semibold text-brand underline" href="/">Voltar ao início</a>}>
         {message}
       </Notice>
     </main>
   );
+}
+
+/** The Lista exists only with the smart list on; off (or the config did not arrive) it is the same «page not found» as any unknown route. */
+function ListaRoute() {
+  const config = useAppConfig();
+  if (config.isPending) return <Spinner />;
+  return config.data?.smart_list_enabled === true ? <ListaPage /> : <RouteError />;
 }
 
 function Protected({ admin = false }: { admin?: boolean }) {
@@ -45,30 +61,65 @@ function Protected({ admin = false }: { admin?: boolean }) {
   );
 }
 
-const router = createBrowserRouter([
+/** Exported so the tests render the real table. */
+export const routes: RouteObject[] = [
   { path: "/login", element: <LoginPage />, errorElement: <RouteError /> },
   { path: "/privacidade", element: <PrivacyPage />, errorElement: <RouteError /> },
+  // Signed in and consented. The onboarding is a full screen (no navigation bar); every other private page sits behind
+  // the onboarding guard, which is above the AppShell so that nothing of the shell shows while it decides.
+  {
+    element: <Protected />,
+    errorElement: <RouteError />,
+    children: [
+      { path: "/boas-vindas", element: <OnboardingPage /> },
+      {
+        element: <RequireOnboarding />,
+        children: [
+          {
+            element: <AppShell />,
+            errorElement: <RouteError />,
+            children: [
+              { path: "/", element: <HomeRoute /> },
+              {
+                element: <TaloesLayout />,
+                children: [
+                  { path: "/compras", element: <ReceiptsPage /> },
+                  { path: "/compras/resumo", element: <DashboardPage /> },
+                  { path: "/produtos", element: <ProductsPage /> },
+                ],
+              },
+              { path: "/compras/:id", element: <ReceiptPage /> },
+              { path: "/adicionar", element: <AddPage /> },
+              { path: "/lista", element: <ListaRoute /> },
+              { path: "/produtos/:id", element: <ProductPage /> },
+              {
+                path: "/definicoes",
+                element: <SettingsLayout />,
+                children: [
+                  { index: true, element: <Navigate to="/definicoes/perfil" replace /> },
+                  { path: "perfil", element: <ProfileTab /> },
+                  { path: "privacidade", element: <PrivacyTab /> },
+                  { path: "conta", element: <AccountTab /> },
+                ],
+              },
+              { path: "/definicoes/conta/eliminar", element: <DeleteAccountPage /> },
+            ],
+          },
+        ],
+      },
+    ],
+  },
   {
     element: <AppShell />,
     errorElement: <RouteError />,
     children: [
-      {
-        element: <Protected />,
-        children: [
-          { path: "/", element: <DashboardPage /> },
-          { path: "/compras", element: <ReceiptsPage /> },
-          { path: "/compras/:id", element: <ReceiptPage /> },
-          { path: "/adicionar", element: <AddPage /> },
-          { path: "/produtos", element: <ProductsPage /> },
-          { path: "/produtos/:id", element: <ProductPage /> },
-          { path: "/definicoes", element: <SettingsPage /> },
-        ],
-      },
       { element: <Protected admin />, children: [{ path: "/operador", element: <AdminPage /> }] },
       { path: "*", element: <RouteError /> },
     ],
   },
-]);
+];
+
+const router = createBrowserRouter(routes);
 
 function sessionLost(error: unknown) {
   const publicPage = ["/login", "/privacidade"].includes(window.location.pathname);

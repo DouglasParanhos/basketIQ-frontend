@@ -1,5 +1,5 @@
 /**
- * End-to-end against the real backend (cd ../Backend && make up) and `pnpm dev`.
+ * End-to-end against the real backend (cd ../basketIQ-backend && make up) and `pnpm dev`.
  * Uses the backend's synthetic golden-set documents (no personal data).
  */
 import { expect, test, type Page } from "@playwright/test";
@@ -7,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const SYNTHETIC = process.env.BASKETIQ_SYNTHETIC_DIR ?? path.resolve(HERE, "../../../Backend/tests/golden/synthetic");
+const SYNTHETIC = process.env.BASKETIQ_SYNTHETIC_DIR ?? path.resolve(HERE, "../../../basketIQ-backend/tests/golden/synthetic");
 const doc = (name: string, file = "document.pdf") => path.join(SYNTHETIC, name, file);
 
 async function signIn(page: Page, subject: string) {
@@ -18,13 +18,21 @@ async function signIn(page: Page, subject: string) {
   await page.getByRole("button", { name: "Sign-in" }).click();
   await expect(page).toHaveURL(/\/privacidade$/);
   await page.getByRole("button", { name: "Aceitar e continuar" }).click();
+  // A new account goes through the onboarding (spec 010) before anything else: skip the four steps.
+  await expect(page).toHaveURL(/\/boas-vindas$/);
+  for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Saltar" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Tudo pronto" })).toBeVisible();
+  await page.getByRole("button", { name: "Ir para o início" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
+  // The empty-account message now lives in the Resumo, under Talões (spec 009).
+  await page.goto("/compras/resumo");
   await expect(page.getByRole("heading", { name: "Comece pela primeira nota" })).toBeVisible();
 }
 
 async function upload(page: Page, file: string, input = "input-pdf") {
   await page.goto("/adicionar");
   await page.getByTestId(input).setInputFiles(file);
-  await page.getByRole("button", { name: "Enviar nota" }).click();
+  await page.getByRole("button", { name: "Enviar talão" }).click();
   await expect(page).toHaveURL(/\/compras\/[0-9a-f-]{36}$/);
 }
 
@@ -43,7 +51,7 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   // F-17: the same file again is flagged before uploading.
   await page.goto("/adicionar");
   await page.getByTestId("input-pdf").setInputFiles(doc("pingo_doce_text"));
-  await page.getByRole("button", { name: "Enviar nota" }).click();
+  await page.getByRole("button", { name: "Enviar talão" }).click();
   await expect(page.getByText("Esta nota parece já ter sido importada")).toBeVisible();
 
   // F-15b / F-12 / F-13: totals do not reconcile → review; fix the total and confirm.
@@ -66,10 +74,10 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
 
   // F-18 / F-19: September 2026 dashboard, then filtered by Lidl.
   await page.goto("/?de=2026-09-01&ate=2026-09-30");
-  await expect(page.getByText("Gasto total")).toBeVisible();
-  const total = page.getByRole("heading", { name: "Gasto total" }).locator("..").locator("p").first();
+  await expect(page.getByRole("heading", { name: /^Gasto em mercado/ })).toBeVisible();
+  const total = page.getByRole("heading", { name: /^Gasto em mercado/ }).locator("..").locator("p").first();
   await expect(total).toHaveText("45,39 €"); // 18,17 + 18,17 (Pingo Doce) + 9,05 (Lidl photo)
-  await page.getByLabel("Supermercado", { exact: true }).selectOption("PINGO_DOCE");
+  await page.getByLabel("Mercado", { exact: true }).selectOption("PINGO_DOCE");
   await expect(total).toHaveText("36,34 €");
 
   // F-20: product history.
@@ -88,10 +96,10 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   await expect(total).toHaveText("18,17 €");
 
   // F-23: account deletion.
-  await page.goto("/definicoes");
-  await page.getByRole("button", { name: "Eliminar conta" }).click();
+  await page.goto("/definicoes/conta");
+  await page.getByRole("link", { name: "Eliminar conta…" }).click();
   await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: "Eliminar conta e dados" }).click();
+  await page.getByRole("button", { name: "Eliminar a minha conta" }).click();
   await expect(page).toHaveURL(/\/login/);
 });
 

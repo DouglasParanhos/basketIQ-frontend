@@ -6,7 +6,7 @@
 
 **Status**: Implemented
 
-**Input**: Especificação Funcional RF-06, RF-07, RF-08, §9, regras de negócio; Plano de Testes F-07, F-10..F-16. Backend: `../Backend/specs/004-revisao-confirmacao`.
+**Input**: Especificação Funcional RF-06, RF-07, RF-08, §9, regras de negócio; Plano de Testes F-07, F-10..F-16. Backend: `../basketIQ-backend/specs/004-revisao-confirmacao`.
 
 ## User Scenarios & Testing *(mandatory)*
 

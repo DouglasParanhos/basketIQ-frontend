@@ -38,6 +38,10 @@
   --color-alert-soft: #f9dedc;
   /* >= 3:1 against paper and ground, in both schemes. */
   --color-chart: #0b8a52;
+  /* The orange band of the goal ring (the marker yellow is only 1.5:1 as a stroke): 3.9:1 against paper; the chip text 7:1. */
+  --color-warn: #c2691a;
+  --color-warn-soft: #fbebd6;
+  --color-warn-ink: #7a400a;
 
   --radius-control: 0.75rem;
   --radius-surface: 1.25rem;
@@ -73,6 +77,9 @@
       --color-alert: #ffb4ab;
       --color-alert-soft: #4a1a17;
       --color-chart: #3dd68c;
+      --color-warn: #f0a050;
+      --color-warn-soft: #4a2a0c;
+      --color-warn-ink: #ffd9ad;
     }
   }
   :focus-visible {

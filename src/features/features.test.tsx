@@ -8,7 +8,6 @@ import { API, errorBody, server } from "../test/server";
 import { LoginPage } from "./auth/LoginPage";
 import { DashboardPage } from "./dashboard/DashboardPage";
 import { ReceiptPage } from "./receipts/ReceiptPage";
-import { SettingsPage } from "./settings/SettingsPage";
 import { AddPage } from "./upload/AddPage";
 
 const anonymous = () =>
@@ -84,8 +83,8 @@ describe("add receipt (RF-02..RF-04)", () => {
     const user = userEvent.setup();
     renderRoutes(routes, "/adicionar");
     await pickFile(screen.getByTestId("input-pdf"), new File(["%PDF-1.4"], "fatura.pdf", { type: "application/pdf" }));
-    await user.selectOptions(await screen.findByLabelText(/supermercado/i), "LIDL");
-    await user.click(screen.getByRole("button", { name: /enviar nota/i }));
+    await user.selectOptions(await screen.findByLabelText(/supermercado \(opcional\)/i), "LIDL");
+    await user.click(screen.getByRole("button", { name: /^enviar talão$/i }));
     expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
     expect(calls).toEqual(["init:application/pdf:64:LIDL", "storage", "process"]);
     expect(processKey).toMatch(/^[0-9a-f-]{36}$/);
@@ -113,12 +112,70 @@ describe("add receipt (RF-02..RF-04)", () => {
     const user = userEvent.setup();
     renderRoutes(routes, "/adicionar");
     await pickFile(screen.getByTestId("input-pdf"), new File(["%PDF"], "f.pdf", { type: "application/pdf" }));
-    await user.click(await screen.findByRole("button", { name: /enviar nota/i }));
+    await user.click(await screen.findByRole("button", { name: /^enviar talão$/i }));
     expect(await screen.findByText(/parece já ter sido importada/i)).toBeInTheDocument();
     expect(screen.getByText(/Lidl, .*9,05/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /guardar nova versão/i }));
     expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
     expect(bodies.map((b) => b.allow_duplicate)).toEqual([false, true]);
+  });
+
+  describe("several photos of one long receipt (RF-03)", () => {
+    const jpg = (name: string, body = name) => new File([body], name, { type: "image/jpeg" });
+    const processed = { id: "j", status: "QUEUED", attempt_count: 0, processing_route: null, created_at: "x" };
+
+    it("F-31: sends the first photo, registers the others, uploads each one and processes once", async () => {
+      const calls: string[] = [];
+      server.use(
+        http.post(`${API}/v1/receipts/upload-init`, async ({ request }) => {
+          calls.push(`init:${((await request.json()) as { filename: string }).filename}`);
+          return HttpResponse.json(
+            { receipt_id: "r20", upload: { url: "http://storage.test/p0", fields: {}, expires_at: "x" }, requirements: { max_bytes: 1, accepted_types: [], max_pdf_pages: 5, max_photos: 6 } },
+            { status: 201 },
+          );
+        }),
+        http.post(`${API}/v1/receipts/r20/photos`, async ({ request }) => {
+          const body = (await request.json()) as { filename: string; sha256: string };
+          calls.push(`photo:${body.filename}:${body.sha256.length}`);
+          return HttpResponse.json({ url: "http://storage.test/p1", fields: {}, expires_at: "x" }, { status: 201 });
+        }),
+        http.post("http://storage.test/p0", () => (calls.push("storage:p0"), new HttpResponse(null, { status: 204 }))),
+        http.post("http://storage.test/p1", () => (calls.push("storage:p1"), new HttpResponse(null, { status: 204 }))),
+        http.post(`${API}/v1/receipts/r20/process`, () => (calls.push("process"), HttpResponse.json(processed, { status: 202 }))),
+      );
+      const user = userEvent.setup();
+      renderRoutes(routes, "/adicionar");
+      await pickFile(screen.getByTestId("input-image"), jpg("a.jpg"));
+      expect(await screen.findByRole("heading", { level: 1, name: "Confirme as partes" })).toBeInTheDocument();
+      expect(screen.getByText("Parte 2 · comece onde a parte 1 acabou")).toBeInTheDocument();
+      await pickFile(screen.getByTestId("input-image"), jpg("b.jpg"));
+      expect(await screen.findByText("b.jpg")).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: /^enviar talão · 2 fotos$/i }));
+      expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
+      expect(calls).toEqual(["init:a.jpg", "photo:b.jpg:64", "storage:p0", "storage:p1", "process"]);
+    });
+
+    it("F-31: the photos can be reordered and removed before sending", async () => {
+      const user = userEvent.setup();
+      renderRoutes(routes, "/adicionar");
+      await pickFile(screen.getByTestId("input-image"), jpg("a.jpg"));
+      await pickFile(screen.getByTestId("input-image"), jpg("b.jpg"));
+      await screen.findByText("b.jpg");
+      await user.click(screen.getByRole("button", { name: /descer a parte 1/i }));
+      await waitFor(() => expect(screen.getAllByRole("listitem").map((li) => li.textContent)).toEqual([expect.stringContaining("b.jpg"), expect.stringContaining("a.jpg")]));
+      await user.click(screen.getByRole("button", { name: /apagar a parte 1/i }));
+      expect(screen.queryByRole("button", { name: /apagar a parte 2/i })).not.toBeInTheDocument(); // one part left
+      expect(screen.getByText("a.jpg")).toBeInTheDocument();
+    });
+
+    it("F-31: a PDF cannot be joined to a photo", async () => {
+      renderRoutes(routes, "/adicionar");
+      await pickFile(screen.getByTestId("input-image"), jpg("a.jpg"));
+      await screen.findByRole("heading", { level: 1, name: "Confirme as partes" });
+      await pickFile(screen.getByTestId("input-pdf"), new File(["%PDF"], "f.pdf", { type: "application/pdf" }));
+      expect(await screen.findByText(/só é possível juntar fotografias/i)).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /apagar a parte 2/i })).not.toBeInTheDocument();
+    });
   });
 
   it("F-24: a network failure keeps the receipt and resumes with a fresh upload URL", async () => {
@@ -139,7 +196,7 @@ describe("add receipt (RF-02..RF-04)", () => {
     const user = userEvent.setup();
     renderRoutes(routes, "/adicionar");
     await pickFile(screen.getByTestId("input-pdf"), new File(["%PDF"], "f.pdf", { type: "application/pdf" }));
-    await user.click(await screen.findByRole("button", { name: /enviar nota/i }));
+    await user.click(await screen.findByRole("button", { name: /^enviar talão$/i }));
     expect(await screen.findByText(/o envio não terminou/i)).toBeInTheDocument();
     expect(screen.getByText(/retoma de onde parou/i)).toBeInTheDocument();
     // Network back: retry reuses the same receipt (no second upload-init).
@@ -165,6 +222,34 @@ describe("review (RF-07, F-11..F-15)", () => {
     expect(screen.getByText(/reveja antes de confirmar/i)).toBeInTheDocument();
   });
 
+  it("F-202: image quality warnings come with the action «Tire outra foto», as a status with text and icon, and never block the review", async () => {
+    server.use(
+      http.get(`${API}/v1/receipts/r1`, () =>
+        HttpResponse.json(
+          receipt({
+            quality_warnings: [
+              { code: "blurry", message: "A imagem parece desfocada." },
+              { code: "too_dark", message: "A imagem está demasiado escura." },
+            ],
+          }),
+        ),
+      ),
+    );
+    renderRoutes([...routes, { path: "/adicionar", element: <p>adicionar</p> }], "/compras/r1");
+    const notice = (await screen.findByText("A fotografia pode ser melhorada")).closest("[role=status]") as HTMLElement;
+    expect(within(notice).getByText(/A imagem parece desfocada\. A imagem está demasiado escura\./)).toBeInTheDocument();
+    expect(notice.querySelector("svg[aria-hidden=true]")).not.toBeNull();
+    expect(within(notice).getByRole("link", { name: "Tire outra foto" })).toHaveAttribute("href", "/adicionar");
+    expect(screen.queryByText(/se os valores não estiverem certos/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /banana/i })).toBeInTheDocument(); // the review is still there
+  });
+
+  it("F-202: without warnings no quality message appears", async () => {
+    renderRoutes(routes, "/compras/r1");
+    await screen.findByRole("button", { name: /banana/i });
+    expect(screen.queryByText("A fotografia pode ser melhorada")).not.toBeInTheDocument();
+  });
+
   it("F-13: editing a line sends only the changed field with the version", async () => {
     let patch: Record<string, unknown> | null = null;
     server.use(
@@ -185,6 +270,36 @@ describe("review (RF-07, F-11..F-15)", () => {
     await waitFor(() => expect(patch).not.toBeNull());
     expect(patch).toEqual({ version: 3, lines: [{ id: "l1" }, { id: "l2", quantity: "0.900" }] });
     expect(await screen.findAllByText(/corrigido manualmente/i)).not.toHaveLength(0);
+  });
+
+  it("F-10: a store without a parser is named in the review, and can be confirmed", async () => {
+    let patch: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`${API}/v1/receipts/r1`, () =>
+        HttpResponse.json(
+          receipt({
+            merchant: "UNKNOWN",
+            merchant_name: "FRUTARIA DO ZE",
+            review_reasons: [{ code: "merchant_unknown", message: "Loja não reconhecida.", field: "merchant", line_index: null, details: {} }],
+          }),
+        ),
+      ),
+      http.patch(`${API}/v1/receipts/r1`, async ({ request }) => {
+        patch = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(receipt({ version: 4, merchant: "UNKNOWN", merchant_name: "Frutaria do Zé" }));
+      }),
+    );
+    const user = userEvent.setup();
+    renderRoutes(routes, "/compras/r1");
+    const name = await screen.findByLabelText("Nome da loja");
+    expect(name).toHaveValue("FRUTARIA DO ZE");
+    expect(screen.getByRole("button", { name: /^confirmar$/i })).toBeEnabled();
+    await user.clear(name);
+    await user.type(name, "Frutaria do Zé");
+    await user.click(screen.getByRole("button", { name: /^guardar$/i }));
+    await waitFor(() => expect(patch).not.toBeNull());
+    expect(patch).toMatchObject({ merchant_name: "Frutaria do Zé" });
+    expect(patch).not.toHaveProperty("merchant");
   });
 
   it("F-14: adds and removes lines, recalculating the sum", async () => {
@@ -222,6 +337,9 @@ describe("review (RF-07, F-11..F-15)", () => {
     await user.click(await screen.findByRole("button", { name: /^confirmar$/i }));
     expect(await screen.findByText(/confirmada por si/i)).toBeInTheDocument();
     expect(confirmed).toEqual({ version: 3 });
+    expect(screen.getByRole("link", { name: /início/i })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: /adicionar outra nota/i })).toHaveAttribute("href", "/adicionar");
+    expect(screen.getAllByText("ESTRADA DA LUZ")).toHaveLength(2);
   });
 
   it("F-07: an invalid document shows the reason and what to do", async () => {
@@ -270,23 +388,49 @@ describe("review (RF-07, F-11..F-15)", () => {
 
 describe("dashboard (RF-09, RF-11)", () => {
   const routes = [
-    { path: "/", element: <DashboardPage /> },
+    { path: "/compras/resumo", element: <DashboardPage /> },
     { path: "/adicionar", element: <p>adicionar</p> },
   ];
 
   it("F-21: explains how to import the first receipt when there is no data", async () => {
     server.use(http.get(`${API}/v1/receipts`, () => HttpResponse.json({ items: [], next_cursor: null })));
-    renderRoutes(routes, "/");
+    renderRoutes(routes, "/compras/resumo");
     expect(await screen.findByRole("heading", { name: /comece pela primeira nota/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /adicionar a primeira nota/i })).toHaveAttribute("href", "/adicionar");
   });
 
   it("shows totals, variation, an accessible table and empty periods", async () => {
-    renderRoutes(routes, "/?de=2026-09-01&ate=2026-09-30");
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
     expect(await screen.findByText("455,00 €")).toBeInTheDocument();
     expect(screen.getByText(/\+12,5 % face a/)).toBeInTheDocument();
     expect(screen.getByText("Ver como tabela")).toBeInTheDocument();
     expect(screen.getByRole("table", { name: /gasto por período/i })).toBeInTheDocument();
+  });
+
+  it("F-196: the Resumo has its title for assistive technology as a level-2 heading, with no greeting and no heading of level 1 of its own", async () => {
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
+    expect(await screen.findByRole("heading", { level: 2, name: "Resumo" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/Olá/);
+  });
+
+  it("F-196: the period has four options and the arrows, and the merchant filter says «Todos os mercados»", async () => {
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
+    const period = await screen.findByRole("radiogroup", { name: "Período" });
+    expect(within(period).getAllByRole("radio").map((r) => r.textContent)).toEqual(["Mês", "Trimestre", "Ano", "Intervalo"]);
+    expect(screen.getByRole("button", { name: "Período anterior" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Período seguinte" })).toBeInTheDocument();
+    const merchant = screen.getByLabelText("Mercado");
+    expect(within(merchant).getByRole("option", { name: "Todos os mercados" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Supermercado")).not.toBeInTheDocument();
+  });
+
+  it("F-196: the total is the «Gasto em mercado» card with the number of receipts, and the stores are «Por mercado»", async () => {
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
+    expect(await screen.findByRole("heading", { name: /^Gasto em mercado · \d+ talões?$/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Por mercado" })).toBeInTheDocument();
+    expect(screen.queryByText("Gasto total")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Por supermercado" })).not.toBeInTheDocument();
   });
 
   it("F-19: the merchant filter is sent with the query", async () => {
@@ -298,13 +442,13 @@ describe("dashboard (RF-09, RF-11)", () => {
       }),
     );
     const user = userEvent.setup();
-    renderRoutes(routes, "/?de=2026-09-01&ate=2026-09-30");
-    await user.selectOptions(await screen.findByLabelText("Supermercado"), "LIDL");
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
+    await user.selectOptions(await screen.findByLabelText("Mercado"), "LIDL");
     await waitFor(() => expect(seen).toContain("LIDL"));
   });
 
   it("shows how often and how much of each product is bought, and omits the block when empty", async () => {
-    renderRoutes(routes, "/?de=2026-09-01&ate=2026-09-30");
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
     const section = (await screen.findByRole("heading", { name: /consumo habitual/i })).closest("section")!;
     expect(within(section).getByRole("link", { name: "LEITE MEIO GORDO" })).toHaveAttribute("href", "/produtos/p1");
     expect(within(section).getByText(/3 compras · a cada 14 dias/)).toBeInTheDocument();
@@ -313,7 +457,7 @@ describe("dashboard (RF-09, RF-11)", () => {
 
   it("hides the consumption block when there is nothing to show", async () => {
     server.use(http.get(`${API}/v1/analytics/consumption`, () => HttpResponse.json(consumption({ items: [], empty: true }))));
-    renderRoutes(routes, "/?de=2026-09-01&ate=2026-09-30");
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
     expect(await screen.findByText("455,00 €")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /consumo habitual/i })).not.toBeInTheDocument();
   });
@@ -324,28 +468,7 @@ describe("dashboard (RF-09, RF-11)", () => {
         HttpResponse.json(summary({ series: { granularity: "day", points: [{ period: "2026-09-02", spent_cents: 100 }], insufficient_data: true } })),
       ),
     );
-    renderRoutes(routes, "/?de=2026-09-01&ate=2026-09-30");
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
     expect(await screen.findByText(/poucas compras neste período/i)).toBeInTheDocument();
-  });
-});
-
-describe("settings (RF-12)", () => {
-  it("F-23: account deletion explains the consequence and needs explicit confirmation", async () => {
-    let deleted = false;
-    server.use(
-      http.delete(`${API}/v1/me`, () => {
-        deleted = true;
-        return HttpResponse.json({ receipts_deleted: 1, objects_deleted: 1 });
-      }),
-    );
-    const user = userEvent.setup();
-    renderRoutes([{ path: "/definicoes", element: <SettingsPage /> }], "/definicoes");
-    await user.click(await screen.findByRole("button", { name: /^eliminar conta$/i }));
-    expect(screen.getByText(/não pode ser desfeito/i)).toBeInTheDocument();
-    const confirm = screen.getByRole("button", { name: /eliminar conta e dados/i });
-    expect(confirm).toBeDisabled();
-    await user.click(screen.getByRole("checkbox"));
-    expect(confirm).toBeEnabled();
-    expect(deleted).toBe(false);
   });
 });

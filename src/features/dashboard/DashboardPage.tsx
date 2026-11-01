@@ -6,7 +6,6 @@ import { DataTable, SpendBars, type Point } from "../../components/charts";
 import { LinkButton, Notice, Select, Spinner } from "../../components/ui";
 import { formatCents, formatMonth, formatVariation, merchantName, MERCHANT_NAMES } from "../../lib/format";
 import { describePeriod, lisbonToday, periodFor, type Period, type PeriodKind } from "../../lib/period";
-import { useMe } from "../auth/session";
 import { PeriodPicker } from "./PeriodPicker";
 
 type Summary = Schemas["SummaryOut"];
@@ -48,7 +47,6 @@ function points(summary: Summary): Point[] {
 }
 
 export function DashboardPage() {
-  const { data: me } = useMe();
   const { period, merchant, product, update } = usePeriodParams();
   const merchantFilter = (merchant ?? undefined) as Merchant | undefined;
   // Fired next to the summary so the two requests run in parallel.
@@ -84,13 +82,11 @@ export function DashboardPage() {
     queryFn: async () => unwrap(await api.GET("/v1/receipts", { params: { query: { limit: 1 } } })),
   });
 
-  const firstName = me?.display_name?.split(" ")[0];
   const s = query.data;
 
   return (
-    <div className="flex flex-col gap-5 pt-6">
-      <h1 className="sr-only">Resumo</h1>
-      <p className="text-ink-soft">{firstName ? `Olá, ${firstName}.` : "Olá."}</p>
+    <div className="flex flex-col gap-5 pt-3">
+      <h2 className="sr-only">Resumo</h2>
 
       {anyReceipts.data && anyReceipts.data.items.length === 0 ? (
         <section className="flex flex-col items-start gap-4 rounded-surface bg-paper p-6">
@@ -108,12 +104,12 @@ export function DashboardPage() {
           />
           <div className="flex flex-wrap items-end gap-3">
             <Select
-              label="Supermercado"
+              label="Mercado"
               value={merchant ?? ""}
               onChange={(e) => update({ mercado: e.target.value || null })}
               className="min-w-44 flex-1"
             >
-              <option value="">Todos</option>
+              <option value="">Todos os mercados</option>
               {Object.entries(MERCHANT_NAMES)
                 .filter(([c]) => c !== "UNKNOWN")
                 .map(([code, name]) => (
@@ -156,7 +152,7 @@ function Consumption({ data }: { data: Schemas["ConsumptionOut"] | undefined }) 
         {data.items.map((p) => (
           <li key={p.product_id} className="flex items-center justify-between gap-3 border-b border-line py-2 text-sm last:border-0">
             <span className="flex min-w-0 flex-col">
-              <Link to={`/produtos/${p.product_id}`} className="flex min-h-7 items-center truncate font-semibold hover:underline">
+              <Link to={`/produtos/${p.product_id}`} className="flex min-h-11 items-center truncate font-semibold hover:underline">
                 {p.name}
               </Link>
               <span className="text-xs text-ink-soft">
@@ -197,13 +193,16 @@ function SummaryView({
   const pts = points(s);
   return (
     <div className={`flex flex-col gap-5 transition-opacity ${stale ? "opacity-60" : ""}`} aria-busy={stale}>
-      <section aria-labelledby="gasto">
-        <h2 id="gasto" className="text-sm font-medium text-ink-soft">
-          Gasto total
+      <section aria-labelledby="gasto" className="rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
+        <h2 id="gasto" className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-soft">
+          Gasto em mercado · {s.cards.purchases} {s.cards.purchases === 1 ? "talão" : "talões"}
         </h2>
-        <p className="amount text-[3.25rem] font-extrabold leading-none tracking-tight">{formatCents(s.cards.total_spent_cents)}</p>
-        <p className="mt-2 text-sm text-ink-soft">
-          {variation ? `${variation} face a ${previousLabel} (${formatCents(s.cards.previous_period.total_spent_cents)})` : `Sem compras em ${previousLabel} para comparar.`}
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <p className="amount text-[2.375rem] font-extrabold leading-none tracking-tight">{formatCents(s.cards.total_spent_cents)}</p>
+          {variation && <span className="rounded-full bg-brand-soft px-3 py-1 text-[13px] font-bold text-brand-deep">{variation} face a {previousLabel}</span>}
+        </div>
+        <p className="mt-2 text-sm text-ink-soft first-letter:uppercase">
+          {variation ? `${previousLabel}: ${formatCents(s.cards.previous_period.total_spent_cents)}` : `Sem compras em ${previousLabel} para comparar.`}
         </p>
         <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-4">
           <div>
@@ -235,21 +234,21 @@ function SummaryView({
 
       <section aria-labelledby="mercados" className="rounded-surface bg-paper p-4">
         <h2 id="mercados" className="mb-3 font-bold">
-          Por supermercado
+          Por mercado
         </h2>
         <ul className="flex flex-col gap-3">
           {s.by_merchant.map((m) => (
             <li key={m.merchant}>
-              <div className="flex justify-between text-sm">
-                <span className="font-semibold">{merchantName(m.merchant)}</span>
+              <div className="grid grid-cols-[5.25rem_1fr_auto] items-center gap-3 text-sm">
+                <span className="truncate font-semibold">{merchantName(m.merchant)}</span>
+                <div aria-hidden className="h-2.5 rounded-full bg-ground">
+                  <div className="h-2.5 rounded-full bg-[var(--color-chart)]" style={{ width: `${Math.max(m.share_pct, 1)}%` }} />
+                </div>
                 <span>
                   {formatCents(m.spent_cents)} <span className="text-ink-soft">({m.share_pct.toLocaleString("pt-PT")} %)</span>
                 </span>
               </div>
-              <div aria-hidden className="mt-1 h-2 rounded-full bg-ground">
-                <div className="h-2 rounded-full bg-[var(--color-chart)]" style={{ width: `${Math.max(m.share_pct, 1)}%` }} />
-              </div>
-              <p className="text-xs text-ink-soft">
+              <p className="mt-0.5 text-xs text-ink-soft">
                 {m.purchases} {m.purchases === 1 ? "compra" : "compras"}
               </p>
             </li>
@@ -257,7 +256,7 @@ function SummaryView({
         </ul>
       </section>
 
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid grid-cols-2 gap-4 rounded-surface bg-paper p-4">
         <Ranking title="Mais gasto" items={s.top_products_by_value} value={(p) => formatCents(p.spent_cents)} onProduct={onProduct} />
         <Ranking title="Mais comprados" items={s.top_products_by_quantity} value={(p) => `${p.units.replace(".", ",")} un.`} onProduct={onProduct} />
       </div>
@@ -281,17 +280,17 @@ function Ranking({
   onProduct: (id: string, name: string) => void;
 }) {
   return (
-    <section className="rounded-surface bg-paper p-4">
+    <section className="min-w-0">
       <h2 className="mb-2 font-bold">{title}</h2>
       <ol className="flex flex-col">
-        {items.slice(0, 5).map((p) => (
-          <li key={p.product_id ?? p.name} className="flex items-center justify-between gap-3 border-b border-line py-2 text-sm last:border-0">
+        {items.slice(0, 3).map((p) => (
+          <li key={p.product_id ?? p.name} className="flex flex-col gap-0.5 border-b border-line py-2 text-xs last:border-0">
             {p.product_id ? (
               <span className="flex min-w-0 flex-col">
-                <Link to={`/produtos/${p.product_id}`} className="flex min-h-7 items-center truncate font-semibold hover:underline">
+                <Link to={`/produtos/${p.product_id}`} className="flex min-h-11 items-center truncate font-semibold hover:underline">
                   {p.name}
                 </Link>
-                <button className="min-h-7 self-start text-xs font-medium text-brand" onClick={() => onProduct(p.product_id!, p.name)}>
+                <button className="min-h-11 self-start text-xs font-medium text-brand" onClick={() => onProduct(p.product_id!, p.name)}>
                   Filtrar resumo
                 </button>
               </span>

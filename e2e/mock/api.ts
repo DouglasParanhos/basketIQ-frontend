@@ -8,13 +8,166 @@ export interface FakeState {
   empty: boolean;
   /** APP_NAME_FOR_CUSTOMER as served by GET /v1/config. */
   appName: string;
+  /** SMART_LIST_ENABLED as served by GET /v1/config (off when absent). */
+  smartList?: boolean;
+  /** Whether the person already finished the onboarding (true when absent). */
+  onboarded?: boolean;
+  /** An account from before the onboarding: finished, with nothing answered (spec 014). */
+  migrated?: boolean;
+  /** The signed-in person is an operator. */
+  admin?: boolean;
+  /** Stored original files (3 per purchase), as GET /v1/receipts/stored-files counts them. Zero when absent. */
+  storedFiles?: number;
+  /** Calls received by DELETE /v1/receipts/stored-files. */
+  storedFilesDeletes: number;
+  /** Makes DELETE /v1/receipts/stored-files answer 500. */
+  storedFilesFail?: boolean;
+  /** Bodies received by PATCH /v1/me/profile, in order. */
+  profilePatches: Record<string, unknown>[];
+  /** Milliseconds GET /v1/me/profile waits before answering (to look at the loading state). */
+  profileDelayMs?: number;
+  /** What the upload endpoints received: the files in the order sent, and how many calls of each kind. */
+  uploads: { inits: number; photos: number; stored: number; processed: number; names: string[]; hints: (string | null)[] };
+  /** upload-init answers 409 duplicate_suspected unless allow_duplicate is true. */
+  duplicate?: boolean;
+  /** The presigned storage drops the connection (a network failure). */
+  storageFails?: boolean;
+  /** The state of GET /v1/analytics/overview (the green ring with a goal when absent). */
+  overview?: OverviewKind;
+  /** Milliseconds GET /v1/analytics/overview waits before answering (the loading state). */
+  overviewDelayMs?: number;
+  /** GET /v1/analytics/overview answers 500. */
+  overviewFail?: boolean;
+  /** The months GET /v1/analytics/overview was asked for, in order. */
+  overviewRequests: string[];
 }
+
+export type OverviewKind = "green" | "orange" | "red" | "over" | "nogoal" | "fewdata" | "notrend" | "zero" | "empty";
+
+/** Synthetic answers of GET /v1/analytics/overview (October 2026, a goal of 400 euros). */
+function overviewBody(kind: OverviewKind, month: string) {
+  const base = {
+    month,
+    spent_cents: 15200,
+    goal_cents: 40000 as number | null,
+    goal_pct: 38 as number | null,
+    band: "ok" as string,
+    monthly_average_cents: 31800 as number | null,
+    recent_vs_average_pct: -7 as number | null,
+    average_trend: "below" as string | null,
+    average_months: 5,
+    average_min_months: 2,
+    purchases_this_month: 7,
+    purchases_last_month: 11,
+    weeks: [
+      { index: 1, from: `${month}-01`, to: `${month}-07`, spent_cents: 1900 },
+      { index: 2, from: `${month}-08`, to: `${month}-14`, spent_cents: 5800 },
+      { index: 3, from: `${month}-15`, to: `${month}-21`, spent_cents: 3100 },
+      { index: 4, from: `${month}-22`, to: `${month}-28`, spent_cents: 3200 },
+      { index: 5, from: `${month}-29`, to: `${month}-31`, spent_cents: 1200 },
+    ],
+    by_merchant: [
+      { merchant: "PINGO_DOCE", name: "Pingo Doce", spent_cents: 6200, purchases: 3, share_pct: 41 },
+      { merchant: "LIDL", name: "Lidl", spent_cents: 5000, purchases: 2, share_pct: 33 },
+      { merchant: "MERCADONA", name: "Mercadona", spent_cents: 4000, purchases: 2, share_pct: 26 },
+    ],
+    recent_receipts: [
+      { id: "c1", merchant: null, name: "Outros", date: `${month}-29`, total_cents: null as number | null, status: "RECEIVED" },
+      { id: "c2", merchant: null, name: "Outros", date: `${month}-28`, total_cents: null as number | null, status: "REVIEW_REQUIRED" },
+      { id: "c3", merchant: "PINGO_DOCE", name: "Pingo Doce", date: `${month}-27`, total_cents: 4120 as number | null, status: "CONFIRMED" },
+    ],
+    empty: false,
+  };
+  const zero = { ...base, spent_cents: 0, goal_pct: 0, purchases_this_month: 0, weeks: base.weeks.map((w) => ({ ...w, spent_cents: 0 })), by_merchant: [], recent_receipts: [] };
+  switch (kind) {
+    case "orange":
+      return { ...base, spent_cents: 24800, goal_pct: 62, band: "attention", recent_vs_average_pct: 2, average_trend: "on_average" };
+    case "red":
+      return { ...base, spent_cents: 35200, goal_pct: 88, band: "high", recent_vs_average_pct: 12, average_trend: "above" };
+    case "over":
+      return { ...base, spent_cents: 45200, goal_pct: 113, band: "high" };
+    case "nogoal":
+      return { ...base, spent_cents: 24800, goal_cents: null, goal_pct: null, band: "none" };
+    case "fewdata":
+      return { ...base, monthly_average_cents: null, recent_vs_average_pct: null, average_trend: null, average_months: 0 };
+    case "notrend":
+      return { ...base, recent_vs_average_pct: null, average_trend: null, average_months: 2 };
+    case "zero":
+      return zero;
+    case "empty":
+      return { ...zero, monthly_average_cents: null, recent_vs_average_pct: null, average_trend: null, average_months: 0, purchases_last_month: 0, empty: true };
+    default:
+      return base;
+  }
+}
+
+/** GET /v1/receipts: purchases in the order the API sends them (by sending), one of each state, in three years. */
+const RECEIPT_LIST = [
+  { id: "r-progress", status: "EXTRACTING", merchant: "CONTINENTE", purchase_at: null, total_cents: null, line_count: 0, needs_action: false, created_at: "2026-10-29T09:00:00Z" },
+  { id: "r1", status: "REVIEW_REQUIRED", merchant: "MERCADONA", purchase_at: "2026-10-28T10:00:00Z", total_cents: 2275, line_count: 11, needs_action: true, created_at: "2026-10-28T12:00:00Z" },
+  { id: "r-ok1", status: "CONFIRMED", merchant: "PINGO_DOCE", purchase_at: "2026-10-27T10:00:00Z", total_cents: 4120, line_count: 14, needs_action: false, created_at: "2026-10-27T12:00:00Z" },
+  { id: "r-error", status: "UNREADABLE", merchant: null, purchase_at: null, total_cents: null, line_count: 0, needs_action: true, created_at: "2026-10-26T09:00:00Z" },
+  { id: "r-ok2", status: "CONFIRMED", merchant: "LIDL", purchase_at: "2026-10-24T10:00:00Z", total_cents: 2895, line_count: 9, needs_action: false, created_at: "2026-10-24T12:00:00Z" },
+  { id: "r-sep", status: "CONFIRMED", merchant: "LIDL", purchase_at: "2026-09-12T10:00:00Z", total_cents: 3340, line_count: 1, needs_action: false, created_at: "2026-09-12T12:00:00Z" },
+  { id: "r-old", status: "CONFIRMED", merchant: "ALDI", purchase_at: "2025-12-20T10:00:00Z", total_cents: 1800, line_count: 6, needs_action: false, created_at: "2025-12-21T10:00:00Z" },
+].map((r) => ({ merchant_name: null, store_label: null, overall_confidence: 0.9, ...r }));
+
+const MONTHS = [
+  { month: "2026-10", confirmed_count: 7, total_cents: 24800 },
+  { month: "2026-09", confirmed_count: 5, total_cents: 32200 },
+  { month: "2025-12", confirmed_count: 2, total_cents: 5000 },
+];
+
+/** GET /v1/products: the average price and the counts; one product without a price. */
+const PRODUCTS = [
+  { id: "p1", name: "Peito de frango", unit_type: "kg", lines: 4, spent_cents: 2650, last_purchase_at: "2026-10-27T10:00:00Z", avg_price_cents: 552, price_basis: "kg", purchases: 4, merchants: 3 },
+  { id: "p2", name: "Leite meio-gordo", unit_type: "l", lines: 9, spent_cents: 3350, last_purchase_at: "2026-10-20T10:00:00Z", avg_price_cents: 85, price_basis: "l", purchases: 9, merchants: 3 },
+  { id: "p3", name: "Ovos M", unit_type: "un", lines: 6, spent_cents: 970, last_purchase_at: "2026-10-18T10:00:00Z", avg_price_cents: 27, price_basis: "un", purchases: 6, merchants: 2 },
+  { id: "p4", name: "Água", unit_type: null, lines: 2, spent_cents: 120, last_purchase_at: "2026-10-10T10:00:00Z", avg_price_cents: null, price_basis: "un", purchases: 2, merchants: 1 },
+];
+
+const PRODUCT_ANALYTICS = {
+  product: { id: "p1", name: "Peito de frango", unit_type: "kg" },
+  price_basis: "kg",
+  mixed_units: false,
+  total_quantity: "4.8",
+  total_spent_cents: 2650,
+  avg_price_cents: 552,
+  min_price_cents: 499,
+  max_price_cents: 589,
+  purchases: 4,
+  insufficient_data: false,
+  history: [
+    { receipt_id: "a", date: "2026-06-10", merchant: "PINGO_DOCE", quantity: "1.2", unit: "kg", unit_price_cents: 589, price_basis: "kg", net_cents: 707, raw_description: "PEITO FRANGO 1KG" },
+    { receipt_id: "b", date: "2026-08-12", merchant: "LIDL", quantity: "1.1", unit: "kg", unit_price_cents: 499, price_basis: "kg", net_cents: 549, raw_description: "FRANGO PEITO" },
+    { receipt_id: "c", date: "2026-09-20", merchant: "MERCADONA", quantity: "1.3", unit: "kg", unit_price_cents: 579, price_basis: "kg", net_cents: 753, raw_description: "PEITO DE FRANGO" },
+    { receipt_id: "d", date: "2026-10-15", merchant: "PINGO_DOCE", quantity: "1.2", unit: "kg", unit_price_cents: 549, price_basis: "kg", net_cents: 659, raw_description: "PEITO FRANGO" },
+  ],
+  by_merchant: [
+    { merchant: "LIDL", purchases: 1, avg_price_cents: 499, min_price_cents: 499, max_price_cents: 499, last_price_cents: 499, last_date: "2026-08-12" },
+    { merchant: "MERCADONA", purchases: 1, avg_price_cents: 579, min_price_cents: 579, max_price_cents: 579, last_price_cents: 579, last_date: "2026-09-20" },
+    { merchant: "PINGO_DOCE", purchases: 2, avg_price_cents: 569, min_price_cents: 549, max_price_cents: 589, last_price_cents: 549, last_date: "2026-10-15" },
+  ],
+};
+
+const MERCHANTS = [
+  { id: "CONTINENTE", name: "Continente" },
+  { id: "PINGO_DOCE", name: "Pingo Doce" },
+  { id: "LIDL", name: "Lidl" },
+  { id: "AUCHAN", name: "Auchan" },
+  { id: "ALDI", name: "Aldi" },
+  { id: "MERCADONA", name: "Mercadona" },
+  { id: "EL_CORTE_INGLES", name: "El Corte Inglés" },
+];
+
+const emptyProfile = { household_size: null, merchants: [], goals: [], monthly_goal_cents: null, onboarding_completed_at: null };
+const doneProfile = { household_size: 2, merchants: ["LIDL"], goals: ["finances"], monthly_goal_cents: 30000, onboarding_completed_at: "2026-10-02T10:00:00Z" };
 
 const me = (s: FakeState) => ({
   id: "u1",
   email: "maria@example.test",
   display_name: "Maria Silva",
-  role: "user",
+  role: s.admin ? "admin" : "user",
   privacy_accepted_at: s.consented ? "2026-10-01T10:00:00Z" : null,
   privacy_version: s.consented ? "2026-10-15" : null,
   current_privacy_version: "2026-10-15",
@@ -141,17 +294,34 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     receipts: [reviewReceipt],
     empty: false,
     appName: "Super Mercado",
+    profilePatches: [],
+    storedFilesDeletes: 0,
+    uploads: { inits: 0, photos: 0, stored: 0, processed: 0, names: [], hints: [] },
+    overviewRequests: [],
     ...overrides,
   };
+  let purchasesWithFiles = Math.ceil((state.storedFiles ?? 0) / 3);
+  let profile: Record<string, unknown> = state.migrated
+    ? { ...emptyProfile, onboarding_completed_at: "2026-10-31T00:00:00Z" }
+    : state.onboarded === false ? { ...emptyProfile } : { ...doneProfile };
   const json = (route: Route, body: unknown, status = 200) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
   const unauth = (route: Route) => json(route, { code: "unauthenticated", message: "Sessão necessária.", request_id: "r" }, 401);
+
+  // The presigned storage is another origin: it answers the upload (CORS allowed) or drops the connection.
+  await page.route("http://storage.test/**", (route) => {
+    const cors = { "access-control-allow-origin": "*" };
+    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: { ...cors, "access-control-allow-methods": "POST" } });
+    if (state.storageFails) return route.abort("failed");
+    state.uploads.stored += 1;
+    return route.fulfill({ status: 204, headers: cors });
+  });
 
   await page.route("**/v1/**", async (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname;
     const method = route.request().method();
     // Public configuration: available without a session (the login screen needs it).
-    if (path === "/v1/config") return json(route, { app_name: state.appName });
+    if (path === "/v1/config") return json(route, { app_name: state.appName, smart_list_enabled: state.smartList });
     if (path === "/v1/config/manifest.webmanifest") {
       return route.fulfill({
         contentType: "application/manifest+json",
@@ -165,16 +335,84 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
       state.consented = true;
       return json(route, me(state));
     }
+    if (path === "/v1/me/profile" && method === "GET") {
+      if (state.profileDelayMs) await new Promise((resolve) => setTimeout(resolve, state.profileDelayMs));
+      return json(route, profile);
+    }
+    if (path === "/v1/me/profile" && method === "PATCH") {
+      const body = route.request().postDataJSON() as Record<string, unknown>;
+      state.profilePatches.push(body);
+      const { onboarding_completed: _done, ...values } = body;
+      profile = { ...profile, ...values, onboarding_completed_at: profile.onboarding_completed_at ?? "2026-10-30T12:00:00Z" };
+      return json(route, profile);
+    }
+    if (path === "/v1/merchants") return json(route, MERCHANTS);
+    if (path === "/v1/receipts/stored-files" && method === "GET") return json(route, { files: state.storedFiles ?? 0 });
+    if (path === "/v1/receipts/stored-files" && method === "DELETE") {
+      state.storedFilesDeletes += 1;
+      if (state.storedFilesFail) return json(route, { code: "internal_error", message: "Erro.", request_id: "r" }, 500);
+      const batch = Math.min(500, purchasesWithFiles);
+      purchasesWithFiles -= batch;
+      const removed = Math.min(batch * 3, state.storedFiles ?? 0);
+      state.storedFiles = (state.storedFiles ?? 0) - removed;
+      return json(route, { files_deleted: removed, receipts: batch, remaining: purchasesWithFiles });
+    }
+    if (path === "/v1/me" && method === "DELETE") {
+      state.signedIn = false;
+      return json(route, { receipts_deleted: 1, objects_deleted: 1 });
+    }
     if (path === "/v1/receipts" && method === "GET") {
-      const items = state.empty ? [] : state.receipts.map((r) => ({ id: r.id, status: r.status, merchant: r.merchant, purchase_at: r.purchase_at, total_cents: 313, line_count: 2, overall_confidence: 0.6, needs_action: true, created_at: r.created_at }));
+      const statuses = url.searchParams.getAll("status");
+      const limit = Number(url.searchParams.get("limit") ?? 20);
+      const items = (state.empty ? [] : RECEIPT_LIST).filter((r) => statuses.length === 0 || statuses.includes(r.status)).slice(0, limit);
       return json(route, { items, next_cursor: null });
+    }
+    if (path === "/v1/analytics/months" && method === "GET") return json(route, state.empty ? [] : MONTHS);
+    if (path === "/v1/products/p1/analytics" && method === "GET") return json(route, PRODUCT_ANALYTICS);
+    if (path === "/v1/products" && method === "GET") {
+      const q = (url.searchParams.get("q") ?? "").toLowerCase();
+      return json(route, PRODUCTS.filter((p) => p.name.toLowerCase().includes(q)));
+    }
+    if (path === "/v1/analytics/overview" && method === "GET") {
+      const month = url.searchParams.get("month") ?? "";
+      state.overviewRequests.push(month);
+      if (state.overviewDelayMs) await new Promise((resolve) => setTimeout(resolve, state.overviewDelayMs));
+      if (state.overviewFail) return json(route, { code: "internal_error", message: "Erro.", request_id: "r" }, 500);
+      return json(route, overviewBody(state.overview ?? "green", month));
+    }
+    if (path === "/v1/receipts/upload-init" && method === "POST") {
+      const body = route.request().postDataJSON() as { filename: string; allow_duplicate: boolean; merchant_hint: string | null };
+      if (state.duplicate && !body.allow_duplicate) {
+        return json(
+          route,
+          { code: "duplicate_suspected", message: "Este documento parece já ter sido importado.", request_id: "r", details: { duplicate_of: { receipt_id: "r1", merchant: "LIDL", purchase_at: "2026-09-12T10:15:00+01:00", total_cents: 905 } } },
+          409,
+        );
+      }
+      state.uploads.inits += 1;
+      state.uploads.names.push(body.filename);
+      state.uploads.hints.push(body.merchant_hint);
+      return json(
+        route,
+        { receipt_id: "r1", upload: { url: "http://storage.test/p0", fields: {}, expires_at: "2030-01-01T00:00:00Z" }, requirements: { max_bytes: 15728640, accepted_types: [], max_pdf_pages: 5, max_photos: 6 } },
+        201,
+      );
+    }
+    if (path === "/v1/receipts/r1/photos" && method === "POST") {
+      state.uploads.photos += 1;
+      state.uploads.names.push((route.request().postDataJSON() as { filename: string }).filename);
+      return json(route, { url: `http://storage.test/p${state.uploads.photos}`, fields: {}, expires_at: "2030-01-01T00:00:00Z" }, 201);
+    }
+    if (path === "/v1/receipts/r1/upload-url" && method === "POST") return json(route, { url: "http://storage.test/retry", fields: {}, expires_at: "2030-01-01T00:00:00Z" });
+    if (path === "/v1/receipts/r1/process" && method === "POST") {
+      state.uploads.processed += 1;
+      return json(route, { id: "j1", status: "QUEUED", attempt_count: 0, processing_route: null, created_at: "2026-10-31T10:00:00Z" }, 202);
     }
     if (path === "/v1/receipts/r1" && method === "GET") return json(route, reviewReceipt);
     if (path === "/v1/analytics/summary") return json(route, summary);
     if (path === "/v1/analytics/consumption") {
       return json(route, { filters: summary.filters, items: [{ product_id: "p1", name: "LEITE MEIO GORDO", purchases: 3, units: "4", units_per_month: 4.1, spent_cents: 33500, avg_interval_days: 14, first_purchase: "2026-10-02", last_purchase: "2026-10-30" }], empty: false });
     }
-    if (path === "/v1/products") return json(route, [{ id: "p1", name: "LEITE MEIO GORDO", unit_type: "un", lines: 3, spent_cents: 33500, last_purchase_at: "2026-10-20T10:00:00Z" }]);
     return json(route, { code: "not_found", message: "Não encontrado.", request_id: "r" }, 404);
   });
   return state;

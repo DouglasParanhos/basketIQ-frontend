@@ -6,7 +6,7 @@
 
 **Status**: Implemented (testes de UI só para a vista de configuração)
 
-**Input**: Especificação Funcional §2.2, §10; Especificação Técnica §10, §11. Backend: `../Backend/specs/007-operador-admin`.
+**Input**: Especificação Funcional §2.2, §10; Especificação Técnica §10, §11. Backend: `../basketIQ-backend/specs/007-operador-admin`.
 
 ## User Scenarios & Testing *(mandatory)*
 

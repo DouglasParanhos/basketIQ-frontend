@@ -7,7 +7,7 @@
 - Be matter-of-fact. No flattery, no filler.
 - I'm sometimes wrong. Challenge my assumptions.
 
-Para se usar containeres/docker, use WSL.
+Containers and Docker: use Docker Desktop on the Windows host (PowerShell or Git Bash). WSL is not used on this machine (it has no bash), so run commands inside containers or directly with Node and pnpm; do not assume WSL or Linux paths.
 
 # Commits
 

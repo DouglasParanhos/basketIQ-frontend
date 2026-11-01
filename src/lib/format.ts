@@ -17,6 +17,13 @@ export function formatCents(cents: number | null | undefined): string {
   return money.format(cents / 100);
 }
 
+const wholeEuros = new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+
+/** A whole number of euros for display only ("300 €"); the value itself is multiplied into integer cents before it is sent. */
+export function formatWholeEuros(euros: number): string {
+  return wholeEuros.format(euros);
+}
+
 /** Amount as printed on a receipt, without the currency sign ("3,49"). */
 export function formatAmount(cents: number | null | undefined): string {
   return cents === null || cents === undefined ? "?" : centsToInput(cents);
@@ -80,9 +87,17 @@ export const MERCHANT_NAMES: Record<string, string> = {
   PINGO_DOCE: "Pingo Doce",
   LIDL: "Lidl",
   AUCHAN: "Auchan",
-  UNKNOWN: "Supermercado desconhecido",
+  ALDI: "Aldi",
+  MERCADONA: "Mercadona",
+  EL_CORTE_INGLES: "El Corte Inglés",
+  UNKNOWN: "Outra loja",
 };
 
-export function merchantName(code: string | null | undefined): string {
-  return code ? (MERCHANT_NAMES[code] ?? code) : "Supermercado por identificar";
+/** The stores a person can pick: every known chain, not "Outra loja". */
+export const MERCHANT_OPTIONS = Object.entries(MERCHANT_NAMES).filter(([code]) => code !== "UNKNOWN");
+
+/** Name shown for a purchase: a store without a parser shows the name read from the receipt or typed. */
+export function merchantName(code: string | null | undefined, name?: string | null): string {
+  if (name && (!code || code === "UNKNOWN")) return name;
+  return code ? (MERCHANT_NAMES[code] ?? code) : "Loja por identificar";
 }

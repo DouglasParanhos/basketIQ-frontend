@@ -66,6 +66,8 @@ export function receipt(overrides: Partial<Receipt> = {}): Receipt {
     merchant_hint: null,
     purchase_at: "2026-09-15T12:30:00+01:00",
     receipt_ref: "FS 0001/0001",
+    store_label: "ESTRADA DA LUZ",
+    merchant_name: null,
     currency: "EUR",
     source_type: "IMAGE",
     totals: {
@@ -92,6 +94,7 @@ export function receipt(overrides: Partial<Receipt> = {}): Receipt {
     confirmed_at: null,
     confirmed_by: null,
     original_available: true,
+    photo_count: 1,
     original_expires_at: null,
     original_deleted_at: null,
     processing: { job_id: "j1", status: "SUCCEEDED", route: "LOCAL_OCR", attempts: 1 },
@@ -149,6 +152,198 @@ export function summary(overrides: Partial<Schemas["SummaryOut"]> = {}): Schemas
     top_products_by_value: [{ product_id: "p1", name: "LEITE MEIO GORDO", spent_cents: 33500, units: "4", lines: 3 }],
     top_products_by_quantity: [{ product_id: "p1", name: "LEITE MEIO GORDO", spent_cents: 33500, units: "4", lines: 3 }],
     empty: false,
+    ...overrides,
+  };
+}
+
+/** A finished onboarding: what the server returns once the person has been through it. */
+export const profile: Schemas["ProfileOut"] = {
+  household_size: 2,
+  merchants: ["LIDL"],
+  goals: ["finances"],
+  monthly_goal_cents: 30000,
+  onboarding_completed_at: "2026-10-02T10:00:00Z",
+};
+
+/** A new account: nothing saved yet. */
+export function emptyProfile(overrides: Partial<Schemas["ProfileOut"]> = {}): Schemas["ProfileOut"] {
+  return { household_size: null, merchants: [], goals: [], monthly_goal_cents: null, onboarding_completed_at: null, ...overrides };
+}
+
+/** An account from before the onboarding: finished and empty (what the backend migration leaves). */
+export const migratedProfile = emptyProfile({ onboarding_completed_at: "2026-10-31T00:00:00Z" });
+
+/** The signed-in operator. */
+export const adminMe: Schemas["MeOut"] = { ...me, role: "admin" };
+
+/** The seven supported merchants, as GET /v1/merchants serves them. */
+export const merchants: Schemas["MerchantOut"][] = [
+  { id: "CONTINENTE", name: "Continente" },
+  { id: "PINGO_DOCE", name: "Pingo Doce" },
+  { id: "LIDL", name: "Lidl" },
+  { id: "AUCHAN", name: "Auchan" },
+  { id: "ALDI", name: "Aldi" },
+  { id: "MERCADONA", name: "Mercadona" },
+  { id: "EL_CORTE_INGLES", name: "El Corte Inglés" },
+];
+
+// ---------------------------------------------------------------- Início (spec 011): GET /v1/analytics/overview, synthetic
+
+type Overview = Schemas["OverviewOut"];
+
+/** October 2026, a goal of 400 €, 152 € spent (38 %, green), an average that is 7 % below, one purchase of each state. */
+export const overviewGreen: Overview = {
+  month: "2026-10",
+  spent_cents: 15200,
+  goal_cents: 40000,
+  goal_pct: 38,
+  band: "ok",
+  monthly_average_cents: 31800,
+  recent_vs_average_pct: -7,
+  average_trend: "below",
+  average_months: 5,
+  average_min_months: 2,
+  purchases_this_month: 7,
+  purchases_last_month: 11,
+  weeks: [
+    { index: 1, from: "2026-10-01", to: "2026-10-07", spent_cents: 1900 },
+    { index: 2, from: "2026-10-08", to: "2026-10-14", spent_cents: 5800 },
+    { index: 3, from: "2026-10-15", to: "2026-10-21", spent_cents: 3100 },
+    { index: 4, from: "2026-10-22", to: "2026-10-28", spent_cents: 3200 },
+    { index: 5, from: "2026-10-29", to: "2026-10-31", spent_cents: 1200 },
+  ],
+  by_merchant: [
+    { merchant: "PINGO_DOCE", name: "Pingo Doce", spent_cents: 6200, purchases: 3, share_pct: 41 },
+    { merchant: "LIDL", name: "Lidl", spent_cents: 5000, purchases: 2, share_pct: 33 },
+    { merchant: "MERCADONA", name: "Mercadona", spent_cents: 4000, purchases: 2, share_pct: 26 },
+  ],
+  recent_receipts: [
+    { id: "c1", merchant: null, name: "Outros", date: "2026-10-29", total_cents: null, status: "RECEIVED" },
+    { id: "c2", merchant: null, name: "Outros", date: "2026-10-28", total_cents: null, status: "REVIEW_REQUIRED" },
+    { id: "c3", merchant: "PINGO_DOCE", name: "Pingo Doce", date: "2026-10-27", total_cents: 4120, status: "CONFIRMED" },
+  ],
+  empty: false,
+};
+
+/** 248 € of 400 € (62 %, orange), average on target. */
+export const overviewOrange: Overview = { ...overviewGreen, spent_cents: 24800, goal_pct: 62, band: "attention", recent_vs_average_pct: 2, average_trend: "on_average" };
+/** 352 € of 400 € (88 %, red), average 12 % above. */
+export const overviewRed: Overview = { ...overviewGreen, spent_cents: 35200, goal_pct: 88, band: "high", recent_vs_average_pct: 12, average_trend: "above" };
+/** 452 € of 400 € (113 %, red, above the goal). */
+export const overviewOver: Overview = { ...overviewGreen, spent_cents: 45200, goal_pct: 113, band: "high" };
+/** No goal defined (also an account from before the onboarding). */
+export const overviewNoGoal: Overview = { ...overviewGreen, spent_cents: 24800, goal_cents: null, goal_pct: null, band: "none" };
+/** Less than the minimum months: no average and no trend yet. */
+export const overviewFewData: Overview = { ...overviewGreen, monthly_average_cents: null, recent_vs_average_pct: null, average_trend: null, average_months: 0 };
+/** Two months: an average but still no trend (the backend needs a third month for it). */
+export const overviewNoTrend: Overview = { ...overviewGreen, recent_vs_average_pct: null, average_trend: null, average_months: 2 };
+/** A month with no confirmed purchase, in an account that has some elsewhere: zeros, with the goal. */
+export const overviewZeroMonth: Overview = {
+  ...overviewGreen,
+  spent_cents: 0,
+  goal_pct: 0,
+  band: "ok",
+  purchases_this_month: 0,
+  weeks: overviewGreen.weeks.map((w) => ({ ...w, spent_cents: 0 })),
+  by_merchant: [],
+  recent_receipts: [],
+};
+/** An account with no confirmed purchase in any month. */
+export const overviewEmpty: Overview = {
+  ...overviewZeroMonth,
+  monthly_average_cents: null,
+  recent_vs_average_pct: null,
+  average_trend: null,
+  average_months: 0,
+  purchases_last_month: 0,
+  empty: true,
+};
+
+/** Spending against a 400 € goal as the backend 014 rounds it: percentage half up, band from the rounded percentage (50 and 75 inclusive). */
+export function overviewFor(spentCents: number, goalCents = 40000): Overview {
+  const pct = Math.floor((spentCents * 100) / goalCents + 0.5);
+  return { ...overviewGreen, spent_cents: spentCents, goal_cents: goalCents, goal_pct: pct, band: pct <= 50 ? "ok" : pct <= 75 ? "attention" : "high" };
+}
+
+// ---------------------------------------------------------------- Talões (spec 012): months, receipts and products, synthetic
+
+/** GET /v1/analytics/months: confirmed purchases and spending per month, newest first. */
+export const monthTotals: Schemas["MonthTotalOut"][] = [
+  { month: "2026-10", confirmed_count: 7, total_cents: 24800 },
+  { month: "2026-09", confirmed_count: 5, total_cents: 32200 },
+  { month: "2025-12", confirmed_count: 2, total_cents: 5000 },
+];
+
+/** One line of GET /v1/receipts: confirmed, from a Lidl, by default. */
+export function receiptItem(overrides: Partial<Schemas["ReceiptSummaryOut"]> = {}): Schemas["ReceiptSummaryOut"] {
+  return {
+    id: "r1",
+    status: "CONFIRMED",
+    merchant: "LIDL",
+    merchant_name: null,
+    store_label: null,
+    purchase_at: "2026-10-24T10:00:00Z",
+    total_cents: 2895,
+    line_count: 9,
+    overall_confidence: 1,
+    needs_action: false,
+    created_at: "2026-10-24T12:00:00Z",
+    ...overrides,
+  };
+}
+
+/** One line of GET /v1/products, with the average price and the counts. */
+export function productItem(overrides: Partial<Schemas["ProductSearchItem"]> = {}): Schemas["ProductSearchItem"] {
+  return {
+    id: "p1",
+    name: "Peito de frango",
+    unit_type: "kg",
+    lines: 4,
+    spent_cents: 2650,
+    last_purchase_at: "2026-10-27T10:00:00Z",
+    avg_price_cents: 552,
+    price_basis: "kg",
+    purchases: 4,
+    merchants: 3,
+    ...overrides,
+  };
+}
+
+/** GET /v1/products/{id}/analytics: three merchants (in the code order the API gives), four purchases. */
+export function productAnalytics(overrides: Partial<Schemas["ProductAnalyticsOut"]> = {}): Schemas["ProductAnalyticsOut"] {
+  const point = (id: string, date: string, merchant: string, unitCents: number, quantity: string, raw: string): Schemas["PricePoint"] => ({
+    receipt_id: id,
+    date,
+    merchant,
+    quantity,
+    unit: "kg",
+    unit_price_cents: unitCents,
+    price_basis: "kg",
+    net_cents: Math.round(unitCents * Number(quantity)),
+    raw_description: raw,
+  });
+  return {
+    product: { id: "p1", name: "Peito de frango", unit_type: "kg" },
+    price_basis: "kg",
+    mixed_units: false,
+    total_quantity: "4.8",
+    total_spent_cents: 2650,
+    avg_price_cents: 552,
+    min_price_cents: 499,
+    max_price_cents: 589,
+    purchases: 4,
+    insufficient_data: false,
+    history: [
+      point("a", "2026-06-10", "PINGO_DOCE", 589, "1.2", "PEITO FRANGO 1KG"),
+      point("b", "2026-08-12", "LIDL", 499, "1.1", "FRANGO PEITO"),
+      point("c", "2026-09-20", "MERCADONA", 579, "1.3", "PEITO DE FRANGO"),
+      point("d", "2026-10-15", "PINGO_DOCE", 549, "1.2", "PEITO FRANGO"),
+    ],
+    by_merchant: [
+      { merchant: "LIDL", purchases: 1, avg_price_cents: 499, min_price_cents: 499, max_price_cents: 499, last_price_cents: 499, last_date: "2026-08-12" },
+      { merchant: "MERCADONA", purchases: 1, avg_price_cents: 579, min_price_cents: 579, max_price_cents: 579, last_price_cents: 579, last_date: "2026-09-20" },
+      { merchant: "PINGO_DOCE", purchases: 2, avg_price_cents: 569, min_price_cents: 549, max_price_cents: 589, last_price_cents: 549, last_date: "2026-10-15" },
+    ],
     ...overrides,
   };
 }

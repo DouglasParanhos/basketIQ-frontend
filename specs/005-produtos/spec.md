@@ -6,7 +6,7 @@
 
 **Status**: Implemented
 
-**Input**: Especificação Funcional RF-10, §4.3; Plano de Testes F-20. Backend: `../Backend/specs/005-analises`.
+**Input**: Especificação Funcional RF-10, §4.3; Plano de Testes F-20. Backend: `../basketIQ-backend/specs/005-analises`.
 
 ## User Scenarios & Testing *(mandatory)*
 

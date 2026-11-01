@@ -141,6 +141,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The person's profile (empty until saved) */
+        get: operations["get_profile_v1_me_profile_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Save the fields sent; omitted ones are kept */
+        patch: operations["update_profile_v1_me_profile_patch"];
+        trace?: never;
+    };
+    "/v1/merchants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Supported merchants, in a fixed order */
+        get: operations["list_merchants_v1_merchants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/receipts/upload-init": {
         parameters: {
             query?: never;
@@ -167,8 +202,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** New upload URL after a failed upload */
+        /** New upload URL after a failed upload (position 0 is the first photo) */
         post: operations["renew_upload_url_v1_receipts__receipt_id__upload_url_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/receipts/{receipt_id}/photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Another photo of a receipt too long for one */
+        post: operations["add_photo_v1_receipts__receipt_id__photos_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -204,6 +256,24 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/receipts/stored-files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Original files still stored */
+        get: operations["stored_files_v1_receipts_stored_files_get"];
+        put?: never;
+        post?: never;
+        /** Delete the originals of confirmed receipts, up to 500 receipts a call (see `remaining`) */
+        delete: operations["delete_stored_files_v1_receipts_stored_files_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -306,6 +376,40 @@ export interface paths {
         };
         /** Dashboard cards, time series and rankings */
         get: operations["summary_v1_analytics_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/analytics/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Home: goal ring, monthly average, weeks, stores and latest receipts */
+        get: operations["overview_v1_analytics_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/analytics/months": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Confirmed receipts and total spending per month, newest first */
+        get: operations["months_v1_analytics_months_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -612,7 +716,15 @@ export interface components {
             accepted_types: string[];
             /** Max Pdf Pages */
             max_pdf_pages: number;
+            /** Max Photos */
+            max_photos: number;
         };
+        /**
+         * Goal
+         * @description What the person wants from the app (onboarding). «All of the above» is the three together.
+         * @enum {string}
+         */
+        Goal: "finances" | "shopping_list" | "savings";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -737,7 +849,7 @@ export interface components {
          * Merchant
          * @enum {string}
          */
-        Merchant: "CONTINENTE" | "PINGO_DOCE" | "LIDL" | "AUCHAN" | "UNKNOWN";
+        Merchant: "CONTINENTE" | "PINGO_DOCE" | "LIDL" | "AUCHAN" | "ALDI" | "MERCADONA" | "EL_CORTE_INGLES" | "UNKNOWN";
         /** MerchantChoiceIn */
         MerchantChoiceIn: {
             /** Merchant */
@@ -773,6 +885,13 @@ export interface components {
             /** Updated At */
             updated_at: string | null;
         };
+        /** MerchantOut */
+        MerchantOut: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+        };
         /** MerchantPrice */
         MerchantPrice: {
             /** Merchant */
@@ -801,6 +920,28 @@ export interface components {
             /** Share Pct */
             share_pct: number;
         };
+        /** MerchantShareOut */
+        MerchantShareOut: {
+            /** Merchant */
+            merchant: string | null;
+            /** Name */
+            name: string;
+            /** Spent Cents */
+            spent_cents: number;
+            /** Purchases */
+            purchases: number;
+            /** Share Pct */
+            share_pct: number;
+        };
+        /** MonthTotalOut */
+        MonthTotalOut: {
+            /** Month */
+            month: string;
+            /** Confirmed Count */
+            confirmed_count: number;
+            /** Total Cents */
+            total_cents: number;
+        };
         /** OriginalUrlOut */
         OriginalUrlOut: {
             /** Url */
@@ -809,6 +950,55 @@ export interface components {
             expires_in_seconds: number;
             /** Content Type */
             content_type: string;
+        };
+        /** OverviewOut */
+        OverviewOut: {
+            /** Month */
+            month: string;
+            /** Spent Cents */
+            spent_cents: number;
+            /** Goal Cents */
+            goal_cents: number | null;
+            /** Goal Pct */
+            goal_pct: number | null;
+            /**
+             * Band
+             * @enum {string}
+             */
+            band: "ok" | "attention" | "high" | "none";
+            /** Monthly Average Cents */
+            monthly_average_cents: number | null;
+            /** Recent Vs Average Pct */
+            recent_vs_average_pct: number | null;
+            /** Average Trend */
+            average_trend: ("below" | "on_average" | "above") | null;
+            /** Average Months */
+            average_months: number;
+            /** Average Min Months */
+            average_min_months: number;
+            /** Purchases This Month */
+            purchases_this_month: number;
+            /** Purchases Last Month */
+            purchases_last_month: number;
+            /** Weeks */
+            weeks: components["schemas"]["WeekOut"][];
+            /** By Merchant */
+            by_merchant: components["schemas"]["MerchantShareOut"][];
+            /** Recent Receipts */
+            recent_receipts: components["schemas"]["RecentReceiptOut"][];
+            /** Empty */
+            empty: boolean;
+        };
+        /** PhotoAddIn */
+        PhotoAddIn: {
+            /** Filename */
+            filename: string;
+            /** Content Type */
+            content_type: string;
+            /** Size Bytes */
+            size_bytes: number;
+            /** Sha256 */
+            sha256: string;
         };
         /** PresignedUploadOut */
         PresignedUploadOut: {
@@ -916,6 +1106,16 @@ export interface components {
             app_name_for_customer: string;
             /** Llm Enabled */
             llm_enabled: boolean;
+            /** Smart List Enabled */
+            smart_list_enabled: boolean;
+            /** Goal Ring Green Up To Pct */
+            goal_ring_green_up_to_pct: number;
+            /** Goal Ring Orange Up To Pct */
+            goal_ring_orange_up_to_pct: number;
+            /** Average Min Months */
+            average_min_months: number;
+            /** Average On Target Pct */
+            average_on_target_pct: number;
         };
         /** ProductInfo */
         ProductInfo: {
@@ -963,11 +1163,58 @@ export interface components {
             spent_cents: number;
             /** Last Purchase At */
             last_purchase_at: string | null;
+            /** Avg Price Cents */
+            avg_price_cents: number | null;
+            /**
+             * Price Basis
+             * @enum {string}
+             */
+            price_basis: "un" | "kg" | "l";
+            /** Purchases */
+            purchases: number;
+            /** Merchants */
+            merchants: number;
+        };
+        /** ProfileOut */
+        ProfileOut: {
+            /** Household Size */
+            household_size: number | null;
+            /** Merchants */
+            merchants: string[];
+            /** Goals */
+            goals: components["schemas"]["Goal"][];
+            /** Monthly Goal Cents */
+            monthly_goal_cents: number | null;
+            /** Onboarding Completed At */
+            onboarding_completed_at: string | null;
+        };
+        /**
+         * ProfilePatch
+         * @description Only the fields present in the request are applied (`model_fields_set`): omitted keeps the value,
+         *     `null` clears the scalar fields. Lists are never `null`: `[]` clears them.
+         */
+        ProfilePatch: {
+            /** Household Size */
+            household_size?: number | null;
+            /** Merchants */
+            merchants?: string[];
+            /** Goals */
+            goals?: components["schemas"]["Goal"][];
+            /** Monthly Goal Cents */
+            monthly_goal_cents?: number | null;
+            /**
+             * Onboarding Completed
+             * @default true
+             * @constant
+             */
+            onboarding_completed: true;
         };
         /** PublicConfigOut */
         PublicConfigOut: {
             /** App Name */
             app_name: string;
+            /** Smart List Enabled */
+            smart_list_enabled: boolean;
         };
         /** ReceiptOut */
         ReceiptOut: {
@@ -982,10 +1229,14 @@ export interface components {
             merchant: string | null;
             /** Merchant Hint */
             merchant_hint: string | null;
+            /** Merchant Name */
+            merchant_name: string | null;
             /** Purchase At */
             purchase_at: string | null;
             /** Receipt Ref */
             receipt_ref: string | null;
+            /** Store Label */
+            store_label: string | null;
             /** Currency */
             currency: string;
             /** Source Type */
@@ -1017,6 +1268,8 @@ export interface components {
             confirmed_by: string | null;
             /** Original Available */
             original_available: boolean;
+            /** Photo Count */
+            photo_count: number;
             /** Original Expires At */
             original_expires_at: string | null;
             /** Original Deleted At */
@@ -1047,6 +1300,8 @@ export interface components {
             /** Version */
             version: number;
             merchant?: components["schemas"]["Merchant"] | null;
+            /** Merchant Name */
+            merchant_name?: string | null;
             /** Purchase At */
             purchase_at?: string | null;
             /** Total Cents */
@@ -1069,6 +1324,10 @@ export interface components {
             status: components["schemas"]["ReceiptStatus"];
             /** Merchant */
             merchant: string | null;
+            /** Merchant Name */
+            merchant_name: string | null;
+            /** Store Label */
+            store_label: string | null;
             /** Purchase At */
             purchase_at: string | null;
             /** Total Cents */
@@ -1084,6 +1343,26 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** RecentReceiptOut */
+        RecentReceiptOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Merchant */
+            merchant: string | null;
+            /** Name */
+            name: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Total Cents */
+            total_cents: number | null;
+            status: components["schemas"]["ReceiptStatus"];
         };
         /** ReviewReasonOut */
         ReviewReasonOut: {
@@ -1118,6 +1397,20 @@ export interface components {
             period: string;
             /** Spent Cents */
             spent_cents: number;
+        };
+        /** StoredFilesDeleted */
+        StoredFilesDeleted: {
+            /** Files Deleted */
+            files_deleted: number;
+            /** Receipts */
+            receipts: number;
+            /** Remaining */
+            remaining: number;
+        };
+        /** StoredFilesOut */
+        StoredFilesOut: {
+            /** Files */
+            files: number;
         };
         /** SummaryFilters */
         SummaryFilters: {
@@ -1223,6 +1516,23 @@ export interface components {
             code: string;
             /** Message */
             message: string;
+        };
+        /** WeekOut */
+        WeekOut: {
+            /** Index */
+            index: number;
+            /**
+             * From
+             * Format: date
+             */
+            from: string;
+            /**
+             * To
+             * Format: date
+             */
+            to: string;
+            /** Spent Cents */
+            spent_cents: number;
         };
     };
     responses: never;
@@ -1431,6 +1741,79 @@ export interface operations {
             };
         };
     };
+    get_profile_v1_me_profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+        };
+    };
+    update_profile_v1_me_profile_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfilePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_merchants_v1_merchants_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchantOut"][];
+                };
+            };
+        };
+    };
     upload_init_v1_receipts_upload_init_post: {
         parameters: {
             query?: never;
@@ -1502,7 +1885,9 @@ export interface operations {
     };
     renew_upload_url_v1_receipts__receipt_id__upload_url_post: {
         parameters: {
-            query?: never;
+            query?: {
+                position?: number;
+            };
             header?: never;
             path: {
                 receipt_id: string;
@@ -1554,6 +1939,77 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_photo_v1_receipts__receipt_id__photos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                receipt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhotoAddIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PresignedUploadOut"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
         };
@@ -1688,6 +2144,100 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stored_files_v1_receipts_stored_files_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoredFilesOut"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    delete_stored_files_v1_receipts_stored_files_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoredFilesDeleted"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
         };
@@ -2074,7 +2624,10 @@ export interface operations {
     };
     original_url_v1_receipts__receipt_id__original_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Photo number, counted from 1 */
+                photo?: number;
+            };
             header?: never;
             path: {
                 receipt_id: string;
@@ -2218,6 +2771,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    overview_v1_analytics_overview_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    months_v1_analytics_months_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthTotalOut"][];
                 };
             };
         };

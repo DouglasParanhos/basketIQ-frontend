@@ -6,7 +6,9 @@
 
 **Status**: Implemented
 
-**Input**: Especificação Funcional RF-02..RF-05, RF-08, §4.2, §9; Plano de Testes F-04..F-08, F-17, F-24. Backend: `../Backend/specs/002-ingestao-upload`.
+**Input**: Especificação Funcional RF-02..RF-05, RF-08, §4.2, §9; Plano de Testes F-04..F-08, F-17, F-24. Backend: `../basketIQ-backend/specs/002-ingestao-upload`.
+
+**Nota (2026-10-31):** o ecrã foi reestilizado pela spec 013 (`specs/013-adicionar-v2`): ecrã inicial com os mercados da API e «Confirme as partes» para vários fotos do mesmo talão, com a edição de cada parte a manter-se (A5); o rótulo passa a «Enviar talão». O envio (`useUpload`, hash, `upload-init`, `/photos`, `process`, duplicado e retoma) **não mudou**; os testes F-04, F-06, F-08, F-17, F-24 e F-31 mantêm os ids e seguem a nova estrutura.
 
 ## User Scenarios & Testing *(mandatory)*
 
