@@ -91,12 +91,12 @@ description: "Tarefas da spec 012: Talões (Compras, Resumo e Produtos)"
 
 ---
 
-## Phase 6: User Story 4 — Lista em papel de talão (P3) — ADIADA (D-T11)
+## Phase 6: User Story 4 — Lista em papel de talão (P3) — FEITA a 2026-11-01 (D-T11 decidida)
 
-**Não implementar** até a Liz decidir onde se abre esta vista (o desenho não mostra o ponto de entrada). Ficam escritas para o dia em que for pedida.
+A Liz decidiu a 2026-11-01: o ponto de entrada é um interruptor «Ver como papel de talão» na aba Compras (`?vista=papel`).
 
-- [ ] T021 [US4] ADIADA: escrever `src/features/receipts/ReceiptPaper.test.tsx` (`F-198:`): os talões do mês em papel de talão (`.receipt-paper`, `--font-receipt`) com a mesma informação e os mesmos estados da lista, «REVER» marcado a amarelo com texto, linha «TOTAL CONFIRMADO» com o total de `months`; contraste ≥ 4,5:1 no axe (claro e escuro)
-- [ ] T022 [US4] ADIADA: `src/features/receipts/ReceiptPaper.tsx` e o seu ponto de entrada (por exemplo «Ver como papel de talão» na aba Compras), conforme a decisão da Liz. Depende de T021
+- [x] T021 [US4] (feito: `ReceiptPaper.test.tsx`, 3 testes, vistos falhar antes do código; axe em `e2e/mock` com `/compras?vista=papel`) escrever `src/features/receipts/ReceiptPaper.test.tsx` (`F-198:`): os talões do mês em papel de talão (`.receipt-paper`, `--font-receipt`) com a mesma informação e os mesmos estados da lista, «REVER» marcado a amarelo com texto, linha «TOTAL CONFIRMADO» com o total de `months`; contraste ≥ 4,5:1 no axe (claro e escuro)
+- [x] T022 [US4] (feito) `src/features/receipts/ReceiptPaper.tsx` e o seu ponto de entrada (por exemplo «Ver como papel de talão» na aba Compras), conforme a decisão da Liz. Depende de T021
 
 ---
 

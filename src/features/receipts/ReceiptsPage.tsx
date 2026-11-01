@@ -6,6 +6,7 @@ import { IN_PROGRESS, type ReceiptStatus } from "../../lib/status";
 import { useMonths } from "../taloes/useMonths";
 import { useYear } from "../taloes/useYear";
 import { groupByMonth, headerSummary, yearOf, type Filter } from "./months";
+import { ReceiptPaper } from "./ReceiptPaper";
 import { ReceiptRow } from "./ReceiptRow";
 
 const ACTION_STATUSES: ReceiptStatus[] = ["REVIEW_REQUIRED", "COMPLETED", "RECEIVED", "INVALID_FORMAT", "UNREADABLE", "UNSUPPORTED_MERCHANT", "TEMPORARY_FAILURE", "PERMANENT_FAILURE"];
@@ -44,19 +45,21 @@ export function ReceiptsPage() {
   // «Requer ação» shows every year (its number is for every year); the other filters show the year chosen.
   const visible = filter.id === "acao" ? items : items.filter((r) => yearOf(r) === year);
   const groups = groupByMonth(visible);
+  const paper = params.get("vista") === "papel";
   const notReached = filter.id !== "acao" && items.length > 0 && visible.length === 0 && query.hasNextPage;
 
-  function choose(id: Filter) {
+  function change(update: (next: URLSearchParams) => void) {
     setParams(
       (previous) => {
         const next = new URLSearchParams(previous);
-        if (id === "todas") next.delete("filtro");
-        else next.set("filtro", id);
+        update(next);
         return next;
       },
       { replace: true },
     );
   }
+  const choose = (id: Filter) => change((next) => (id === "todas" ? next.delete("filtro") : next.set("filtro", id)));
+  const togglePaper = () => change((next) => (paper ? next.delete("vista") : next.set("vista", "papel")));
 
   return (
     <>
@@ -76,6 +79,19 @@ export function ReceiptsPage() {
         ))}
       </div>
 
+      <button
+        type="button"
+        role="switch"
+        aria-checked={paper}
+        onClick={togglePaper}
+        className="mb-3 inline-flex min-h-11 items-center gap-3 text-sm font-semibold"
+      >
+        <span aria-hidden className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${paper ? "bg-brand" : "bg-line"}`}>
+          <span className={`size-5 rounded-full bg-paper shadow transition-transform motion-reduce:transition-none ${paper ? "translate-x-5" : ""}`} />
+        </span>
+        Ver como papel de talão
+      </button>
+
       {query.isLoading && <Spinner />}
       {query.error && <Notice tone="error">{query.error.message}</Notice>}
       {!query.isLoading && items.length === 0 && (
@@ -94,27 +110,31 @@ export function ReceiptsPage() {
         </Notice>
       )}
 
-      {groups.map((g) => {
-        const summary = headerSummary(g, months.data, filter.id);
-        return (
-          <section key={g.key} aria-labelledby={`mes-${g.key}`} className="mb-2">
-            <h3 id={`mes-${g.key}`} className="flex items-baseline justify-between gap-3 pb-1 pt-3">
-              <span className="text-lg font-extrabold">{g.title}</span>
-              {summary && (
-                <>
-                  <span className="sr-only"> · </span>
-                  <span className="text-right text-xs font-normal text-ink-soft">{summary}</span>
-                </>
-              )}
-            </h3>
-            <ul className="flex flex-col">
-              {g.rows.map((r) => (
-                <ReceiptRow key={r.id} receipt={r} />
-              ))}
-            </ul>
-          </section>
-        );
-      })}
+      {paper ? (
+        <ReceiptPaper groups={groups} totals={months.data} filter={filter.id} />
+      ) : (
+        groups.map((g) => {
+          const summary = headerSummary(g, months.data, filter.id);
+          return (
+            <section key={g.key} aria-labelledby={`mes-${g.key}`} className="mb-2">
+              <h3 id={`mes-${g.key}`} className="flex items-baseline justify-between gap-3 pb-1 pt-3">
+                <span className="text-lg font-extrabold">{g.title}</span>
+                {summary && (
+                  <>
+                    <span className="sr-only"> · </span>
+                    <span className="text-right text-xs font-normal text-ink-soft">{summary}</span>
+                  </>
+                )}
+              </h3>
+              <ul className="flex flex-col">
+                {g.rows.map((r) => (
+                  <ReceiptRow key={r.id} receipt={r} />
+                ))}
+              </ul>
+            </section>
+          );
+        })
+      )}
       {query.hasNextPage && (
         <Button variant="secondary" className="mt-4 w-full" busy={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>
           Carregar mais

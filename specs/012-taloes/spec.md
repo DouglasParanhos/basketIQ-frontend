@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-30
 
-**Status**: Especificada em 2026-10-31 (Fase 4 do plano UX v2). **Sem bloqueio de contrato:** o backend 014 já publica `GET /v1/analytics/months` e o `GET /v1/products` enriquecido (verificado no OpenAPI da API em execução a 2026-10-31); o `src/api/schema.d.ts` foi regenerado na spec 011. **Implementada a 2026-10-31** (US1, US2, US3, US5); a US4 (papel de talão) fica adiada (D-T11).
+**Status**: Especificada em 2026-10-31 (Fase 4 do plano UX v2). **Sem bloqueio de contrato:** o backend 014 já publica `GET /v1/analytics/months` e o `GET /v1/products` enriquecido (verificado no OpenAPI da API em execução a 2026-10-31); o `src/api/schema.d.ts` foi regenerado na spec 011. **Implementada a 2026-10-31** (US1, US2, US3, US5); a US4 (papel de talão) foi implementada a 2026-11-01, com o interruptor «Ver como papel de talão» em Compras (D-T11 decidida).
 
 **Input**: Especificação Funcional v1.4 §8, RF-07, RF-09, RF-10, RF-11, RF-12; `Documentation/Super Mercado_—_Plano_de_Implementação_UX_v2.md` (Fase 4, D2); `Documentation/design-ux-v2/TaloesV2.dc.html` (layout) e `README.md` (textos pt-PT e o que não se implementa). Backend: `../basketIQ-backend/specs/014-visao-geral-inicio` (US4 totais por mês, US5 produtos; `contracts/api.md`). Specs relacionadas: `004-resumo-analises`, `005-produtos`, `006-definicoes-dados` (eliminar compra e original, reestilizadas aqui), `009-navegacao-5-botoes` (`TaloesLayout`, `SegmentedTabs`).
 
@@ -97,7 +97,7 @@ O `DashboardPage` atual, reestilizado, sem alterar a lógica nem os pedidos.
 
 ### User Story 4 - Lista em papel de talão (Priority: P3, opcional)
 
-*Adiável se o prazo apertar (plano Fase 4). **Não se implementa nesta entrega** (D-T11): o desenho não mostra como se chega a esta vista; fica por implementar até a Liz dizer onde se abre.*
+*Implementada a 2026-11-01 (D-T11): o ponto de entrada é o interruptor «Ver como papel de talão» na aba Compras, guardado no URL (`?vista=papel`).*
 
 **Acceptance Scenarios**:
 
@@ -189,5 +189,5 @@ O `DashboardPage` atual, reestilizado, sem alterar a lógica nem os pedidos.
 | F-195 | Compras: cabeçalho por mês com totais do endpoint, filtros, selos «!» e «…», estados por texto e ícone, eliminar | US1.1 a US1.10 | por definir em `/speckit-tasks` |
 | F-196 | Resumo: reestilizado, mesmos valores, URL, tabela alternativa, estado vazio | US2.1 a US2.8 | por definir |
 | F-197 | Produtos: lista com preço médio e contagens, ordenação, detalhe, por mercado sem ranking, descrição original | US3.1 a US3.9 | por definir |
-| F-198 | Lista em papel de talão (opcional, adiada) | US4.1 a US4.3 | por definir |
+| F-198 | Lista em papel de talão (interruptor em Compras) | US4.1 a US4.3 | `ReceiptPaper.test.tsx` e axe em `e2e/mock` |
 | F-199 | Qualidade: axe, larguras, texto pt-PT, mercados sem logótipos, alvos, teclado | US5.1 a US5.7 | por definir |

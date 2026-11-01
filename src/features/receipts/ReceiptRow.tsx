@@ -1,9 +1,9 @@
 import { AlertCircle } from "lucide-react";
 import { Link } from "react-router";
 import type { Schemas } from "../../api/client";
-import { formatCents, merchantName } from "../../lib/format";
+import { formatCents } from "../../lib/format";
 import { rowState, STATUS } from "../../lib/status";
-import { dayMonthOf } from "./months";
+import { dayMonthOf, receiptName } from "./months";
 
 const BADGE = {
   attention: { style: "bg-marker text-marker-ink", content: "!" },
@@ -24,7 +24,7 @@ function Badge({ state }: { state: keyof typeof BADGE }) {
 /** One purchase of the list: the store, the day, the items and the state in words, and the total. The state comes from `status`. */
 export function ReceiptRow({ receipt: r }: { receipt: Schemas["ReceiptSummaryOut"] }) {
   const state = rowState(r.status);
-  const name = r.merchant ? merchantName(r.merchant, r.merchant_name) : "Nota em processamento";
+  const name = receiptName(r);
   const day = dayMonthOf(r);
   const items = r.line_count > 0 ? `${r.line_count} ${r.line_count === 1 ? "item" : "itens"}` : null;
   return (

@@ -680,7 +680,7 @@ test.describe("início (spec 011)", () => {
 
 // ---------------------------------------------------------------- Talões (spec 012)
 
-const TALOES_PAGES = ["/compras", "/compras?filtro=acao", "/compras?ano=2025", "/compras/resumo", "/produtos", "/produtos/p1"] as const;
+const TALOES_PAGES = ["/compras", "/compras?filtro=acao", "/compras?ano=2025", "/compras?vista=papel", "/compras/resumo", "/produtos", "/produtos/p1"] as const;
 
 test.describe("talões (spec 012)", () => {
   for (const scheme of ["light", "dark"] as const) {

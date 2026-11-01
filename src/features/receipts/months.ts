@@ -1,10 +1,10 @@
 import type { Schemas } from "../../api/client";
-import { formatCents, formatMonth } from "../../lib/format";
+import { formatCents, formatMonth, merchantName } from "../../lib/format";
 import { shortMonth } from "../../lib/month";
 import { lisbonToday } from "../../lib/period";
 
 type Receipt = Schemas["ReceiptSummaryOut"];
-type MonthTotal = Schemas["MonthTotalOut"];
+export type MonthTotal = Schemas["MonthTotalOut"];
 
 export type Filter = "todas" | "acao" | "confirmadas";
 
@@ -44,9 +44,14 @@ export function groupByMonth(items: Receipt[]): MonthGroup[] {
   return groups;
 }
 
+/** The totals of the month from the endpoint of totals; none where they would mislead («Requer ação» shows what is not confirmed). */
+export function monthTotal(group: MonthGroup, totals: MonthTotal[] | undefined, filter: Filter): MonthTotal | undefined {
+  return filter === "acao" ? undefined : totals?.find((t) => t.month === group.key);
+}
+
 /** «7 confirmados · 248,00 €» from the endpoint of totals; nothing where that would mislead. */
 export function headerSummary(group: MonthGroup, totals: MonthTotal[] | undefined, filter: Filter): string | null {
-  const total = filter === "acao" ? undefined : totals?.find((t) => t.month === group.key);
+  const total = monthTotal(group, totals, filter);
   if (!total) return null;
   return `${total.confirmed_count} ${total.confirmed_count === 1 ? "confirmado" : "confirmados"} · ${formatCents(total.total_cents)}`;
 }
@@ -58,6 +63,15 @@ export const defaultYear = (items: Receipt[], currentYear: number): number => (i
 export function yearsToShow(totals: MonthTotal[] | undefined, standard: number, currentYear: number): number[] {
   const years = new Set([standard, currentYear, ...(totals ?? []).map((t) => Number(t.month.slice(0, 4)))]);
   return [...years].sort((a, b) => b - a);
+}
+
+/** The store of a purchase, or the placeholder while it is still being read. */
+export const receiptName = (r: Receipt): string => (r.merchant ? merchantName(r.merchant, r.merchant_name) : "Nota em processamento");
+
+/** «28/10» in Lisbon time, for the receipt paper. */
+export function dayMonthSlashOf(r: Receipt): string {
+  const { m0, d } = lisbonToday(dateOf(r));
+  return `${String(d).padStart(2, "0")}/${String(m0 + 1).padStart(2, "0")}`;
 }
 
 /** «28 out.» in Lisbon time, from the date of the purchase (or of sending while it is being read). */
