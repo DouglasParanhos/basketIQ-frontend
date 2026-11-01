@@ -40,7 +40,7 @@ Percurso de quatro passos (objetivo, pessoas, mercados, meta pessoal) em `/boas-
 | IV. Privacidade no cliente | Passa: respostas só em memória; perfil em cache de servidor; nada em `localStorage`; `qc.clear()` no *logout* já existente apaga-o; sem registos no cliente com os valores |
 | V. Mobile-first e acessível | Passa com verificação: caixas de seleção com nome, alvos ≥ 44 px, foco no título, «Passo N de 4» como texto, estado nunca só por cor (marca de verificação); axe em 320–820 px claro e escuro |
 | VI. Contrato tipado | Passa: `ProfileOut`, `ProfilePatch`, `MerchantOut` vêm de `schema.d.ts` (gerado a 2026-10-30), todas as chamadas por `api` |
-| VII. Rastreabilidade | Passa: F-113 a F-117, um por história (tabela na `spec.md`); F-176 a F-205 reservados à continuação da UX v2 (Funcional §12.4) |
+| VII. Rastreabilidade | Passa: F-113 a F-117, um por história (tabela na `spec.md`); F-176 a F-205 reservados à continuação da UX v2 (Plano de Testes §5.1) |
 | VIII. Simplicidade | Passa: sem estado global novo (reducer local + cache de servidor), sem biblioteca de formulários, sem lista local de mercados |
 
 Resultado: **sem violações**. A leitura de III («Avançar» confirma) foi decidida pela Liz e a constituição passou à 1.0.2.
@@ -55,7 +55,7 @@ Aplicadas à `spec.md`, a este plano, ao `research.md`, aos contratos e às tare
 | P2 | Objetivo «Gastar menos nas compras» (nunca «poupar» nem «economizar»); descrições que não prometem a Lista nem a comparação; «Quero tudo isso» |
 | P3 | `/boas-vindas` só para quem não concluiu; «refazer» é do Perfil (spec 014). US4.1 e o critério «pronto quando» da Fase 2 do plano UX reescritos |
 | P4 | Inicial = primeira letra; «EC» para El Corte Inglés (regra do artigo, sem nomes escritos à mão); o nome fica sempre visível |
-| P5 | F-113 a F-117, um por história; F-176 a F-205 reservados à continuação da UX v2 (Funcional §12.4); `traceability.py` não muda agora |
+| P5 | F-113 a F-117, um por história; F-176 a F-205 reservados à continuação da UX v2 (Plano de Testes §5.1); `traceability.py` não muda agora |
 | C1 | «Avançar» confirma o que o ecrã mostra; constituição do frontend 1.0.2, princípio III: «envia apenas os campos que a pessoa confirmou ou alterou» |
 | I3 | A guarda fica **acima** do AppShell: enquanto decide não aparece a barra de navegação (R14) |
 | E1 | «T032 aplicada e imagem da API reconstruída» é pré-requisito dos cenários manuais e da T024 (não se executa nesta ronda) |

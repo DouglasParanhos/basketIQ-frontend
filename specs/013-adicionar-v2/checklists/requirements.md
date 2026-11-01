@@ -32,4 +32,4 @@
 ## Notes
 
 - Sem decisões de produto novas (confirmado em `/speckit-clarify`, segunda ronda: Recortar, envio em curso, mercado, texto do aviso, erros de ficheiro e foco são leituras do código, do desenho e do padrão da 010 e 014). Cada resposta tem fonte (README, plano Fase 5, HANDOFF, código e backend).
-- A5 do HANDOFF fica como requisito (FR-007) com teste novo que falha primeiro.
+- A5 do Plano do Passo A (§3) fica como requisito (FR-007) com teste novo que falha primeiro.

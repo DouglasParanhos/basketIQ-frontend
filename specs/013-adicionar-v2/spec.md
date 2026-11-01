@@ -6,7 +6,7 @@
 
 **Status**: Especificada em 2026-10-31 (Fase 5 do plano UX v2). **Sem bloqueio de contrato:** o fluxo de envio já existe (`upload-init`, `/photos`, `upload-url`, `process`) e `GET /v1/merchants` também; só muda a interface. A câmara própria (moldura e captura automática) é um *spike* separado, **fora desta implementação** (US5 é um documento).
 
-**Input**: Especificação Funcional v1.4 §4.2, RF-02, RF-03, RF-04, RF-05; `Documentation/Super Mercado_—_Plano_de_Implementação_UX_v2.md` (Fase 5); `Documentation/design-ux-v2/AdicionarV2.dc.html` (layout) e `README.md` (textos pt-PT, tabela «não se implementa»); HANDOFF UX v2 §6 (A5). Spec reestilizada: `002-adicionar-nota`. Backend: `specs/002-ingestao-upload` e `009` do backend (envio, fotos, junção).
+**Input**: Especificação Funcional v1.4 §4.2, RF-02, RF-03, RF-04, RF-05; `Documentation/Super Mercado_—_Plano_de_Implementação_UX_v2.md` (Fase 5); `Documentation/design-ux-v2/AdicionarV2.dc.html` (layout) e `README.md` (textos pt-PT, tabela «não se implementa»); Plano do Passo A (§3, A5). Spec reestilizada: `002-adicionar-nota`. Backend: `specs/002-ingestao-upload` e `009` do backend (envio, fotos, junção).
 
 **Convenção de rastreabilidade**: cada critério cita o RF da Especificação Funcional. Os testes do frontend levam o identificador no nome (`F-xx: …`). Identificadores **F-200 a F-205**, um por história (a 012 usa F-195 a F-199; a faixa fica fechada). Os testes atuais do Adicionar mantêm os seus ids e são adaptados: `F-04` (envio de PDF), `F-06` (câmara traseira), `F-08` (ficheiro não suportado), `F-17` (duplicado), `F-24` (falha de rede) e `F-31` (várias fotos). Os cenários de junção, qualidade e duplicados são «Verificado no Backend»; aqui verifica-se o que o ecrã mostra, valida e envia.
 
@@ -16,14 +16,14 @@
 
 ### Session 2026-10-31
 
-Respostas deduzidas dos documentos (plano UX v2, README de design, HANDOFF, código e contrato atuais) e verificadas no código do backend (só leitura), dadas sem supervisão. Fecham os marcadores de clarificação do rascunho; não deixam decisão de produto nova (cada resposta tem fonte).
+Respostas deduzidas dos documentos (plano UX v2, README de design, HANDOFF de 2026-10-30, hoje em `Documentation/_arquivo/`, código e contrato atuais) e verificadas no código do backend (só leitura), dadas sem supervisão. Fecham os marcadores de clarificação do rascunho; não deixam decisão de produto nova (cada resposta tem fonte).
 
 - Q: De onde vêm os mercados do campo opcional? → A: de `GET /v1/merchants` (os 7 suportados, incluindo Auchan e Aldi), com o hook `useMerchants` que já existe (spec 010). O ecrã atual usa a lista fixa `MERCHANT_OPTIONS` de `format.ts`; deixa de a usar aqui. O protótipo mostra 5 mercados e omite dois: o README manda usar a API.
 - Q: Qual é o limite de partes? → A: 6 (`MAX_PHOTOS` em `src/lib/upload.ts`), igual ao `upload_max_photos` do backend. O backend devolve `requirements.max_photos` no `upload-init`, mas só depois do primeiro envio, por isso o cliente usa a constante (se divergirem, o servidor recusa e a mensagem do erro aparece).
 - Q: Quem junta as partes? → A: o servidor (`stitch.py`, RF-04). O ecrã não promete que o cliente junta: «Juntamos tudo num só talão» (README); o texto sobre linhas repetidas descreve o que o servidor faz.
 - Q: Várias partes e «várias notas numa só operação» (§3, fora de âmbito) são a mesma coisa? → A: não. **Várias partes** são fotografias do **mesmo** talão comprido, enviadas como uma só compra; **várias notas** seriam talões diferentes numa só operação e continuam fora de âmbito. A Especificação Funcional não descreve as várias fotos de uma nota (nota para a próxima versão do Funcional).
 - Q: Como se orienta a segunda parte sem câmara própria? → A: `capture="environment"` abre a câmara do sistema e não permite desenhar moldura. Fica o texto «Parte 2 · comece onde a parte 1 acabou», no ecrã das partes, junto a «Adicionar outra parte» (plano Fase 5: «só com o texto de orientação»). A moldura depende do spike.
-- Q: A edição de uma parte mantém-se ao trocar de parte (A5 do HANDOFF)? → A: tem de manter-se, e o que se vê tem de ser o que se envia. Hoje o `ImageEditor` guarda o recorte, o zoom, a rotação e o formato em estado interno e remonta ao trocar de foto (`key={active.id}`), enquanto o `AddPage` guarda só `edit` (`rotation`, `area`, `changed`) por foto: ao voltar a uma parte editada o editor reabre sem a edição e a foto pode seguir sem ela (ou com ela, sem se ver). Um teste novo que falha primeiro fixa o comportamento; o estado da edição passa a viver com a parte.
+- Q: A edição de uma parte mantém-se ao trocar de parte (Plano do Passo A (§3, A5))? → A: tem de manter-se, e o que se vê tem de ser o que se envia. Hoje o `ImageEditor` guarda o recorte, o zoom, a rotação e o formato em estado interno e remonta ao trocar de foto (`key={active.id}`), enquanto o `AddPage` guarda só `edit` (`rotation`, `area`, `changed`) por foto: ao voltar a uma parte editada o editor reabre sem a edição e a foto pode seguir sem ela (ou com ela, sem se ver). Um teste novo que falha primeiro fixa o comportamento; o estado da edição passa a viver com a parte.
 - Q: Onde aparece a mensagem de qualidade da imagem? → A: no detalhe da compra, **depois** do envio: os avisos (`WarningOut {code, message}`: `blurry`, `low_resolution`, `too_dark`, `low_text`, `low_ocr_confidence`) saem do processamento (`pipeline/quality.py`, «nunca rejeita») e o `ReceiptPage` já mostra o aviso «A fotografia pode ser melhorada». Não há verificação no cliente antes de enviar; o aviso nunca bloqueia nada. A US3 trata do desenho, do anúncio e da ação «Tire outra foto» nesse ecrã.
 - Q: O que mostra o ecrã das partes com uma só foto? → A: o mesmo ecrã «Confirme as partes» com uma parte (o desenho não tem um ecrã à parte para uma foto), com «Adicionar outra parte» disponível; o fluxo e o envio são os de hoje. «Adicionar outra parte» não aparece com PDF (PDF e fotos não se misturam).
 - Q: As setas de subir e descer partes mantêm-se? → A: sim: a ordem das partes é a ordem do talão e a lógica atual (F-31) não muda; o desenho não as mostra, mas o plano manda não alterar a lógica.
@@ -63,7 +63,7 @@ Respostas deduzidas dos documentos (plano UX v2, README de design, HANDOFF, cód
 
 1. **Given** uma foto escolhida, **When** abre «Confirme as partes», **Then** vê cada parte com a pré-visualização, «Recortar» e «Apagar», e o botão «Adicionar outra parte» com o texto «Parte 2 · comece onde a parte 1 acabou». — §4.2, RF-04
 2. **Given** «Adicionar outra parte», **When** a pessoa a toca, **Then** abre a câmara (ou a galeria) para a parte seguinte, que se junta às anteriores. — §4.2
-3. **Given** as partes, **When** a pessoa recorta, roda ou aplica o formato a uma, **Then** a edição mantém-se e vê-se ao trocar de parte, ao apagar outra e ao subir ou descer partes, e o que se envia é o que se vê. — RF-04, HANDOFF A5
+3. **Given** as partes, **When** a pessoa recorta, roda ou aplica o formato a uma, **Then** a edição mantém-se e vê-se ao trocar de parte, ao apagar outra e ao subir ou descer partes, e o que se envia é o que se vê. — RF-04, Plano do Passo A (§3, A5)
 4. **Given** o limite de 6 partes, **When** é atingido, **Then** «Adicionar outra parte» fica desativado com a explicação «No máximo 6 fotos por talão.». — RF-04
 5. **Given** a última parte apagada, **When** isso acontece, **Then** a pessoa volta ao ecrã inicial sem envio pendente. — RF-04
 6. **Given** «Enviar talão · 2 fotos», **When** é tocado, **Then** o talão é criado como uma só compra e as partes são ligadas a ela, pela ordem mostrada (`upload-init` com a primeira e `/photos` com as outras). — §4.2, RF-04
@@ -193,7 +193,7 @@ A deteção é do backend e acontece depois do envio, por isso a mensagem vive n
 - As leituras do desenho que a spec adota (sem decisão de produto nova): chips de mercados no ecrã inicial e um campo equivalente no ecrã das partes, ligados ao mesmo estado; o título «Confirme as partes» também com uma parte; as setas de subir e descer mantêm-se; «Parte N · comece onde a parte N−1 acabou» no ecrã das partes.
 - O aviso de qualidade não é verificado no cliente (RF-05 do backend: «avisa e sugere, nunca rejeita»).
 - O spike da câmara própria é uma entrega separada (plano Fase 5, esforço S) e não bloqueia esta spec.
-- **Identificadores de teste:** F-200 a F-205 (aprovados na distribuição de 2026-10-31, por confirmar no fecho do Funcional §12.4); `traceability.py` do backend não muda.
+- **Identificadores de teste:** F-200 a F-205 (aprovados na distribuição de 2026-10-31, por registar no Plano de Testes §5.1); `traceability.py` do backend não muda.
 
 ## Identificadores de teste (constituição VII)
 

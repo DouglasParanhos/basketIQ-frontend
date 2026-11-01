@@ -138,12 +138,12 @@ description: "Tarefas da spec 011: Início"
 ## Phase 9: Polish & cross-cutting
 
 - [X] T026 Atualizar os testes existentes afetados por `/` ter passado a pedir `overview` (R11): `src/routes.test.tsx`, `src/components/AppShell.test.tsx`, `src/features/home/HomeRoute.test.tsx`, `src/features/onboarding/OnboardingPage.test.tsx`, `src/features/onboarding/RequireOnboarding.test.tsx` e os e2e `mock` que esperam o título «Início»; devem passar com o handler por omissão da T006/T007. Correr cada ficheiro isolado e corrigir só o necessário
-- [X] T027 Atualizar a spec 004 (`specs/004-resumo-analises/spec.md`): registar o anel de três faixas como exceção a «gráficos de série única» (US5.5, D7), com a referência a esta spec. Atualizar o HANDOFF: a spec 011 implementada (não é git)
-- [X] T028 (NÃO corrido: manual) Em `e2e/stack/journey.spec.ts`, confirmar que a jornada continua a chegar ao Início (título «Início») com `overview` real; **manual**, só com o backend a servir `overview`, e a jornada `stack` está desatualizada por outra causa (HANDOFF, commit `0a2856f` do backend): registar «não corrido» se não houver backend
+- [X] T027 Atualizar a spec 004 (`specs/004-resumo-analises/spec.md`): registar o anel de três faixas como exceção a «gráficos de série única» (US5.5, D7), com a referência a esta spec. Atualizar `Documentation/README.md` (pendências): a spec 011 implementada (não é git)
+- [X] T028 (NÃO corrido: manual) Em `e2e/stack/journey.spec.ts`, confirmar que a jornada continua a chegar ao Início (título «Início») com `overview` real; **manual**, só com o backend a servir `overview`, e a jornada `stack` está desatualizada por outra causa (`Documentation/README.md`, pendências; commit `0a2856f` do backend): registar «não corrido» se não houver backend
 - [X] T029 Capturas a 390 px em `Documentation/capturas-inicio/` (fora do git): verde, laranja, vermelho, acima da meta, sem meta, conta vazia, poucos dados, carregamento e erro; claro e escuro nos três primeiros
 - [X] T030 Correr `corepack pnpm@9 lint`, `typecheck`, `exec vitest run --maxWorkers=4` e `e2e:mock`; registar o resultado
 - [X] T031 Confirmar que a coluna «Tarefas» da tabela de identificadores da `spec.md` (F-183 a F-188) e as referências do `quickstart.md` batem com as tarefas feitas
-- [X] T032 Registar F-183 a F-188 na Especificação Funcional §12.4 (fora do git). A `PLAN_IDS` do backend **não muda** até os cenários entrarem no Plano de Testes
+- [X] T032 Registar F-183 a F-188 no Plano de Testes §5.1 (fora do git). A `PLAN_IDS` do backend **não muda** até os cenários entrarem no Plano de Testes
 - [X] T033 Remover do projeto qualquer código ou estilo que não seja usado (por exemplo `--color-warn-soft` se o chip não o usar)
 - [X] T034 Correr `/simplify` e repetir T030; mostrar o `git diff --stat`. O commit é da Liz
 
