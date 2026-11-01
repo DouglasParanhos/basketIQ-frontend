@@ -48,6 +48,8 @@ export function PartsScreen(props: {
   const busy = ["hashing", "uploading", "starting"].includes(upload.phase);
   const hasPdf = parts.some((p) => p.type === "application/pdf");
   const atLimit = parts.length >= MAX_PHOTOS;
+  // The last photo already holds the whole receipt: another part is possible but not asked for.
+  const complete = !!parts.at(-1)?.whole;
   const editing = parts.findIndex((p) => p.id === editingId);
 
   // The first time the screen opens the focus goes to its title.
@@ -154,7 +156,7 @@ export function PartsScreen(props: {
             <div className="flex flex-col gap-2">
               {!atLimit && (
                 <p id="next-part" className="text-sm font-semibold">
-                  {nextPartText(parts)}
+                  {complete ? "O talão parece completo nesta foto: pode enviar." : nextPartText(parts)}
                 </p>
               )}
               <Button

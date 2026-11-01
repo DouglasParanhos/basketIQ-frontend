@@ -1,10 +1,11 @@
 import { effectiveType, MAX_PHOTOS } from "../../lib/upload";
-import type { Hint } from "../capture/analyzeFrame";
+import { NO_CHECK, type StillCheck } from "../capture/analyzeFrame";
 import { isEdited, NO_EDIT, type Edit } from "./edit";
 import type { UploadFile } from "./useUpload";
 
-/** One part of the receipt being added: a photo (or the PDF), kept only in memory. */
-export interface Part {
+/** One part of the receipt being added: a photo (or the PDF), kept only in memory. Its check (`analyzeStill`:
+ * what the backend would warn about, the whole receipt in it) arrives after it is added. */
+export interface Part extends StillCheck {
   id: string;
   /** The original file; never changed. */
   file: File;
@@ -14,8 +15,6 @@ export interface Part {
   previewUrl: string | null;
   previewError: boolean;
   edit: Edit;
-  /** What the backend would warn about this photo, checked on the device (`analyzeStill`); empty when nothing. */
-  warnings: Hint[];
 }
 
 export const newPart = (file: File, previewUrl: string | null, previewError: boolean): Part => ({
@@ -25,7 +24,7 @@ export const newPart = (file: File, previewUrl: string | null, previewError: boo
   previewUrl,
   previewError,
   edit: NO_EDIT,
-  warnings: [],
+  ...NO_CHECK,
 });
 
 /** Why a file of this type cannot be added to the parts, or null when it can. */
@@ -44,8 +43,8 @@ export const remove = (parts: Part[], id: string): Part[] => parts.filter((p) =>
 /** A part taken again («Fotografar de novo») goes where the old one was. */
 export const replace = (parts: Part[], id: string, part: Part): Part[] => parts.map((p) => (p.id === id ? part : p));
 
-export const setWarnings = (parts: Part[], id: string, warnings: Hint[]): Part[] =>
-  parts.map((p) => (p.id === id ? { ...p, warnings } : p));
+export const setCheck = (parts: Part[], id: string, check: StillCheck): Part[] =>
+  parts.map((p) => (p.id === id ? { ...p, ...check } : p));
 
 /** Swaps a part with its neighbour; at the ends nothing changes. */
 export function move(parts: Part[], id: string, by: -1 | 1): Part[] {

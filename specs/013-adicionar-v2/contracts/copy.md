@@ -83,8 +83,7 @@ Fonte no código: `src/features/capture/hints.ts` (`LIVE_TEXT`, `STILL_TEXT`) e 
 | Diálogo (`aria-label`) | Fotografar o talão |
 | Título | Talão inteiro na imagem (foto única) · Parte N (partes seguintes) |
 | Partes | Linhas já fotografadas (sobre o fundo da parte anterior) · Parte N · comece onde a parte N-1 acabou |
-| Botões | Tirar a foto · Concluir · Fechar a câmara · Repetir a foto N |
-| Limite | No máximo 6 fotos por talão |
+| Botões | Tirar a foto · Fechar a câmara (depois de cada foto a câmara fecha e volta «Confirme as partes») |
 | Sem acesso | A aplicação não tem acesso à câmara. Pode dar acesso nas definições do navegador ou usar a câmara do telemóvel. |
 | Sem câmara | Não foi possível abrir a câmara neste navegador. |
 | Recurso | Usar a câmara do telemóvel |

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { analyzeFrame, minPaperFrac, type AnalyzeOptions } from "./analyzeFrame";
+import { analyzeFrame, checkStill, minPaperFrac, type AnalyzeOptions } from "./analyzeFrame";
 import { stabilizer } from "./hints";
 
 const W = 300;
 const H = 400;
-const LIVE: AnalyzeOptions = { mode: "live", part: false, minPaperFrac: 0.3 };
+const LIVE: AnalyzeOptions = { part: false, minPaperFrac: 0.3 };
 
 /** A frame of `background` grey with a receipt (paper 230, printed lines 30) at [left, top, right, bottom]. */
 function frame(background: number, paper?: [number, number, number, number], print = true): Uint8Array {
@@ -44,6 +44,7 @@ function blur(gray: Uint8Array, radius = 4): Uint8Array {
 }
 
 const hintOf = (gray: Uint8Array, options: Partial<AnalyzeOptions> = {}) => analyzeFrame(gray, W, H, { ...LIVE, ...options })[0] ?? "ok";
+const stillOf = (gray: Uint8Array, minFrac = 0.3) => checkStill(gray, W, H, minFrac).warnings[0] ?? "ok";
 
 describe("analyzeFrame (live guidance)", () => {
   it("a whole receipt, near enough, on a dark table: ok", () => {
@@ -76,7 +77,7 @@ describe("analyzeFrame (live guidance)", () => {
     const dim = frame(10, [70, 40, 230, 360]).map((v) => (v > 100 ? 90 : v));
     expect(hintOf(dim)).toBe("too_dark");
     expect(hintOf(frame(10, [125, 120, 175, 280]))).toBe("too_far");
-    expect(hintOf(frame(10, [125, 120, 175, 280]), { mode: "still", minPaperFrac: 0.1 })).toBe("too_dark"); // as the backend
+    expect(stillOf(frame(10, [125, 120, 175, 280]), 0.1)).toBe("too_dark"); // as the backend
   });
 
   it("no paper or no print: no_receipt", () => {
@@ -95,19 +96,29 @@ describe("analyzeFrame (live guidance)", () => {
 
 describe("analyzeFrame (a photo already taken)", () => {
   it("reports only what the backend warns about: no framing advice", () => {
-    expect(hintOf(frame(225, [110, 40, 190, 360]), { mode: "still" })).toBe("ok");
-    expect(hintOf(frame(80, [150, 40, 330, 360]), { mode: "still" })).toBe("ok");
+    expect(stillOf(frame(225, [110, 40, 190, 360]))).toBe("ok");
+    expect(stillOf(frame(80, [150, 40, 330, 360]))).toBe("ok");
   });
 
   it("paper narrower than the backend's 600 px: too_far", () => {
     // 160 of 300 frame pixels: in a 1000 px photo the paper spans 533 px, in a 2000 px photo 1067 px
     const gray = frame(80, [70, 40, 230, 360]);
-    expect(hintOf(gray, { mode: "still", minPaperFrac: minPaperFrac(1000) })).toBe("too_far");
-    expect(hintOf(gray, { mode: "still", minPaperFrac: minPaperFrac(2000) })).toBe("ok");
+    expect(stillOf(gray, minPaperFrac(1000))).toBe("too_far");
+    expect(stillOf(gray, minPaperFrac(2000))).toBe("ok");
   });
 
   it("a screenshot with no paper to cut out is measured whole", () => {
-    expect(hintOf(frame(230, [0, 0, 300, 400]), { mode: "still", minPaperFrac: minPaperFrac(1080) })).toBe("ok");
+    expect(stillOf(frame(230, [0, 0, 300, 400]), minPaperFrac(1080))).toBe("ok");
+  });
+});
+
+describe("checkStill: the whole receipt in the photo", () => {
+  it("is true only for the whole receipt inside the frame, on a surface it stands out from", () => {
+    expect(checkStill(frame(80, [70, 40, 230, 360]), W, H, 0.3).whole).toBe(true);
+    expect(checkStill(frame(80, [70, -10, 230, 410]), W, H, 0.3).whole).toBe(false); // cut at the top and bottom
+    expect(checkStill(frame(80, [150, 40, 330, 360]), W, H, 0.3).whole).toBe(false); // cut at a side
+    expect(checkStill(frame(225, [110, 40, 190, 360]), W, H, 0.3).whole).toBe(false); // no edge against the desk
+    expect(checkStill(frame(80, [70, 40, 230, 360], false), W, H, 0.3).whole).toBe(false); // blank paper
   });
 });
 

@@ -8,7 +8,7 @@ import { cameraSupported } from "../capture/useCamera";
 import type { Edit } from "./edit";
 import { MerchantChips } from "./MerchantPicker";
 import { PartsScreen, type FocusTarget } from "./PartsScreen";
-import { add, canAdd, move, newPart, remove, replace, setEdit, setWarnings, toUploadFiles, type Part } from "./photos";
+import { add, canAdd, move, newPart, remove, replace, setCheck, setEdit, toUploadFiles, type Part } from "./photos";
 import { previewFor } from "./preview";
 import { renderEdit } from "./renderEdit";
 import { SOURCES, SourceButtons, type Source } from "./SourceButtons";
@@ -24,7 +24,8 @@ export function AddPage() {
   const [merchant, setMerchant] = useState("");
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const [focus, setFocus] = useState<FocusTarget | null>(null);
-  const [cameraOpen, setCameraOpen] = useState(false);
+  // The in-app camera, open with the parts before the one being taken (null: closed).
+  const [cameraBefore, setCameraBefore] = useState<Part[] | null>(null);
   // Refused in this visit: the phone's own camera from then on. Kept in memory, as the Adicionar writes
   // nothing to the browser's storage (F-205).
   const [cameraRefused, setCameraRefused] = useState(false);
@@ -68,22 +69,23 @@ export function AddPage() {
     // The first part opens the parts screen, which focuses its own title.
     if (parts.length > 0) setFocus({ to: "part", id: part.id });
     if (type !== "application/pdf") {
-      // The part shows at once; what the backend would warn about follows when the check is done.
-      const warnings = await analyzeStill(file);
-      if (warnings.length) setParts((all) => setWarnings(all, part.id, warnings));
+      // The part shows at once; the check (warnings, the whole receipt in it) follows when it is done.
+      const check = await analyzeStill(file);
+      setParts((all) => setCheck(all, part.id, check));
     }
   }
 
-  /** The in-app camera with its advice where the browser has one; otherwise the phone's own camera. */
-  function openCamera() {
-    if (cameraSupported() && !cameraRefused) setCameraOpen(true);
+  /** The in-app camera with its advice where the browser has one; otherwise the phone's own camera. `before`:
+   * the parts before the one being taken (all of them for a new part). */
+  function openCamera(before: Part[] = parts) {
+    if (cameraSupported() && !cameraRefused) setCameraBefore(before);
     else inputs.current.camera?.click();
   }
 
   /** Take a part again: the new photo takes its place when it arrives. */
   function retake(id: string) {
     retakeId.current = id;
-    openCamera();
+    openCamera(parts.slice(0, parts.findIndex((p) => p.id === id)));
   }
 
   function removePart(id: string) {
@@ -164,7 +166,7 @@ export function AddPage() {
           focus={focus}
           onFocused={() => setFocus(null)}
           onMerchant={setMerchant}
-          onAddCamera={openCamera}
+          onAddCamera={() => openCamera()}
           onAddGallery={() => inputs.current.image?.click()}
           onEdit={(id) => {
             setEditingId(id);
@@ -184,28 +186,21 @@ export function AddPage() {
         />
       )}
 
-      {cameraOpen && (
+      {cameraBefore && (
         <CameraCapture
-          photos={parts}
+          before={cameraBefore}
           onCapture={(file) => {
-            const replaces = takeRetake();
-            void onPick(file, replaces);
-            if (replaces) setCameraOpen(false); // a part taken again: back to the parts, where it was
-          }}
-          onRetake={(id) => {
-            // the last photo, taken again from the camera: the next shot takes its place at the end
-            const gone = parts.find((p) => p.id === id);
-            if (gone?.previewUrl) URL.revokeObjectURL(gone.previewUrl);
-            setParts((all) => remove(all, id));
+            void onPick(file, takeRetake());
+            setCameraBefore(null); // one photo, then the parts screen («Adicionar outra parte» for the next)
           }}
           onSystemCamera={() => {
             setCameraRefused(true);
-            setCameraOpen(false);
+            setCameraBefore(null);
             inputs.current.camera?.click(); // still inside the tap: the browser lets it open the picker
           }}
           onClose={() => {
             retakeId.current = null;
-            setCameraOpen(false);
+            setCameraBefore(null);
           }}
         />
       )}

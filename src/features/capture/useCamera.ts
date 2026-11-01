@@ -72,7 +72,7 @@ export function useFrameGuidance(video: RefObject<HTMLVideoElement | null>, live
       if (!v || v.readyState < 2 || !v.videoWidth) return;
       const frame = frames.read(v, v.videoWidth, v.videoHeight);
       if (!frame) return;
-      const options = { mode: "live" as const, part, minPaperFrac: minPaperFrac(v.videoWidth, LIVE_MARGIN) };
+      const options = { part, minPaperFrac: minPaperFrac(v.videoWidth, LIVE_MARGIN) };
       setHint(steady(analyzeFrame(frame.gray, frame.w, frame.h, options)[0] ?? "ok"));
     }, ANALYSIS_INTERVAL_MS);
     return () => window.clearInterval(timer);

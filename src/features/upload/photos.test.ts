@@ -10,6 +10,7 @@ const part = (id: string, over: Partial<Part> = {}): Part => ({
   previewError: false,
   edit: NO_EDIT,
   warnings: [],
+  whole: false,
   ...over,
 });
 const pdfPart = (id: string): Part => part(id, { file: new File(["%PDF"], `${id}.pdf`, { type: "application/pdf" }), type: "application/pdf", previewUrl: null });

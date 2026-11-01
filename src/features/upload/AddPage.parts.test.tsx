@@ -12,7 +12,7 @@ vi.mock("./ImageEditor", async () => ({ ImageEditor: (await import("../../test/u
 vi.mock("./renderEdit", () => ({ renderEdit: vi.fn(async (_url: string, edit: { rotation: number }) => new Blob([`editado:${edit.rotation}`])) }));
 vi.mock("heic2any", () => ({ default: vi.fn(async () => new Blob(["jpeg"])) }));
 // jsdom cannot decode images: the post-capture check is driven by each test (empty: nothing to say).
-vi.mock("../capture/analyzeStill", () => ({ analyzeStill: vi.fn(async () => []) }));
+vi.mock("../capture/analyzeStill", () => ({ analyzeStill: vi.fn(async () => ({ warnings: [], whole: false })) }));
 
 const { released } = stubPreviewUrls();
 
@@ -287,8 +287,16 @@ describe("Adicionar: the in-app camera and the check of each photo (spec 013, US
     expect(sessionStorage.length + localStorage.length).toBe(0);
   });
 
+  it("F-203: a photo that holds the whole receipt does not ask for the next part (another can still be added)", async () => {
+    vi.mocked(analyzeStill).mockResolvedValueOnce({ warnings: [], whole: true });
+    await withParts(jpg("a.jpg"));
+    expect(await screen.findByText("O talão parece completo nesta foto: pode enviar.")).toBeInTheDocument();
+    expect(screen.queryByText(/Parte 2 · comece onde/)).not.toBeInTheDocument();
+    expect(button("Adicionar outra parte")).toBeEnabled();
+  });
+
   it("F-204: a part the backend would warn about says so, never blocks, and is taken again in its place", async () => {
-    vi.mocked(analyzeStill).mockResolvedValueOnce(["too_far", "blurry"]);
+    vi.mocked(analyzeStill).mockResolvedValueOnce({ warnings: ["too_far", "blurry"], whole: false });
     const { user } = await withParts(jpg("a.jpg"));
     await pick("input-image", jpg("b.jpg"));
     await screen.findByText("b.jpg");

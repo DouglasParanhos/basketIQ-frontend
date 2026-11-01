@@ -20,16 +20,15 @@ async function openCamera(page: Page, scene: SceneName): Promise<Locator> {
 const advice = (dialog: Locator) => dialog.locator("[aria-live=polite]");
 
 test.describe("in-app camera (spec 013 US4)", () => {
-  test("a receipt well framed: ready, no axe violations, and the photo joins the list without a warning", async ({ page }) => {
+  test("a receipt that fits: ready, no axe violations; one photo, then the parts screen, without a warning", async ({ page }) => {
     const dialog = await openCamera(page, "framed");
     await expect(advice(dialog)).toHaveText("Talão detetado · pode fotografar");
     await noA11yViolations(page);
     await dialog.getByRole("button", { name: "Tirar a foto" }).click();
-    await expect(dialog.getByText("Parte 2 · comece onde a parte 1 acabou")).toBeVisible();
-    await dialog.getByRole("button", { name: /concluir/i }).click();
-    await expect(dialog).toBeHidden();
+    await expect(dialog).toBeHidden(); // the receipt fit in one photo: nothing asks for more
     await expect(page.getByRole("heading", { name: "Confirme as partes" })).toBeVisible();
     await expect(page.getByText("parte-1.jpg")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Enviar talão" })).toBeVisible();
     await expect(page.getByRole("button", { name: /fotografar de novo/i })).toBeHidden(); // the backend would not warn about it
   });
 
@@ -44,7 +43,8 @@ test.describe("in-app camera (spec 013 US4)", () => {
       const dialog = await openCamera(page, scene);
       await expect(advice(dialog)).toHaveText(text);
       await dialog.getByRole("button", { name: "Tirar a foto" }).click();
-      await expect(dialog.getByText("Parte 2 · comece onde a parte 1 acabou")).toBeVisible();
+      await expect(dialog).toBeHidden();
+      await expect(page.getByText("parte-1.jpg")).toBeVisible();
     });
   }
 
@@ -52,15 +52,15 @@ test.describe("in-app camera (spec 013 US4)", () => {
     const dialog = await openCamera(page, "tooLong");
     const shutter = dialog.getByRole("button", { name: "Tirar a foto" });
     await expect(advice(dialog)).toHaveText("O talão não cabe: afaste-se ou fotografe por partes");
-    for (const n of [2, 3, 4]) {
-      await shutter.click();
+    await shutter.click();
+    for (const n of [2, 3]) {
+      await page.getByRole("button", { name: "Adicionar outra parte" }).click();
       await expect(dialog.getByText(`Parte ${n} · comece onde a parte ${n - 1} acabou`)).toBeVisible();
-      if (n === 2) {
-        await expect(dialog.getByText("Linhas já fotografadas")).toBeVisible();
-        await expect(advice(dialog)).toHaveText("Talão detetado · pode fotografar"); // a part may be cut top and bottom
-      }
+      await expect(dialog.getByText("Linhas já fotografadas")).toBeVisible();
+      await expect(advice(dialog)).toHaveText("Talão detetado · pode fotografar"); // a part may be cut top and bottom
+      await shutter.click();
+      await expect(dialog).toBeHidden();
     }
-    await dialog.getByRole("button", { name: /concluir/i }).click();
     await expect(page.getByRole("button", { name: "Enviar talão · 3 fotos" })).toBeVisible();
     for (const n of [1, 2, 3]) await expect(page.getByText(`parte-${n}.jpg`)).toBeVisible();
   });

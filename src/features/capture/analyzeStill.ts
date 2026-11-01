@@ -1,20 +1,19 @@
-import { analyzeFrame, minPaperFrac, type Hint } from "./analyzeFrame";
+import { checkStill, minPaperFrac, NO_CHECK, type StillCheck } from "./analyzeFrame";
 import { GrayFrame } from "./frame";
 
-/** What the backend would warn about this photo (any image: from the camera, the system camera or the
- * gallery); empty when there is nothing to say or the browser cannot decode it (HEIC on most browsers). */
-export async function analyzeStill(file: Blob): Promise<Hint[]> {
-  if (typeof createImageBitmap !== "function") return [];
+/** The check of a photo already taken (any image: from the camera, the system camera or the gallery);
+ * nothing when the browser cannot decode it (HEIC on most browsers). */
+export async function analyzeStill(file: Blob): Promise<StillCheck> {
+  if (typeof createImageBitmap !== "function") return NO_CHECK;
   let bitmap: ImageBitmap;
   try {
     bitmap = await createImageBitmap(file);
   } catch {
-    return [];
+    return NO_CHECK;
   }
   try {
     const frame = new GrayFrame().read(bitmap, bitmap.width, bitmap.height);
-    if (!frame) return [];
-    return analyzeFrame(frame.gray, frame.w, frame.h, { mode: "still", part: false, minPaperFrac: minPaperFrac(bitmap.width) });
+    return frame ? checkStill(frame.gray, frame.w, frame.h, minPaperFrac(bitmap.width)) : NO_CHECK;
   } finally {
     bitmap.close();
   }

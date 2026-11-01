@@ -27,8 +27,6 @@ const HINTS = ["too_dark", "no_receipt", "bad_background", "cut_side", "too_clos
 export type Hint = (typeof HINTS)[number] | "ok";
 
 export interface AnalyzeOptions {
-  /** "live": the camera preview, every check. "still": a photo already taken, only what the backend warns about. */
-  mode: "live" | "still";
   /** A part of a long receipt: its top and bottom may be cut (the other parts hold them). */
   part: boolean;
   /** Narrowest paper, as a share of the frame width, that still gives MIN_PAPER_WIDTH pixels in the photo. */
@@ -162,45 +160,73 @@ function printSpan(gray: Uint8Array, w: number, box: Box, threshold: number): [n
   return [box.left + first, box.left + last + 1];
 }
 
-/** The problems of a frame `w` × `h` (see ANALYSIS_SIDE), the most important first; empty when it is good. */
-export function analyzeFrame(gray: Uint8Array, w: number, h: number, options: AnalyzeOptions): Hint[] {
-  const found = new Set<Hint>();
+/** The paper in a frame and how it sits: one measurement for the live advice and for a photo taken. */
+function measure(gray: Uint8Array, w: number, h: number) {
   const { threshold, mean, brightMean } = levels(gray);
   const box = paperBox(gray, w, h, threshold);
   const area = box ? ((box.right - box.left) * (box.bottom - box.top)) / (w * h) : 0;
-  const plausible = area >= PAPER_MIN_AREA && area <= PAPER_MAX_AREA;
-  const paperFrac = box ? (box.right - box.left) / w : 0;
-
-  // The backend looks at the whole photo; live, a small receipt on a dark table is not a dark photo, so
-  // the light is judged on the paper.
-  if (options.mode === "still" ? mean < DARK_MEAN_MAX : brightMean < PAPER_DARK_MAX) found.add("too_dark");
-  if (laplacianVariance(gray, w, h) < BLUR_VARIANCE_MIN) found.add("blurry");
-
-  if (options.mode === "still") {
-    // A photo already taken (or a screenshot, a scan): only what the backend measures. Without a plausible
-    // paper the whole image is the receipt.
-    if ((plausible ? paperFrac : 1) < options.minPaperFrac) found.add("too_far");
-    return ordered(found);
-  }
-
-  if (!box || area < PAPER_MIN_AREA) return ordered(found.add("no_receipt"));
-  const print = printSpan(gray, w, box, threshold);
-  // Out of focus, the print fades into the paper: then the blur is what to fix, not the aim.
-  if (!print && !(plausible && found.has("blurry"))) return ordered(found.add("no_receipt"));
   const mx = EDGE_MARGIN * w;
   const my = EDGE_MARGIN * h;
-  const atLeft = box.left <= mx;
-  const atRight = box.right >= w - mx;
-  if (atLeft && atRight) {
+  return {
+    mean,
+    brightMean,
+    box,
+    area,
+    plausible: area >= PAPER_MIN_AREA && area <= PAPER_MAX_AREA,
+    paperFrac: box ? (box.right - box.left) / w : 0,
+    print: box && area >= PAPER_MIN_AREA ? printSpan(gray, w, box, threshold) : null,
+    atLeft: !!box && box.left <= mx,
+    atRight: !!box && box.right >= w - mx,
+    atEnds: !!box && (box.top <= my || box.bottom >= h - my),
+    blurry: laplacianVariance(gray, w, h) < BLUR_VARIANCE_MIN,
+  };
+}
+
+/** Live advice on a camera frame `w` × `h` (see ANALYSIS_SIDE): the problems, the most important first; empty
+ * when it is good. */
+export function analyzeFrame(gray: Uint8Array, w: number, h: number, options: AnalyzeOptions): Hint[] {
+  const m = measure(gray, w, h);
+  const found = new Set<Hint>();
+  // The backend looks at the whole photo; live, a small receipt on a dark table is not a dark photo, so
+  // the light is judged on the paper.
+  if (m.brightMean < PAPER_DARK_MAX) found.add("too_dark");
+  if (m.blurry) found.add("blurry");
+  if (!m.box || m.area < PAPER_MIN_AREA) return ordered(found.add("no_receipt"));
+  // Out of focus, the print fades into the paper: then the blur is what to fix, not the aim.
+  if (!m.print && !(m.plausible && m.blurry)) return ordered(found.add("no_receipt"));
+  if (m.atLeft && m.atRight) {
     // Bright from side to side: the receipt fills the width (too close) or the surface is as bright as it.
-    if (print) found.add((print[1] - print[0]) / w >= TEXT_FILLS_FRAME ? "too_close" : "bad_background");
-  } else if (atLeft || atRight) {
+    if (m.print) found.add((m.print[1] - m.print[0]) / w >= TEXT_FILLS_FRAME ? "too_close" : "bad_background");
+  } else if (m.atLeft || m.atRight) {
     found.add("cut_side");
-  } else if (paperFrac < options.minPaperFrac) {
+  } else if (m.paperFrac < options.minPaperFrac) {
     found.add("too_far");
   }
-  if (!options.part && (box.top <= my || box.bottom >= h - my)) found.add("cut_ends");
+  if (!options.part && m.atEnds) found.add("cut_ends");
   return ordered(found);
+}
+
+export interface StillCheck {
+  /** What the backend would warn about the photo (`too_dark`, `too_far`, `blurry`); empty when nothing. */
+  warnings: Hint[];
+  /** The whole receipt is in the photo: a plausible paper with print that touches none of the edges, so no
+   * other part is asked for. */
+  whole: boolean;
+}
+
+export const NO_CHECK: StillCheck = { warnings: [], whole: false };
+
+/** The check of a photo already taken (or a screenshot, a scan) `w` × `h`: only what the backend measures,
+ * and whether it holds the whole receipt. `minPaperFrac` as in AnalyzeOptions. */
+export function checkStill(gray: Uint8Array, w: number, h: number, minPaperFrac: number): StillCheck {
+  const m = measure(gray, w, h);
+  const found = new Set<Hint>();
+  if (m.mean < DARK_MEAN_MAX) found.add("too_dark");
+  if (m.blurry) found.add("blurry");
+  // Without a plausible paper the whole image is the receipt.
+  if ((m.plausible ? m.paperFrac : 1) < minPaperFrac) found.add("too_far");
+  const inside = !m.atLeft && !m.atRight && !m.atEnds;
+  return { warnings: ordered(found), whole: m.plausible && inside && m.print !== null };
 }
 
 function ordered(found: Set<Hint>): Hint[] {

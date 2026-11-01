@@ -13,7 +13,7 @@ export const LIVE_TEXT: Record<Hint, string> = {
   ok: "Talão detetado · pode fotografar",
 };
 
-/** What is said about a photo already taken (only the checks of `mode: "still"`). */
+/** What is said about a photo already taken (the warnings of `checkStill`). */
 const STILL_TEXT: Partial<Record<Hint, string>> = {
   too_dark: "A foto está escura.",
   too_far: "O talão ficou pequeno na foto: aproxime-se ou fotografe-o por partes.",

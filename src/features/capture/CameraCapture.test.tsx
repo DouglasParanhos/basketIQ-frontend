@@ -2,7 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Hint } from "./analyzeFrame";
-import { CameraCapture, type CapturedPhoto } from "./CameraCapture";
+import { CameraCapture } from "./CameraCapture";
 import type { CameraState } from "./useCamera";
 
 const camera = vi.hoisted(() => ({ state: "live" as CameraState, hint: "too_far" as Hint | null }));
@@ -11,9 +11,11 @@ vi.mock("./useCamera", () => ({
   useFrameGuidance: () => camera.hint,
 }));
 
-function renderCamera(photos: CapturedPhoto[] = [], props: Partial<Parameters<typeof CameraCapture>[0]> = {}) {
-  const handlers = { onCapture: vi.fn(), onRetake: vi.fn(), onSystemCamera: vi.fn(), onClose: vi.fn() };
-  const view = render(<CameraCapture photos={photos} {...handlers} {...props} />);
+type Before = Parameters<typeof CameraCapture>[0]["before"];
+
+function renderCamera(before: Before = []) {
+  const handlers = { onCapture: vi.fn(), onSystemCamera: vi.fn(), onClose: vi.fn() };
+  const view = render(<CameraCapture before={before} {...handlers} />);
   return { ...handlers, ...view };
 }
 
@@ -46,12 +48,12 @@ describe("CameraCapture", () => {
   it("announces a change of advice to screen readers at most every few seconds", () => {
     vi.useFakeTimers();
     try {
-      const { rerender, onCapture, onRetake, onSystemCamera, onClose } = renderCamera();
+      const { rerender, onCapture, onSystemCamera, onClose } = renderCamera();
       const live = () => document.querySelector("[aria-live=polite]")!.textContent;
       act(() => void vi.advanceTimersByTime(0));
       expect(live()).toBe("Aproxime a câmara do talão");
       camera.hint = "too_close";
-      rerender(<CameraCapture photos={[]} {...{ onCapture, onRetake, onSystemCamera, onClose }} />);
+      rerender(<CameraCapture before={[]} {...{ onCapture, onSystemCamera, onClose }} />);
       act(() => void vi.advanceTimersByTime(1000));
       expect(live()).toBe("Aproxime a câmara do talão");
       act(() => void vi.advanceTimersByTime(1600));
@@ -61,39 +63,23 @@ describe("CameraCapture", () => {
     }
   });
 
-  it("for the next part: the lines already taken, where to start, and Concluir", async () => {
+  it("for the next part: the lines already taken and where to start; the photo is named after the part", async () => {
     const user = userEvent.setup();
-    const { onClose } = renderCamera([{ id: "p1", previewUrl: "blob:p1", warnings: [] }]);
+    const { onCapture } = renderCamera([{ id: "p1", previewUrl: "blob:p1" }]);
     expect(screen.getByText("Linhas já fotografadas")).toBeInTheDocument();
     expect(screen.getByText("Parte 2 · comece onde a parte 1 acabou")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /concluir/i }));
-    expect(onClose).toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Tirar a foto" }));
+    expect(onCapture).toHaveBeenCalledWith(expect.objectContaining({ name: "parte-2.jpg" }));
   });
 
-  it("for a third part: the lines of the second part, not the first, and where to start", () => {
+  it("for a third part: the lines of the second part, not the first", () => {
     renderCamera([
-      { id: "p1", previewUrl: "blob:p1", warnings: [] },
-      { id: "p2", previewUrl: "blob:p2", warnings: ["blurry"] },
+      { id: "p1", previewUrl: "blob:p1" },
+      { id: "p2", previewUrl: "blob:p2" },
     ]);
     expect(screen.getByText("Parte 3 · comece onde a parte 2 acabou")).toBeInTheDocument();
     const strip = screen.getByText("Linhas já fotografadas").parentElement!;
     expect(strip.querySelector("img")).toHaveAttribute("src", "blob:p2");
-    expect(screen.getByRole("button", { name: "Repetir a foto 2" })).toBeInTheDocument(); // the last one taken
-    expect(screen.getByRole("img", { name: "2 de 6 fotos" })).toBeInTheDocument();
-  });
-
-  it("offers to take the last photo again when it can be better", async () => {
-    const user = userEvent.setup();
-    const { onRetake } = renderCamera([{ id: "p1", previewUrl: "blob:p1", warnings: ["too_far"] }]);
-    expect(screen.getByText(/o talão ficou pequeno na foto/i)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Repetir a foto 1" }));
-    expect(onRetake).toHaveBeenCalledWith("p1");
-  });
-
-  it("stops at the photo limit", () => {
-    const photos = Array.from({ length: 6 }, (_, i) => ({ id: `p${i}`, previewUrl: null, warnings: [] }));
-    renderCamera(photos);
-    expect(screen.getByRole("button", { name: "No máximo 6 fotos por talão" })).toBeDisabled();
   });
 
   it("without access to the camera, offers the phone's own camera", async () => {
