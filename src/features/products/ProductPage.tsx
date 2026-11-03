@@ -33,12 +33,12 @@ export default function ProductPage() {
         <Link to="/produtos" aria-label="Voltar aos produtos" className="grid size-11 shrink-0 place-items-center rounded-full hover:bg-brand-soft">
           <ArrowLeft aria-hidden className="size-5" />
         </Link>
-        <h1 className="text-2xl font-extrabold leading-tight tracking-tight">{a.product.name}</h1>
+        <h1 className="font-display text-2xl font-semibold leading-tight">{a.product.name}</h1>
       </header>
 
       <section aria-label={`Preço médio ${basis}`} className="flex flex-col gap-1.5 rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
         <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-soft">Preço médio {basis}</p>
-        <p className="amount text-[2.75rem] font-extrabold leading-none tracking-tight">{formatCents(a.avg_price_cents)}</p>
+        <p className="amount font-display text-[2.75rem] font-semibold leading-none">{formatCents(a.avg_price_cents)}</p>
         <p className="text-sm text-ink-soft">Média ponderada pelas quantidades que comprou</p>
         <dl className="mt-2 grid grid-cols-3 gap-3 border-t border-line pt-3">
           <div>

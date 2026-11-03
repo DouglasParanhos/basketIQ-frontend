@@ -34,7 +34,7 @@ export function SegmentedTabs({
   }
 
   return (
-    <div role="tablist" aria-label={label} className="flex rounded-full bg-brand-soft p-1">
+    <div role="tablist" aria-label={label} className="flex rounded-full bg-line p-1">
       {tabs.map((tab, index) => (
         <button
           key={tab.id}

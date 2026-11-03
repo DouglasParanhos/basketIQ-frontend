@@ -74,6 +74,8 @@ describe("colours of the Início (spec 011, D-P3)", () => {
         ["ink", "brand-soft"],
         ["ink-soft", "brand-soft"],
         ["brand", "brand-soft"],
+        // The tabs of Talões and Definições: the label of the tab that is not current, on the rail that holds them.
+        ["ink-soft", "line"],
         ["ink-soft", "paper"],
         ["ink-soft", "ground"],
         ["ink-soft", "table"],

@@ -133,7 +133,9 @@ test.describe("bottom navigation: the approved design (canvas NavBar)", () => {
         const { content, bar } = await page.evaluate(() => {
           window.scrollTo(0, document.documentElement.scrollHeight);
           const main = document.getElementById("conteudo")!;
+          // A fixed element (the desk of Compras) fills the screen behind the content: it is not content.
           const content = Array.from(main.querySelectorAll("*")).reduce((lowest, e) => {
+            if (getComputedStyle(e).position === "fixed") return lowest;
             const r = e.getBoundingClientRect();
             return r.width > 1 && r.height > 1 ? Math.max(lowest, r.bottom) : lowest;
           }, 0);
@@ -882,6 +884,43 @@ test.describe("início (spec 011)", () => {
 const TALOES_PAGES = ["/compras", "/compras?filtro=acao", "/compras?ano=2025", "/compras?vista=papel", "/compras/resumo", "/produtos", "/produtos/p1"] as const;
 
 test.describe("talões (spec 012)", () => {
+  test("Compras lies on a desk, each month is a torn sheet with dashed rows, and the old ?vista=papel address is cleaned", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.emulateMedia({ colorScheme: "light" });
+    await fakeApi(page);
+    await page.goto("/compras?vista=papel&filtro=acao");
+    await expect(page).toHaveURL(/\/compras\?filtro=acao$/);
+    await expect(page.getByRole("switch")).toHaveCount(0);
+    await expect(page.locator(".bg-table")).toHaveCSS("background-color", "rgb(233, 227, 214)");
+    // What is really seen: the desk is the top layer in the margin beside the sheet (not hidden behind the shell's
+    // background), and the sheet and the tabs are above the desk.
+    const seen = await page.evaluate(() => {
+      const classes = (x: number, y: number) => document.elementFromPoint(x, y)?.className ?? "";
+      const sheetBox = document.querySelector(".torn")!.getBoundingClientRect();
+      return { margin: classes(3, sheetBox.top + 40), sheet: !!document.elementFromPoint(sheetBox.left + 40, sheetBox.top + 40)?.closest(".torn") };
+    });
+    expect(seen.margin).toContain("bg-table");
+    expect(seen.sheet).toBe(true);
+    const sheet = page.locator(".torn").first();
+    await expect(sheet).toBeVisible();
+    // The torn edge is a mask (with the -webkit- prefix of Safari).
+    expect(await sheet.evaluate((el) => getComputedStyle(el).maskImage || getComputedStyle(el).webkitMaskImage)).not.toBe("none");
+    const row = sheet.getByRole("link").first();
+    await expect(row).toHaveCSS("border-top-style", "dashed");
+    expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(64);
+    await row.click();
+    await expect(page).toHaveURL(/\/compras\/[^/?]+$/);
+  });
+
+  test("the desk is only behind the list of purchases", async ({ page }) => {
+    await fakeApi(page);
+    for (const [path, desk] of [["/compras", 1], ["/compras/resumo", 0], ["/produtos", 0]] as const) {
+      await page.goto(path);
+      await expect(page.locator("main")).toBeVisible();
+      await expect(page.locator(".bg-table")).toHaveCount(desk);
+    }
+  });
+
   for (const scheme of ["light", "dark"] as const) {
     for (const width of [320, 375, 430, 820]) {
       test(`F-199: every tab and the product detail have no axe violations and no horizontal scroll (${scheme}, ${width}px)`, async ({ page }) => {

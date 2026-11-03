@@ -1,12 +1,11 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router";
+import { Navigate, useSearchParams } from "react-router";
 import { api, unwrap } from "../../api/client";
 import { Button, LinkButton, Notice, Spinner } from "../../components/ui";
 import { IN_PROGRESS, type ReceiptStatus } from "../../lib/status";
 import { useMonths } from "../taloes/useMonths";
 import { useYear } from "../taloes/useYear";
 import { groupByMonth, headerSummary, yearOf, type Filter } from "./months";
-import { ReceiptPaper } from "./ReceiptPaper";
 import { ReceiptRow } from "./ReceiptRow";
 
 const ACTION_STATUSES: ReceiptStatus[] = ["REVIEW_REQUIRED", "COMPLETED", "RECEIVED", "INVALID_FORMAT", "UNREADABLE", "UNSUPPORTED_MERCHANT", "TEMPORARY_FAILURE", "PERMANENT_FAILURE"];
@@ -45,7 +44,6 @@ export function ReceiptsPage() {
   // «Requer ação» shows every year (its number is for every year); the other filters show the year chosen.
   const visible = filter.id === "acao" ? items : items.filter((r) => yearOf(r) === year);
   const groups = groupByMonth(visible);
-  const paper = params.get("vista") === "papel";
   const notReached = filter.id !== "acao" && items.length > 0 && visible.length === 0 && query.hasNextPage;
 
   function change(update: (next: URLSearchParams) => void) {
@@ -59,7 +57,13 @@ export function ReceiptsPage() {
     );
   }
   const choose = (id: Filter) => change((next) => (id === "todas" ? next.delete("filtro") : next.set("filtro", id)));
-  const togglePaper = () => change((next) => (paper ? next.delete("vista") : next.set("vista", "papel")));
+
+  // The «papel de talão» view is gone (the list is the paper now): its old address opens the list, without the parameter.
+  if (params.has("vista")) {
+    const next = new URLSearchParams(params);
+    next.delete("vista");
+    return <Navigate to={{ search: next.toString() }} replace />;
+  }
 
   return (
     <>
@@ -71,26 +75,13 @@ export function ReceiptsPage() {
             role="radio"
             aria-checked={f.id === filter.id}
             onClick={() => choose(f.id)}
-            className="min-h-11 shrink-0 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line aria-checked:bg-brand aria-checked:text-white aria-checked:ring-brand dark:aria-checked:text-ground"
+            className="min-h-11 shrink-0 rounded-full border-[1.5px] border-line bg-paper px-3.5 text-[13px] font-bold aria-checked:border-brand aria-checked:bg-brand aria-checked:text-white dark:aria-checked:text-ground"
           >
             {f.id === "acao" && asked > 0 && <span aria-hidden className="mr-2 inline-block size-2 rounded-full bg-marker" />}
             {f.id === "acao" && asked > 0 ? `${f.label} · ${asked >= 100 ? "99+" : asked}` : f.label}
           </button>
         ))}
       </div>
-
-      <button
-        type="button"
-        role="switch"
-        aria-checked={paper}
-        onClick={togglePaper}
-        className="mb-3 inline-flex min-h-11 items-center gap-3 text-sm font-semibold"
-      >
-        <span aria-hidden className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${paper ? "bg-brand" : "bg-line"}`}>
-          <span className={`size-5 rounded-full bg-paper shadow transition-transform motion-reduce:transition-none ${paper ? "translate-x-5" : ""}`} />
-        </span>
-        Ver como papel de talão
-      </button>
 
       {query.isLoading && <Spinner />}
       {query.error && <Notice tone="error">{query.error.message}</Notice>}
@@ -110,31 +101,33 @@ export function ReceiptsPage() {
         </Notice>
       )}
 
-      {paper ? (
-        <ReceiptPaper groups={groups} totals={months.data} filter={filter.id} />
-      ) : (
-        groups.map((g) => {
-          const summary = headerSummary(g, months.data, filter.id);
-          return (
-            <section key={g.key} aria-labelledby={`mes-${g.key}`} className="mb-2">
-              <h3 id={`mes-${g.key}`} className="flex items-baseline justify-between gap-3 pb-1 pt-3">
-                <span className="text-lg font-extrabold">{g.title}</span>
-                {summary && (
-                  <>
-                    <span className="sr-only"> · </span>
-                    <span className="text-right text-xs font-normal text-ink-soft">{summary}</span>
-                  </>
-                )}
-              </h3>
+      {/* One sheet of paper per month, with the month on the desk above it. */}
+      {groups.map((g) => {
+        const summary = headerSummary(g, months.data, filter.id);
+        return (
+          <section key={g.key} aria-labelledby={`mes-${g.key}`} className="mb-3">
+            <h3 id={`mes-${g.key}`} className="flex items-baseline justify-between gap-3 pb-2 pt-3">
+              <span className="font-display text-lg font-semibold">{g.title}</span>
+              {summary && (
+                <>
+                  <span className="sr-only"> · </span>
+                  <span className="text-right text-xs font-normal text-ink-soft">{summary}</span>
+                </>
+              )}
+            </h3>
+            <div className="torn bg-paper px-4 pb-[30px] shadow-[0_1px_0_var(--color-muted-bar)] [--tear:10px]">
+              <p aria-hidden className="font-receipt pb-2 pt-3 text-center text-[11px] font-semibold tracking-[0.1em] text-ink-soft">
+                OS SEUS TALÕES
+              </p>
               <ul className="flex flex-col">
                 {g.rows.map((r) => (
                   <ReceiptRow key={r.id} receipt={r} />
                 ))}
               </ul>
-            </section>
-          );
-        })
-      )}
+            </div>
+          </section>
+        );
+      })}
       {query.hasNextPage && (
         <Button variant="secondary" className="mt-4 w-full" busy={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>
           Carregar mais

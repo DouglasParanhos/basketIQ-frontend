@@ -41,8 +41,8 @@ interno ao vitest, e não é coberto por estes valores. Está comentado em `vite
 |---|---|---|
 | 4 Login e Política | feito | `22822fd` |
 | 5 Onboarding | feito, **sem** a meta acima de € 800 (backend) | `a6f2fd0` |
-| 6 Início | feito | (ver `git log`) |
-| 7 Talões | não feito | |
+| 6 Início | feito | `9d5ba36` |
+| 7 Talões | feito (Compras completo; Resumo e Produtos só nos pontos do canvas que o código já cobria) | (ver `git log`) |
 | 8 Rever talão | não feito | |
 | 9 Adicionar | não feito | |
 | 10 Definições | não feito | |
@@ -117,6 +117,21 @@ Os passos de mercados já usavam o `MarketTile` do passo 2.
   ficava presa no indicador). `useProfile` passa a ter `retryOnMount: false`: um perfil que falhou não é pedido outra vez por cada
   ecrã que monta; os botões «Tentar de novo» fazem `refetch`.
 
+### Passo 7: Talões
+
+- **Compras:** mesa (`bg-table`) atrás do ecrã inteiro, só neste separador; uma **folha de papel rasgado por mês**
+  (`.torn`, dentes de 10 px) com «OS SEUS TALÕES» em Martian Mono (decorativo, `aria-hidden`), o mês (Fraunces) e o resumo em cima,
+  na mesa. Linhas tracejadas (`muted-bar`), tile do mercado, selo `!` / `…` / erro, data em Martian Mono, total, chevron, 64 px.
+  Chips «Todas / Requer ação · N / Confirmadas» brancos com contorno; separadores sobre `line` (antes menta); título em Fraunces 28.
+- **Removido:** o interruptor «Ver como papel de talão», `ReceiptPaper.tsx` e o seu teste, e `dayMonthSlashOf`. O endereço antigo
+  `/compras?vista=papel` passa a abrir a lista sem o parâmetro (`<Navigate replace>`; os outros parâmetros mantêm-se).
+- **Resumo e Produtos:** o código já tinha a estrutura do canvas (cartão do gasto com variação, barras por mercado com a cor da borda
+  de cada mercado, mais gasto / mais comprados, preço médio, evolução). Aplicado: valores grandes e título do produto em Fraunces,
+  cartões com contorno, pista das barras em `line`.
+- **Defeito apanhado nas capturas e corrigido:** a mesa estava escondida (um `-z-10` fica por trás do fundo do contentor da
+  aplicação). Agora a mesa é um elemento posicionado e o conteúdo vem por cima; o teste e2e verifica o que está realmente à vista
+  (`elementFromPoint`), não só a cor computada.
+
 ## Decisões a rever
 
 1. **Colunas de talões do login em conteúdo gerado por CSS.** O axe mediu 1,21:1 no texto decorativo a 10 % de
@@ -152,6 +167,10 @@ Os passos de mercados já usavam o `MarketTile` do passo 2.
 16. **Início: o subtítulo «média € 79 por semana»** do canvas **não** foi aplicado: o número do canvas não corresponde às suas próprias barras (58+91+54+45 dão 62 por semana) e a média semanal não está definida na API. Não inventei o número.
 17. **Início, exemplo: sem seletor de mês** (o canvas tem-no, mas navegar meses de um exemplo não faz sentido) e com as compras sem ligação.
 18. **Início: formato do dinheiro e da percentagem** mantido como `22,75 €` e `38 %` (o canvas escreve `€ 22,75` e `38%`): ainda por decidir.
+20. **Talões, escuro: a mesa é mais escura que o fundo** (`--color-table` escuro `#1D2922` → `#0C110E`), para a folha (`paper`) se distinguir; com o valor anterior os dois tons quase coincidiam. O canvas não tem versão escura.
+21. **Talões: «OS SEUS TALÕES» repete-se em cada folha** (uma por mês); o canvas só mostra uma folha.
+22. **Talões: a linha de data em Martian Mono** parte em duas linhas a 390 px quando é longa («28 out. · 11 itens · rever valores»); no canvas cabe numa.
+23. **Talões: Resumo e Produtos** não foram redesenhados além do descrito: os períodos, os filtros e o «Ver como tabela» são os que o código já tinha. Fica para a passagem final se quiser alinhar pixel a pixel.
 19. **Os documentos de `specs/011-inicio/`** (copy, plan, research, spec, tasks) ainda descrevem os textos e as cores antigos do anel («laranja», «vermelho» a 88 %, «Acima da meta pessoal este mês», «Gasto em mercado no mês»). Não os alterei; ficam para a passagem final.
 
 ## Dependências do backend
@@ -172,5 +191,6 @@ Os passos de mercados já usavam o `MarketTile` do passo 2.
 ## Capturas
 
 - Passo 4 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-4/` do projeto: `login-*`, `login-erro-*`, `politica-*`, `politica-aberta-*`.
+- Passo 7 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-7/`: `compras-*`, `resumo-*`, `produtos-*`.
 - Passo 6 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-6/`: `inicio-*` (um estado por captura), `vazio-*`, `exemplo-*`.
 - Passo 5 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-5/` do projeto: `passoN-vazio-*` (sem resposta, «Avançar» bloqueado), `passoN-resposta-*`, `pronto-*`.

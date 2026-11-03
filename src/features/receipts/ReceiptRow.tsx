@@ -1,4 +1,4 @@
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ChevronRight } from "lucide-react";
 import { Link } from "react-router";
 import type { Schemas } from "../../api/client";
 import { MarketTile } from "../../components/MarketBadge";
@@ -16,7 +16,7 @@ const BADGE = {
 function Badge({ state }: { state: keyof typeof BADGE }) {
   const { style, content } = BADGE[state];
   return (
-    <span aria-hidden className={`absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full border-2 border-ground text-xs font-extrabold ${style}`}>
+    <span aria-hidden className={`absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full border-2 border-paper text-xs font-extrabold ${style}`}>
       {content}
     </span>
   );
@@ -30,7 +30,7 @@ export function ReceiptRow({ receipt: r }: { receipt: Schemas["ReceiptSummaryOut
   const items = r.line_count > 0 ? `${r.line_count} ${r.line_count === 1 ? "item" : "itens"}` : null;
   return (
     <li>
-      <Link to={`/compras/${r.id}`} className="flex min-h-16 items-center gap-3 border-t border-line py-2.5">
+      <Link to={`/compras/${r.id}`} className="flex min-h-16 items-center gap-3 border-t border-dashed border-muted-bar py-2.5">
         <span className="relative shrink-0">
           <MarketTile code={r.merchant} size={40} fontSize={18} />
           {state !== "confirmed" && <Badge state={state} />}
@@ -38,7 +38,7 @@ export function ReceiptRow({ receipt: r }: { receipt: Schemas["ReceiptSummaryOut
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="truncate font-semibold">{name}</span>
           {r.store_label && <span className="truncate text-xs text-ink-soft">{r.store_label}</span>}
-          <span className={`text-xs ${state === "attention" ? "font-semibold text-warn-ink" : "text-ink-soft"}`}>
+          <span className={`font-receipt text-[11px] ${state === "attention" ? "font-bold text-warn-ink" : "text-ink-soft"}`}>
             <span className={state === "attention" ? "font-bold" : undefined}>{day}</span>
             {state === "progress" && " · a ler o talão…"}
             {state === "error" && <> · {STATUS[r.status].label}</>}
@@ -53,7 +53,8 @@ export function ReceiptRow({ receipt: r }: { receipt: Schemas["ReceiptSummaryOut
             )}
           </span>
         </span>
-        <span className="amount shrink-0 font-bold">{state === "progress" || r.total_cents === null ? "—" : formatCents(r.total_cents)}</span>
+        <span className={`amount shrink-0 font-bold ${state === "progress" ? "text-ink-soft" : ""}`}>{state === "progress" || r.total_cents === null ? "—" : formatCents(r.total_cents)}</span>
+        <ChevronRight aria-hidden className="size-[18px] shrink-0 text-ink-soft" />
       </Link>
     </li>
   );
