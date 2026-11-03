@@ -786,23 +786,33 @@ test.describe("talões (spec 012)", () => {
   });
 });
 
-// ---------------------------------------------------------------- Lista provisória (spec 015)
+// ---------------------------------------------------------------- Lista, artigos (spec 015 US-A)
 
-test.describe("lista provisória (spec 015)", () => {
+test.describe("lista, artigos (spec 015 US-A)", () => {
   for (const scheme of ["light", "dark"] as const) {
     for (const width of [320, 375, 430, 820]) {
-      test(`F-146: /lista has no axe violations and no horizontal scroll (${scheme}, ${width}px)`, async ({ page }) => {
+      test(`F-153: /lista has no axe violations and no horizontal scroll (${scheme}, ${width}px)`, async ({ page }) => {
         await page.emulateMedia({ colorScheme: scheme });
         await page.setViewportSize({ width, height: 800 });
         await fakeApi(page, { smartList: true });
         await page.goto("/lista");
         await expect(page.getByRole("heading", { level: 1, name: "Lista" })).toBeVisible();
-        await expect(page.getByText("Em breve")).toBeVisible();
+        await expect(page.getByText("Mercearia do Bairro")).toBeVisible();
         await noA11yViolations(page);
         await noHorizontalScroll(page);
       });
     }
   }
+
+  test("F-153: a product of the list opens its page with the price history", async ({ page }) => {
+    await fakeApi(page, { smartList: true });
+    await page.goto("/lista");
+    await expect(page.getByText("Valores calculados com os seus talões dos últimos 90 dias. Não são preços de hoje.")).toBeVisible();
+    await expect(page.getByText("2 artigos ficaram de fora por não terem o produto identificado.")).toBeVisible();
+    await page.getByRole("link", { name: /Peito de frango/ }).click();
+    await expect(page).toHaveURL(/\/produtos\/p1$/);
+    await expect(page.getByRole("heading", { level: 2, name: "Evolução do preço" })).toBeVisible();
+  });
 
   test("F-146: /lista is reached from the fifth button, and with the smart list off it does not exist", async ({ page }) => {
     await fakeApi(page, { smartList: true });

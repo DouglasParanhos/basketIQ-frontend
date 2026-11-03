@@ -469,6 +469,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/lists/articles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Smart list, first increment: products bought in the window, per store */
+        get: operations["articles_v1_lists_articles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/jobs": {
         parameters: {
             query?: never;
@@ -619,6 +636,15 @@ export interface components {
             created_at: string;
             /** Finished At */
             finished_at: string | null;
+        };
+        /** ArticlePrice */
+        ArticlePrice: {
+            /** Price Cents */
+            price_cents: number | null;
+            /** Date */
+            date: string;
+            /** Discounted */
+            discounted: boolean;
         };
         /** CardsOut */
         CardsOut: {
@@ -819,6 +845,66 @@ export interface components {
             line_total_cents?: number | null;
             /** Discount Cents */
             discount_cents?: number | null;
+        };
+        /**
+         * ListArticle
+         * @description One product at one store: its purchases and the prices paid there, in the item's base unit.
+         */
+        ListArticle: {
+            /** Merchant */
+            merchant: string | null;
+            /** Merchant Name */
+            merchant_name: string;
+            /** Purchases */
+            purchases: number;
+            /** Avg Price Cents */
+            avg_price_cents: number | null;
+            lowest: components["schemas"]["ArticlePrice"] | null;
+            highest: components["schemas"]["ArticlePrice"] | null;
+            last: components["schemas"]["ArticlePrice"] | null;
+        };
+        /** ListArticlesOut */
+        ListArticlesOut: {
+            /** Window Days */
+            window_days: number;
+            /** Date From */
+            date_from: string;
+            /** Date To */
+            date_to: string;
+            /** Items */
+            items: components["schemas"]["ListItem"][];
+            /** Excluded Lines */
+            excluded_lines: number;
+        };
+        /** ListItem */
+        ListItem: {
+            /** Product Id */
+            product_id: string;
+            /** Name */
+            name: string;
+            /** Purchases */
+            purchases: number;
+            /** Packages */
+            packages: string;
+            /** Packages Per Month */
+            packages_per_month: number;
+            /** Avg Interval Days */
+            avg_interval_days: number | null;
+            /** Spent Cents */
+            spent_cents: number;
+            /**
+             * Price Basis
+             * @enum {string}
+             */
+            price_basis: "un" | "kg" | "l";
+            /** Mixed Units */
+            mixed_units: boolean;
+            /** Avg Price Cents */
+            avg_price_cents: number | null;
+            /** Last Purchase */
+            last_purchase: string;
+            /** Articles */
+            articles: components["schemas"]["ListArticle"][];
         };
         /** MeOut */
         MeOut: {
@@ -1108,6 +1194,8 @@ export interface components {
             llm_enabled: boolean;
             /** Smart List Enabled */
             smart_list_enabled: boolean;
+            /** Comparison Window Days */
+            comparison_window_days: number;
             /** Goal Ring Green Up To Pct */
             goal_ring_green_up_to_pct: number;
             /** Goal Ring Orange Up To Pct */
@@ -2923,6 +3011,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    articles_v1_lists_articles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListArticlesOut"];
                 };
             };
         };
