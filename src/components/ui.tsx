@@ -107,7 +107,7 @@ export function Select({
 const NOTICE = {
   info: { icon: Info, cls: "bg-brand-soft text-ink" },
   success: { icon: CheckCircle2, cls: "bg-ok-soft text-ink" },
-  warning: { icon: AlertTriangle, cls: "bg-marker/40 text-marker-ink" },
+  warning: { icon: AlertTriangle, cls: "bg-warn-soft text-warn-ink" },
   error: { icon: OctagonAlert, cls: "bg-alert-soft text-ink" },
 } as const;
 

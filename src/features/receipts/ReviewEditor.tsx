@@ -292,18 +292,22 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
         <p className="text-sm text-ink-soft">Para confirmar falta: {blocking.map((b) => b.message?.toLowerCase()).join(" ")}</p>
       )}
 
-      <div className="sticky bottom-20 z-10 flex gap-3 rounded-surface bg-ground/95 py-3 backdrop-blur md:bottom-0">
-        <Button variant="secondary" className="flex-1" busy={save.isPending} disabled={!dirty || hasErrors} onClick={() => save.mutate()}>
-          Guardar
-        </Button>
-        <Button
-          className="flex-1"
-          busy={confirm.isPending}
-          disabled={hasErrors || (!dirty && !receipt.can_confirm)}
-          onClick={() => confirm.mutate()}
-        >
-          <Check aria-hidden className="size-5" /> Confirmar
-        </Button>
+      <div className="sticky bottom-20 z-10 flex flex-col gap-2 rounded-surface bg-ground/95 py-3 backdrop-blur md:bottom-0">
+        <p className="text-center text-xs text-ink-soft">Ao confirmar, os valores entram nos seus gastos.</p>
+        <div className="flex gap-3">
+          <Button variant="secondary" size="lg" className="flex-1 rounded-[28px]" busy={save.isPending} disabled={!dirty || hasErrors} onClick={() => save.mutate()}>
+            Guardar
+          </Button>
+          <Button
+            size="lg"
+            className="flex-1 rounded-[28px] font-extrabold"
+            busy={confirm.isPending}
+            disabled={hasErrors || (!dirty && !receipt.can_confirm)}
+            onClick={() => confirm.mutate()}
+          >
+            <Check aria-hidden className="size-5" /> Confirmar
+          </Button>
+        </div>
       </div>
     </div>
   );

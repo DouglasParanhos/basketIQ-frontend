@@ -40,7 +40,7 @@ export function ReceiptPage() {
           <ArrowLeft aria-hidden className="size-5" />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-extrabold tracking-tight">{r.merchant_name || (r.merchant && r.merchant !== "UNKNOWN") ? merchantName(r.merchant, r.merchant_name) : "Nova compra"}</h1>
+          <h1 className="truncate font-display text-2xl font-semibold">{r.merchant_name || (r.merchant && r.merchant !== "UNKNOWN") ? merchantName(r.merchant, r.merchant_name) : "Nova compra"}</h1>
           {r.store_label && <p className="truncate text-sm font-semibold text-ink-soft">{r.store_label}</p>}
           <p className="text-sm text-ink-soft">{r.purchase_at ? formatDateTime(r.purchase_at) : `Enviada ${formatDateTime(r.created_at)}`}</p>
         </div>

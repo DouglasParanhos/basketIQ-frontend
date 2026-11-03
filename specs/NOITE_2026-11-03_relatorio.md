@@ -42,8 +42,8 @@ interno ao vitest, e não é coberto por estes valores. Está comentado em `vite
 | 4 Login e Política | feito | `22822fd` |
 | 5 Onboarding | feito, **sem** a meta acima de € 800 (backend) | `a6f2fd0` |
 | 6 Início | feito | `9d5ba36` |
-| 7 Talões | feito (Compras completo; Resumo e Produtos só nos pontos do canvas que o código já cobria) | (ver `git log`) |
-| 8 Rever talão | não feito | |
+| 7 Talões | feito (Compras completo; Resumo e Produtos só nos pontos do canvas que o código já cobria) | `2d58c0d` |
+| 8 Rever talão | **parcial**: só o aspeto, a estrutura do canvas não foi adotada | (ver `git log`) |
 | 9 Adicionar | não feito | |
 | 10 Definições | não feito | |
 
@@ -132,6 +132,24 @@ Os passos de mercados já usavam o `MarketTile` do passo 2.
   aplicação). Agora a mesa é um elemento posicionado e o conteúdo vem por cima; o teste e2e verifica o que está realmente à vista
   (`elementFromPoint`), não só a cor computada.
 
+### Passo 8: Rever talão (parcial)
+
+O canvas `ReviewTalao` é uma estrutura **diferente** da tela atual: cartão de resumo (Mercado / Data / Total, com o total a Fraunces
+sobre o marcador), lista de produtos em cartão com painel de edição por linha, aviso «Preço alterado… Desfazer» e rodapé fixo
+(«Confirmar talão», «Guardar e rever depois», «Eliminar talão»). A tela atual é a vista de talão impresso (`.receipt-paper`, Martian
+Mono, marcador nos valores a rever) com a lógica toda: editar/acrescentar/remover/dividir linhas, diferença de totais, conflito de
+versão, duplicado, mercado desconhecido. Regra da noite (o código ganha em lógica e a11y, o canvas em cor, fonte e texto): **não
+refiz a estrutura**; apliquei o aspeto:
+
+- o aviso «Reveja antes de confirmar» (e todos os avisos `warning` da app) passa ao dourado dos chips (`warn-soft` / `warn-ink`),
+  em vez de uma mancha do amarelo do marcador;
+- os botões de baixo passam a pílulas de 56 px com a frase «Ao confirmar, os valores entram nos seus gastos.» por cima;
+- o título da compra em Fraunces.
+
+**Não aplicado e porquê:** o rodapé «Confirmar talão / Guardar e rever depois / Eliminar talão» (os textos mudariam o comportamento:
+«Guardar e rever depois» sai do ecrã, «Guardar» não), o cartão de resumo com edição por ícone, o aviso «Desfazer» (não há
+desfazer na lógica), o total sobre o marcador a Fraunces e a frase «A descrição original fica guardada» (só depois de B-10, plano §6.3).
+
 ## Decisões a rever
 
 1. **Colunas de talões do login em conteúdo gerado por CSS.** O axe mediu 1,21:1 no texto decorativo a 10 % de
@@ -191,6 +209,7 @@ Os passos de mercados já usavam o `MarketTile` do passo 2.
 ## Capturas
 
 - Passo 4 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-4/` do projeto: `login-*`, `login-erro-*`, `politica-*`, `politica-aberta-*`.
+- Passo 8: `Documentation/noite-2026-11-03/passo-8/`: `rever-*`.
 - Passo 7 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-7/`: `compras-*`, `resumo-*`, `produtos-*`.
 - Passo 6 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-6/`: `inicio-*` (um estado por captura), `vazio-*`, `exemplo-*`.
 - Passo 5 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-5/` do projeto: `passoN-vazio-*` (sem resposta, «Avançar» bloqueado), `passoN-resposta-*`, `pronto-*`.
