@@ -22,7 +22,7 @@ async function signIn(page: Page, subject: string) {
   await expect(page).toHaveURL(/\/boas-vindas$/);
   for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Saltar" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Tudo pronto" })).toBeVisible();
-  await page.getByRole("button", { name: "Ir para o início" }).click();
+  await page.getByRole("link", { name: "Ver o início" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
   // The empty-account message now lives in the Resumo, under Talões (spec 009).
   await page.goto("/compras/resumo");

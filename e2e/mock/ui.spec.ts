@@ -316,7 +316,15 @@ test.describe("flows with a fake API", () => {
 
 const ONBOARDING_STEPS = [/Qual é o seu objetivo/, /Quantas pessoas vivem/, /Onde costuma fazer compras/, /Qual é a sua meta pessoal por mês/];
 
-/** Walks the four steps and «Tudo pronto», running `check` on each screen. */
+/** Gives the step an answer, because «Avançar» does not go on without one. */
+async function answerOnboarding(page: Page, index: number) {
+  if (index === 0) await page.getByRole("checkbox", { name: /Organizar as minhas finanças/ }).check({ force: true });
+  if (index === 1) await page.getByRole("button", { name: "Mais uma pessoa" }).click();
+  if (index === 2) await page.getByRole("checkbox", { name: "Lidl" }).check({ force: true });
+  if (index === 3) await page.getByRole("slider").fill("300");
+}
+
+/** Walks the four steps and «Tudo pronto», running `check` on each screen, without an answer (the button is aria-disabled) and with one. */
 async function walkOnboarding(page: Page, check: () => Promise<void>) {
   await page.goto("/boas-vindas");
   for (const [index, title] of ONBOARDING_STEPS.entries()) {
@@ -324,6 +332,8 @@ async function walkOnboarding(page: Page, check: () => Promise<void>) {
     if (index === 2) await expect(page.getByRole("checkbox", { name: "Lidl" })).toBeVisible();
     // The page has moved on to this step before axe looks at it.
     await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", String((index + 1) * 25));
+    await check();
+    await answerOnboarding(page, index);
     await check();
     await page.getByRole("button", { name: index === 3 ? "Concluir" : "Avançar" }).click();
   }
@@ -367,17 +377,19 @@ test.describe("onboarding (spec 010)", () => {
     await expect(page.getByRole("navigation", { name: "Navegação principal" })).toHaveCount(0);
     await page.getByRole("checkbox", { name: /Organizar as minhas finanças/ }).check({ force: true });
     await page.getByRole("button", { name: "Avançar" }).click();
-    await page.getByRole("button", { name: "Mais uma pessoa" }).click();
+    for (let i = 0; i < 3; i++) await page.getByRole("button", { name: "Mais uma pessoa" }).click();
     await page.getByRole("button", { name: "Avançar" }).click();
     await page.getByRole("checkbox", { name: "El Corte Inglés" }).check({ force: true });
     await expect(page.getByText("EC", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Avançar" }).click();
+    await page.getByRole("slider").fill("300");
     await page.getByRole("button", { name: "Concluir" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Tudo pronto" })).toBeVisible();
     expect(state.profilePatches).toEqual([
       { goals: ["finances"], household_size: 3, merchants: ["EL_CORTE_INGLES"], monthly_goal_cents: 30000, onboarding_completed: true },
     ]);
-    await page.getByRole("button", { name: "Ir para o início" }).click();
+    await expect(page.getByRole("link", { name: "Adicionar o meu primeiro talão" })).toHaveAttribute("href", "/adicionar");
+    await page.getByRole("link", { name: "Ver o início" }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeVisible();

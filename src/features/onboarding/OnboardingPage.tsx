@@ -1,13 +1,14 @@
 import { Check, ChevronLeft } from "lucide-react";
 import { useEffect, useReducer, useRef, useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router";
+import { Link, Navigate } from "react-router";
 import { ApiError } from "../../api/client";
-import { Button, Notice, Spinner } from "../../components/ui";
+import { Button, LinkButton, Notice, Spinner } from "../../components/ui";
 import { isConsentError, useMerchants, useProfile, useSaveProfile } from "../profile/useProfile";
-import { buildPatch, initialState, LAST_STEP, progressPercent, reduce, STEP_COUNT, type OnboardingState, type Profile } from "./state";
+import { buildPatch, canAdvance, initialState, LAST_STEP, progressPercent, reduce, STEP_COUNT, type OnboardingState, type Profile } from "./state";
 import { GoalAmountStep, GoalsStep, MerchantsStep, PeopleStep, STEP_COPY } from "./steps";
 
 const STEP_LABEL_ID = "onboarding-step";
+const BLOCKED_ID = "onboarding-blocked";
 
 /** What to tell the person when the PATCH did not go through. */
 function saveProblem(error: Error): { text: string; consent?: boolean; retry?: boolean } {
@@ -22,7 +23,6 @@ function Onboarding({ saved }: { saved: Profile | null }) {
   const [state, dispatch] = useReducer(reduce, saved, initialState);
   const merchants = useMerchants();
   const save = useSaveProfile();
-  const navigate = useNavigate();
   const titleRef = useRef<HTMLHeadingElement>(null);
 
   // Moving to another step (or to «Tudo pronto») puts the focus on the title.
@@ -35,6 +35,8 @@ function Onboarding({ saved }: { saved: Profile | null }) {
   }
 
   function move(type: "next" | "skip") {
+    // «Avançar» without an answer does nothing (the button says so with aria-disabled); «Saltar» is the way past.
+    if (type === "next" && !canAdvance(state)) return;
     const after = reduce(state, { type });
     dispatch({ type });
     if (state.step === LAST_STEP) send(after);
@@ -47,19 +49,19 @@ function Onboarding({ saved }: { saved: Profile | null }) {
           <span aria-hidden className="grid size-[84px] place-items-center rounded-full bg-brand-soft text-brand">
             <Check className="size-10" strokeWidth={2.5} />
           </span>
-          <h1 ref={titleRef} tabIndex={-1} className="text-[2.125rem] font-extrabold leading-tight outline-none">
+          <h1 ref={titleRef} tabIndex={-1} className="font-display text-[2.125rem] font-semibold leading-tight outline-none">
             Tudo pronto
           </h1>
           <p className="leading-6 text-ink-soft">Pode editar estas respostas no Perfil a qualquer momento.</p>
         </div>
-        <div className="pb-[max(1.75rem,env(safe-area-inset-bottom))]">
-          <Button
-            size="lg"
-            className="w-full"
-            onClick={() => navigate("/", { replace: true })}
-          >
-            Ir para o início
-          </Button>
+        {/* The text is 28 px from the edges, the buttons 24 px (the design). */}
+        <div className="-mx-1 flex flex-col gap-2.5 pb-[max(1.75rem,env(safe-area-inset-bottom))]">
+          <LinkButton to="/adicionar" replace size="lg" className="w-full">
+            Adicionar o meu primeiro talão
+          </LinkButton>
+          <LinkButton to="/" replace variant="quiet" className="min-h-[52px] w-full border-[1.5px] border-brand text-[0.9375rem] font-bold">
+            Ver o início
+          </LinkButton>
         </div>
       </main>
     );
@@ -68,6 +70,7 @@ function Onboarding({ saved }: { saved: Profile | null }) {
   const copy = STEP_COPY[state.step] ?? STEP_COPY[0];
   const percent = progressPercent(state.step);
   const problem = save.error ? saveProblem(save.error) : null;
+  const blocked = !canAdvance(state);
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6">
@@ -106,7 +109,7 @@ function Onboarding({ saved }: { saved: Profile | null }) {
 
       <div className="flex-1 pt-6">
         <p id={STEP_LABEL_ID} className="sr-only">{`Passo ${state.step + 1} de ${STEP_COUNT}`}</p>
-        <h1 ref={titleRef} tabIndex={-1} aria-describedby={STEP_LABEL_ID} className="mt-1 text-[2rem] font-extrabold leading-[1.12] tracking-[-0.01em] outline-none">
+        <h1 ref={titleRef} tabIndex={-1} aria-describedby={STEP_LABEL_ID} className="mt-1 font-display text-[2rem] font-semibold leading-[1.12] tracking-[-0.01em] outline-none">
           {copy.title}
         </h1>
         <p className="mt-2 text-ink-soft">{copy.hint}</p>
@@ -137,7 +140,18 @@ function Onboarding({ saved }: { saved: Profile | null }) {
             {problem.text}
           </Notice>
         )}
-        <Button size="lg" className="w-full" busy={save.isPending} onClick={() => move("next")}>
+        {/* aria-disabled, not disabled: it stays in the tab order and the screen reader reads why it does not go on. */}
+        <p id={BLOCKED_ID} className="min-h-[18px] text-center text-xs leading-[1.4] text-ink-soft">
+          {blocked ? copy.blocked : ""}
+        </p>
+        <Button
+          size="lg"
+          className={`w-full rounded-[28px] ${blocked ? "opacity-40" : ""}`}
+          busy={save.isPending}
+          aria-disabled={blocked || undefined}
+          aria-describedby={blocked ? BLOCKED_ID : undefined}
+          onClick={() => move("next")}
+        >
           {state.step === LAST_STEP ? "Concluir" : "Avançar"}
         </Button>
       </div>

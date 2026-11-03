@@ -3,7 +3,7 @@ import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 import { merchants, profile } from "../../test/fixtures";
 import { API, errorBody, servePatch, serveProfile, server } from "../../test/server";
-import { allDone, BANNED, openOnboarding, press, title, type User } from "./testing";
+import { advance, allDone, BANNED, openOnboarding, press, title, type User } from "./testing";
 
 let patches: Record<string, unknown>[] = [];
 
@@ -39,13 +39,14 @@ describe("the four steps (spec 010, US1)", () => {
     expect(all).toBeChecked();
   });
 
-  it("F-113: step 2 starts at 2 «pessoas», stops at 1 («pessoa») and at 12", async () => {
+  it("F-113: step 2 starts at «—» «pessoas», the first «+» says 1 («pessoa»), and it stops at 12", async () => {
     const { user } = await openOnboarding();
-    await press(user, "Avançar");
+    await advance(user, 1);
     expect(title()).toHaveTextContent("Quantas pessoas vivem em sua casa?");
-    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getByText("—")).toBeInTheDocument();
     expect(screen.getByText("pessoas")).toBeInTheDocument();
-    await press(user, "Menos uma pessoa");
+    expect(screen.getByRole("button", { name: "Menos uma pessoa" })).toBeDisabled();
+    await press(user, "Mais uma pessoa");
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("pessoa")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Menos uma pessoa" })).toBeDisabled();
@@ -57,8 +58,7 @@ describe("the four steps (spec 010, US1)", () => {
   it("F-113: step 3 shows the merchants the API serves, with initial and name; a new one needs no code", async () => {
     server.use(http.get(`${API}/v1/merchants`, () => HttpResponse.json([...merchants, { id: "NOVO", name: "Mercado Novo" }])));
     const { user } = await openOnboarding();
-    await press(user, "Avançar");
-    await press(user, "Avançar");
+    await advance(user, 2);
     expect(title()).toHaveTextContent("Onde costuma fazer compras?");
     expect(await screen.findAllByRole("checkbox")).toHaveLength(8);
     expect(screen.getByRole("checkbox", { name: "Mercado Novo" })).toBeInTheDocument();
@@ -69,12 +69,12 @@ describe("the four steps (spec 010, US1)", () => {
     expect(screen.getByRole("checkbox", { name: "Lidl" })).toBeChecked();
   });
 
-  it("F-113: step 4 shows 300 € per month between 50 € and 800 €; «Ainda não sei» disables the bar and explains where to set it later", async () => {
+  it("F-113: step 4 starts at «— €» per month between 50 € and 800 €; «Ainda não sei» disables the bar and explains where to set it later", async () => {
     const { user } = await openOnboarding();
-    for (let i = 0; i < 3; i++) await press(user, "Avançar");
+    await advance(user, 3);
     expect(title()).toHaveTextContent("Qual é a sua meta pessoal por mês?");
     const value = screen.getByTestId("goal-value");
-    expect(value.textContent?.replace(/\s/g, " ")).toBe("300 €");
+    expect(value.textContent?.replace(/\s/g, " ")).toBe("— €");
     expect(screen.getByText("por mês")).toBeInTheDocument();
     expect(screen.getByText("Por mês. Pode mudá-la quando quiser.")).toBeInTheDocument();
     const bar = screen.getByRole("slider", { name: /meta pessoal/i });
@@ -98,15 +98,15 @@ describe("the four steps (spec 010, US1)", () => {
     for (const [n, percent] of [[1, 25], [2, 50], [3, 75], [4, 100]] as const) {
       expect(screen.getByText(`Passo ${n} de 4`)).toBeInTheDocument();
       expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", String(percent));
-      if (n < 4) await press(user, "Avançar");
+      if (n < 4) await advance(user, 1, n - 1);
     }
     expect(screen.getByRole("button", { name: "Concluir" })).toBeInTheDocument();
   });
 
   it("F-113: «Voltar» goes to the step before and keeps the answers", async () => {
     const { user } = await openOnboarding();
-    await press(user, "Avançar");
-    await press(user, "Mais uma pessoa");
+    await advance(user, 1);
+    for (let i = 0; i < 3; i++) await press(user, "Mais uma pessoa");
     await press(user, "Avançar");
     await press(user, "Voltar");
     expect(title()).toHaveTextContent("Quantas pessoas vivem em sua casa?");
@@ -115,14 +115,9 @@ describe("the four steps (spec 010, US1)", () => {
     expect(screen.queryByRole("button", { name: "Voltar" })).not.toBeInTheDocument();
   });
 
-  it("F-113: «Concluir» sends one PATCH, shows «Tudo pronto», and «Ir para o início» leads to the Início", async () => {
+  it("F-113: «Concluir» sends one PATCH, shows «Tudo pronto», and «Ver o início» leads to the Início", async () => {
     const { user, router } = await openOnboarding();
-    await user.click(screen.getByRole("checkbox", { name: /Organizar as minhas finanças/ }));
-    await press(user, "Avançar");
-    await press(user, "Avançar");
-    await user.click(await screen.findByRole("checkbox", { name: "Lidl" }));
-    await press(user, "Avançar");
-    await press(user, "Concluir");
+    await advance(user, 4);
 
     expect(await allDone()).toBeInTheDocument();
     expect(screen.getByText("Pode editar estas respostas no Perfil a qualquer momento.")).toBeInTheDocument();
@@ -131,9 +126,20 @@ describe("the four steps (spec 010, US1)", () => {
     ]);
     expect(router.state.location.pathname).toBe("/boas-vindas");
 
-    await press(user, "Ir para o início");
+    expect(screen.getByRole("link", { name: "Adicionar o meu primeiro talão" })).toHaveAttribute("href", "/adicionar");
+    await user.click(screen.getByRole("link", { name: "Ver o início" }));
     expect(await screen.findByText("Início de teste")).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/");
+    expect(patches).toHaveLength(1);
+  });
+
+  it("F-113: «Adicionar o meu primeiro talão» leads to Adicionar, without saving again", async () => {
+    const { user, router } = await openOnboarding();
+    await advance(user, 4);
+    await allDone();
+    await user.click(screen.getByRole("link", { name: "Adicionar o meu primeiro talão" }));
+    expect(await screen.findByText("Adicionar de teste")).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/adicionar");
     expect(patches).toHaveLength(1);
   });
 });
@@ -166,16 +172,17 @@ describe("only what the person confirmed is saved (spec 010, US2)", () => {
   });
 
   it("F-114: «Saltar» on the last step finishes with no goal", async () => {
-    const body = await through(["Avançar", "Avançar", "Avançar", "Saltar"], async (user) => {
-      await user.click(screen.getByRole("checkbox", { name: /Gastar menos nas compras/ }));
-    });
-    expect(body).toEqual({ goals: ["savings"], household_size: 2, onboarding_completed: true });
+    const { user } = await openOnboarding();
+    await advance(user, 3);
+    await press(user, "Saltar");
+    await allDone();
+    expect(patches).toEqual([{ goals: ["finances"], household_size: 2, merchants: ["LIDL"], onboarding_completed: true }]);
   });
 
   it("F-114: 3 people confirmed with «Avançar» and the goal skipped saves only the 3 people", async () => {
     const { user } = await openOnboarding();
     await press(user, "Saltar");
-    await press(user, "Mais uma pessoa");
+    for (let i = 0; i < 3; i++) await press(user, "Mais uma pessoa");
     await press(user, "Avançar");
     await press(user, "Saltar");
     await press(user, "Saltar");
@@ -183,16 +190,35 @@ describe("only what the person confirmed is saved (spec 010, US2)", () => {
     expect(patches).toEqual([{ household_size: 3, onboarding_completed: true }]);
   });
 
-  it("F-114: «Avançar» on the suggested 2 people saves 2, because it confirms what the screen shows", async () => {
-    expect(await through(["Saltar", "Avançar", "Saltar", "Saltar"])).toEqual({ household_size: 2, onboarding_completed: true });
+  it("F-114: nothing is suggested: «Avançar» with no answer on the people goes nowhere and saves nothing", async () => {
+    const { user } = await openOnboarding();
+    await press(user, "Saltar");
+    await press(user, "Avançar");
+    expect(title()).toHaveTextContent("Quantas pessoas vivem em sua casa?");
+    for (let i = 0; i < 3; i++) await press(user, "Saltar");
+    await allDone();
+    expect(patches).toEqual([{ onboarding_completed: true }]);
   });
 
-  it("F-114: goals and merchants confirmed with nothing chosen save nothing of them", async () => {
-    expect(await through(["Avançar", "Saltar", "Avançar", "Saltar"])).toEqual({ onboarding_completed: true });
+  it("F-114: «Concluir» with a value on the bar confirms it and sends it in whole cents", async () => {
+    const { user } = await openOnboarding();
+    for (let i = 0; i < 3; i++) await press(user, "Saltar");
+    fireEvent.change(screen.getByRole("slider"), { target: { value: "300" } });
+    await press(user, "Concluir");
+    await allDone();
+    expect(patches).toEqual([{ monthly_goal_cents: 30000, onboarding_completed: true }]);
   });
 
-  it("F-114: «Concluir» on the suggested 300 € confirms it and sends it in whole cents", async () => {
-    expect(await through(["Saltar", "Saltar", "Saltar", "Concluir"])).toEqual({ monthly_goal_cents: 30000, onboarding_completed: true });
+  it("F-114: «Saltar» saves nothing even when the step was answered before skipping it", async () => {
+    const { user } = await openOnboarding();
+    await user.click(screen.getByRole("checkbox", { name: /Organizar as minhas finanças/ }));
+    await press(user, "Saltar");
+    await press(user, "Mais uma pessoa");
+    await press(user, "Saltar");
+    await press(user, "Saltar");
+    await press(user, "Saltar");
+    await allDone();
+    expect(patches).toEqual([{ onboarding_completed: true }]);
   });
 
   it("F-114: «Ainda não sei» followed by «Concluir» sends no goal", async () => {
@@ -207,7 +233,7 @@ describe("only what the person confirmed is saved (spec 010, US2)", () => {
   it("F-114: going back to a confirmed step and skipping it keeps the confirmation", async () => {
     const { user } = await openOnboarding();
     await press(user, "Saltar");
-    await press(user, "Mais uma pessoa");
+    for (let i = 0; i < 3; i++) await press(user, "Mais uma pessoa");
     await press(user, "Avançar");
     await press(user, "Voltar");
     await press(user, "Saltar");
@@ -234,8 +260,7 @@ describe("failures of the merchants list and of the saving (spec 010, US4)", () 
       }),
     );
     const { user } = await openOnboarding();
-    await press(user, "Avançar");
-    await press(user, "Avançar");
+    await advance(user, 2);
     expect(await screen.findByRole("button", { name: "Tentar de novo" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Saltar" })).toBeEnabled();
     await press(user, "Tentar de novo");
@@ -252,7 +277,7 @@ describe("failures of the merchants list and of the saving (spec 010, US4)", () 
     );
     const { user } = await openOnboarding();
     await press(user, "Saltar");
-    await press(user, "Mais uma pessoa");
+    for (let i = 0; i < 3; i++) await press(user, "Mais uma pessoa");
     await press(user, "Avançar");
     await press(user, "Saltar");
     await press(user, "Saltar");
@@ -297,8 +322,8 @@ describe("failures of the merchants list and of the saving (spec 010, US4)", () 
     try {
       const { user } = await openOnboarding();
       await user.click(screen.getByRole("checkbox", { name: /Todas as anteriores/ }));
-      for (let i = 0; i < 3; i++) await press(user, "Avançar");
-      await press(user, "Concluir");
+      await press(user, "Avançar");
+      await advance(user, 3, 1);
       await allDone();
       expect(writes).toEqual([]);
     } finally {
@@ -326,13 +351,13 @@ describe("values already saved (spec 010, US4)", () => {
   it("F-116: reloading the page returns to step 1 with the saved values, without the intermediate answers", async () => {
     const first = await openOnboarding();
     await press(first.user, "Saltar");
-    await press(first.user, "Mais uma pessoa");
+    for (let i = 0; i < 3; i++) await press(first.user, "Mais uma pessoa");
     expect(screen.getByText("3")).toBeInTheDocument();
     first.unmount();
     const second = await openOnboarding();
     expect(screen.getByText("Passo 1 de 4")).toBeInTheDocument();
     await press(second.user, "Saltar");
-    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getByText("—")).toBeInTheDocument();
     await waitFor(() => expect(within(document.body).queryByText("3")).not.toBeInTheDocument());
   });
 });
