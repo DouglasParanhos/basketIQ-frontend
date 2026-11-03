@@ -100,6 +100,56 @@ test.describe("small screens (plano de testes §11)", () => {
   }
 });
 
+test.describe("bottom navigation: the approved design (canvas NavBar)", () => {
+  for (const smartList of [false, true]) {
+    test(`the bar is 76 px high, its ${smartList ? 5 : 4} destinations fill the width with no gap, and Adicionar is a 56 px green round button`, async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await fakeApi(page, { smartList });
+      await page.goto("/");
+      const nav = page.getByRole("navigation", { name: "Navegação principal" });
+      await expect(nav.getByRole("link")).toHaveCount(smartList ? 5 : 4);
+      const bar = (await nav.boundingBox())!;
+      expect(bar.height).toBe(76);
+      expect(bar.y + bar.height).toBe(844);
+      // The slots are contiguous and as wide as each other: no hole where Lista is missing.
+      const slots = await nav.locator("li").evaluateAll((els) => els.map((e) => {
+        const { left, right, width } = e.getBoundingClientRect();
+        return { left, right, width };
+      }));
+      expect(slots[0]!.left).toBe(0);
+      expect(slots.at(-1)!.right).toBe(390);
+      slots.slice(1).forEach((slot, i) => expect(Math.abs(slot.left - slots[i]!.right)).toBeLessThan(0.5));
+      slots.forEach((slot) => expect(Math.abs(slot.width - slots[0]!.width)).toBeLessThan(0.5));
+      const add = nav.getByRole("link", { name: "Adicionar talão" }).locator("span").first();
+      const box = (await add.boundingBox())!;
+      expect([box.width, box.height]).toEqual([56, 56]);
+      expect(box.y).toBeLessThan(bar.y); // it rises above the bar, as in the canvas
+      await expect(add).toHaveCSS("background-color", "rgb(31, 111, 74)");
+    });
+  }
+
+  for (const [width, height] of [[320, 568], [390, 844]] as const) {
+    for (const path of ["/", "/compras", "/produtos", "/definicoes/perfil"]) {
+      test(`the bar does not cover the last element of ${path} (${width}px)`, async ({ page }) => {
+        await page.setViewportSize({ width, height });
+        await fakeApi(page, { smartList: true });
+        await page.goto(path);
+        await page.waitForLoadState("networkidle");
+        const { content, bar } = await page.evaluate(() => {
+          window.scrollTo(0, document.documentElement.scrollHeight);
+          const main = document.getElementById("conteudo")!;
+          const content = Array.from(main.querySelectorAll("*")).reduce((lowest, e) => {
+            const r = e.getBoundingClientRect();
+            return r.width > 1 && r.height > 1 ? Math.max(lowest, r.bottom) : lowest;
+          }, 0);
+          return { content, bar: document.querySelector('nav[aria-label="Navegação principal"]')!.getBoundingClientRect().top };
+        });
+        expect(content).toBeLessThanOrEqual(bar);
+      });
+    }
+  }
+});
+
 test.describe("customer-facing name (CFG-02)", () => {
   test("title, login and manifest follow the name served by the backend", async ({ page }) => {
     await fakeApi(page, { signedIn: false, appName: "Mercado do Zé" });

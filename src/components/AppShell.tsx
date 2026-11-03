@@ -1,4 +1,4 @@
-import { House, ListChecks, Plus, ReceiptText, SlidersVertical } from "lucide-react";
+import { Plus } from "lucide-react";
 import { createContext, Suspense, useContext, useLayoutEffect, useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import { useSmartListEnabled } from "../config/appConfig";
@@ -7,13 +7,22 @@ import { Spinner } from "./ui";
 const under = (path: string, base: string) => path === base || path.startsWith(`${base}/`);
 
 // `also`: other roots that keep the destination active (Talões covers /produtos too).
+// `icon`: the strokes of the approved design (canvas NavBar): a house, a receipt, three lines with dots, three sliders.
 const ITEMS = [
-  { to: "/", label: "Início", icon: House },
-  { to: "/compras", also: ["/produtos"], label: "Talões", icon: ReceiptText },
-  { to: "/adicionar", label: "Adicionar talão", icon: Plus, primary: true },
-  { to: "/lista", label: "Lista", icon: ListChecks, requiresSmartList: true },
-  { to: "/definicoes", label: "Definições", icon: SlidersVertical },
+  { to: "/", label: "Início", icon: "M3 11l9-8 9 8M5 10v10h14V10" },
+  { to: "/compras", also: ["/produtos"], label: "Talões", icon: "M6 3h12v18l-3-2-3 2-3-2-3 2V3zM9 8h6M9 12h6" },
+  { to: "/adicionar", label: "Adicionar talão", primary: true },
+  { to: "/lista", label: "Lista", icon: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01", requiresSmartList: true },
+  { to: "/definicoes", label: "Definições", icon: "M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" },
 ];
+
+function NavIcon({ path, active }: { path: string; active: boolean }) {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round" className="size-6">
+      <path d={path} />
+    </svg>
+  );
+}
 
 const NavContext = createContext<{ hidden: boolean; setHidden: (hidden: boolean) => void }>({ hidden: false, setHidden: () => undefined });
 
@@ -43,24 +52,27 @@ export function AppShell() {
       {!navHidden && (
         <nav
           aria-label="Navegação principal"
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:sticky md:top-0 md:h-dvh md:border-r md:border-t-0"
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-paper pb-[calc(8px+env(safe-area-inset-bottom))] md:sticky md:top-0 md:h-dvh md:border-r md:border-t-0 md:pb-0"
         >
-          <ul className="mx-auto flex max-w-xl items-stretch justify-around md:h-full md:flex-col md:justify-start md:gap-2 md:pt-6">
-            {items.map(({ to, also, label, icon: Icon, primary }) => {
+          {/* 76 px with the border and the 8 px below (plus the iOS safe area); the items sit centred in the 67 px between. */}
+          <ul className="mx-auto flex h-[67px] max-w-xl items-center md:h-full md:flex-col md:items-stretch md:justify-start md:gap-2 md:pt-6">
+            {items.map(({ to, also, label, icon, primary }) => {
               const isActive = [to, ...(also ?? [])].some((base) => under(pathname, base));
               return (
-                <li key={to} className="flex-1 md:flex-none">
+                <li key={to} className="flex flex-1 justify-center md:flex-none">
                   <Link
                     to={to}
                     aria-current={isActive ? "page" : undefined}
-                    className={`flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] ${isActive ? "font-bold text-ink" : "font-medium text-ink-soft"}`}
+                    className={`flex min-h-14 flex-col items-center justify-center gap-[3px] text-xs ${primary ? "" : "w-full"} ${isActive && !primary ? "font-extrabold text-brand" : "font-semibold text-ink-soft"}`}
                   >
-                    {primary ? (
-                      <span className="-mt-[22px] grid size-14 place-items-center rounded-full bg-brand text-white shadow-[0_6px_16px_rgb(0_0_0/0.3)] dark:text-ground md:mt-0">
-                        <Icon aria-hidden className="size-6" strokeWidth={2.4} />
+                    {primary || !icon ? (
+                      <span className="-mt-[22px] grid size-14 place-items-center rounded-full bg-brand text-white shadow-[0_6px_16px_color-mix(in_srgb,var(--color-brand)_35%,transparent)] dark:text-ground md:mt-0">
+                        <Plus aria-hidden className="size-6" strokeWidth={2.4} />
                       </span>
                     ) : (
-                      <Icon aria-hidden className="size-[22px]" strokeWidth={1.8} />
+                      <span className={`grid h-[30px] w-[52px] place-items-center rounded-[15px] ${isActive ? "bg-brand-pill" : ""}`}>
+                        <NavIcon path={icon} active={isActive} />
+                      </span>
                     )}
                     <span className={primary ? "sr-only md:not-sr-only" : undefined}>{label}</span>
                   </Link>
@@ -70,7 +82,7 @@ export function AppShell() {
           </ul>
         </nav>
       )}
-      <main id="conteudo" className={`mx-auto w-full max-w-2xl px-5 ${navHidden ? "" : "pb-28 md:pb-12"}`}>
+      <main id="conteudo" className={`mx-auto w-full max-w-2xl px-5 ${navHidden ? "" : "pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-12"}`}>
         <NavContext.Provider value={nav}>
           <Suspense fallback={<Spinner />}>
             <Outlet />

@@ -71,6 +71,36 @@ describe("bottom navigation (spec 009)", () => {
   });
 });
 
+describe("bottom navigation: the approved design (canvas NavBar)", () => {
+  const links = () => within(nav()).getAllByRole("link");
+  const strokeOf = (link: HTMLElement) => link.querySelector("svg")!.getAttribute("stroke-width");
+
+  it("only the current destination has aria-current; the others do not carry the attribute at all", () => {
+    renderRoutes(shell, "/compras");
+    const current = links().filter((l) => l.hasAttribute("aria-current"));
+    expect(current.map((l) => l.textContent)).toEqual(["Talões"]);
+    expect(current[0]).toHaveAttribute("aria-current", "page");
+  });
+
+  it("the current destination has the pill behind a thicker icon; the others have neither", () => {
+    renderRoutes(shell, "/definicoes");
+    for (const link of links()) {
+      const active = link.textContent === "Definições";
+      expect(link.querySelector(".bg-brand-pill") !== null, link.textContent ?? "").toBe(active);
+      if (link.textContent !== "Adicionar talão") expect(strokeOf(link), link.textContent ?? "").toBe(active ? "2.2" : "1.8");
+    }
+  });
+
+  it("«Adicionar talão» is a link with that accessible name, to /adicionar, and keeps its green button when it is the current page", () => {
+    renderRoutes(shell, "/adicionar");
+    const add = within(nav()).getByRole("link", { name: "Adicionar talão" });
+    expect(add).toHaveAttribute("href", "/adicionar");
+    expect(add).toHaveAttribute("aria-current", "page");
+    expect(add.querySelector(".bg-brand")).not.toBeNull();
+    expect(add.querySelector(".bg-brand-pill")).toBeNull();
+  });
+});
+
 describe("lazy pages inside the shell (spec 010, R14)", () => {
   it("F-115: the navigation bar stays while a lazy page is still loading", async () => {
     const Pending = lazy(() => new Promise<never>(() => undefined));
