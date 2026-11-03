@@ -109,7 +109,7 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
 
 test("CFG-02: name, title and manifest come from the backend's config/app-config.yaml", async ({ page, request }) => {
   const config = await request.get("/v1/config");
-  expect(await config.json()).toEqual({ app_name: "Super Mercado" });
+  expect(await config.json()).toMatchObject({ app_name: "Super Mercado" }); // the exact public keys: backend F-176
   const manifest = await request.get("/v1/config/manifest.webmanifest");
   expect(manifest.headers()["content-type"]).toContain("application/manifest+json");
   expect((await manifest.json()).name).toBe("Super Mercado");
