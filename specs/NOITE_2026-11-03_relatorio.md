@@ -43,8 +43,8 @@ interno ao vitest, e não é coberto por estes valores. Está comentado em `vite
 | 5 Onboarding | feito, **sem** a meta acima de € 800 (backend) | `a6f2fd0` |
 | 6 Início | feito | `9d5ba36` |
 | 7 Talões | feito (Compras completo; Resumo e Produtos só nos pontos do canvas que o código já cobria) | `2d58c0d` |
-| 8 Rever talão | **parcial**: só o aspeto, a estrutura do canvas não foi adotada | (ver `git log`) |
-| 9 Adicionar | não feito | |
+| 8 Rever talão | **parcial**: só o aspeto, a estrutura do canvas não foi adotada | `aaecb5d` |
+| 9 Adicionar | feito (câmara do Douglas intocada) | (ver `git log`) |
 | 10 Definições | não feito | |
 
 ### Passo 4: Login e Política
@@ -150,6 +150,18 @@ refiz a estrutura**; apliquei o aspeto:
 «Guardar e rever depois» sai do ecrã, «Guardar» não), o cartão de resumo com edição por ícone, o aviso «Desfazer» (não há
 desfazer na lógica), o total sobre o marcador a Fraunces e a frase «A descrição original fica guardada» (só depois de B-10, plano §6.3).
 
+### Passo 9: Adicionar
+
+O ecrã já tinha a estrutura do canvas (título, chips de mercado, três botões grandes, aviso do talão comprido, ecrã das partes).
+Aplicado: título em Fraunces 30; **cada mercado é a sua pílula** (`MarketPill`): escolhido, com as cores do mercado e «✓»; não
+escolhido, branco com a borda e o tile do mercado; «Detetar sozinho» fica verde (escolhido) ou branco. Os títulos dos ecrãs
+sem barra (`FullScreen`: «Confirme as partes», «Editar perfil») passam a Fraunces 20. O aviso do talão comprido ficou dourado
+pela mudança global dos avisos (passo 8).
+
+**Câmara do Douglas:** não toquei em `features/capture/`, nem na lógica ou no fluxo da câmara. Nenhum conflito com o canvas
+(o canvas desenha um ecrã de câmara com «Captura automática» e várias partes; o da câmara existente fica como está, sem
+alterações de aspeto nesta noite).
+
 ## Decisões a rever
 
 1. **Colunas de talões do login em conteúdo gerado por CSS.** O axe mediu 1,21:1 no texto decorativo a 10 % de
@@ -209,6 +221,7 @@ desfazer na lógica), o total sobre o marcador a Fraunces e a frase «A descriç
 ## Capturas
 
 - Passo 4 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-4/` do projeto: `login-*`, `login-erro-*`, `politica-*`, `politica-aberta-*`.
+- Passo 9: `Documentation/noite-2026-11-03/passo-9/`: `adicionar-*` (primeiro ecrã) e `adicionar-auchan-*` (Auchan escolhida).
 - Passo 8: `Documentation/noite-2026-11-03/passo-8/`: `rever-*`.
 - Passo 7 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-7/`: `compras-*`, `resumo-*`, `produtos-*`.
 - Passo 6 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-6/`: `inicio-*` (um estado por captura), `vazio-*`, `exemplo-*`.
