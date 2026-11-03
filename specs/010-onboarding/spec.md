@@ -149,7 +149,7 @@ Depois do consentimento, a pessoa responde a: objetivo, pessoas, mercados e meta
 
 ## Identificadores de teste (constituição VII)
 
-Atribuídos a 2026-10-30 dentro da faixa da experiência v2 (F-86 a F-125), um por história; F-176 a F-205 ficam reservados à continuação da UX v2 (Funcional §12.4). Os testes do frontend levam o identificador no nome (`F-113: …`).
+Atribuídos a 2026-10-30 dentro da faixa da experiência v2 (F-86 a F-125), um por história; F-176 a F-205 ficam reservados à continuação da UX v2 (Plano de Testes §5.1). Os testes do frontend levam o identificador no nome (`F-113: …`).
 
 | ID | O que verifica | Critérios | Tarefas |
 |---|---|---|---|

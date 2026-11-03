@@ -17,6 +17,13 @@ export function formatCents(cents: number | null | undefined): string {
   return money.format(cents / 100);
 }
 
+const UNIT_BASE: Record<string, string> = { kg: "/kg", l: "/l", un: "/un." };
+
+/** A price in its base unit ("1,59 € /un."); "—" when there is none, so no base is shown without a price. */
+export function formatUnitPrice(cents: number | null | undefined, basis: string): string {
+  return cents === null || cents === undefined ? "—" : `${formatCents(cents)} ${UNIT_BASE[basis] ?? ""}`.trim();
+}
+
 const wholeEuros = new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
 /** A whole number of euros for display only ("300 €"); the value itself is multiplied into integer cents before it is sent. */

@@ -50,5 +50,5 @@
 **R11. Identificadores de teste (D-Q10).**
 - F-189 a F-194, um por história; o backend 014 usa F-176 a F-182 e o frontend 011 usa F-183 a F-188. Ficam F-195 a F-205 para as specs 012 e 013 do frontend e 015. `traceability.py` não muda.
 
-**R12. Spec 006 e Funcional.**
-- A spec 006 (`006-definicoes-dados`) é reestilizada aqui, não substituída: o comportamento de eliminar e terminar sessão mantém-se. Registar F-189 a F-194 na Funcional §12.4 e uma nota na spec 006 na implementação (T025).
+**R12. Spec 006 e Plano de Testes.**
+- A spec 006 (`006-definicoes-dados`) é reestilizada aqui, não substituída: o comportamento de eliminar e terminar sessão mantém-se. Registar F-189 a F-194 no Plano de Testes §5.1 e uma nota na spec 006 na implementação (T025).

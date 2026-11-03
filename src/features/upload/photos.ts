@@ -1,9 +1,11 @@
 import { effectiveType, MAX_PHOTOS } from "../../lib/upload";
+import { NO_CHECK, type StillCheck } from "../capture/analyzeFrame";
 import { isEdited, NO_EDIT, type Edit } from "./edit";
 import type { UploadFile } from "./useUpload";
 
-/** One part of the receipt being added: a photo (or the PDF), kept only in memory. */
-export interface Part {
+/** One part of the receipt being added: a photo (or the PDF), kept only in memory. Its check (`analyzeStill`:
+ * what the backend would warn about, the whole receipt in it) arrives after it is added. */
+export interface Part extends StillCheck {
   id: string;
   /** The original file; never changed. */
   file: File;
@@ -22,6 +24,7 @@ export const newPart = (file: File, previewUrl: string | null, previewError: boo
   previewUrl,
   previewError,
   edit: NO_EDIT,
+  ...NO_CHECK,
 });
 
 /** Why a file of this type cannot be added to the parts, or null when it can. */
@@ -36,6 +39,12 @@ export function canAdd(parts: Part[], type: string): string | null {
 export const add = (parts: Part[], part: Part): Part[] => [...parts, part];
 
 export const remove = (parts: Part[], id: string): Part[] => parts.filter((p) => p.id !== id);
+
+/** A part taken again («Fotografar de novo») goes where the old one was. */
+export const replace = (parts: Part[], id: string, part: Part): Part[] => parts.map((p) => (p.id === id ? part : p));
+
+export const setCheck = (parts: Part[], id: string, check: StillCheck): Part[] =>
+  parts.map((p) => (p.id === id ? { ...p, ...check } : p));
 
 /** Swaps a part with its neighbour; at the ends nothing changes. */
 export function move(parts: Part[], id: string, by: -1 | 1): Part[] {
@@ -62,5 +71,5 @@ export async function toUploadFiles(parts: Part[], render: (previewUrl: string, 
   return files;
 }
 
-/** The orientation for the next part, which the system camera cannot draw as a frame. */
-export const nextPartText = (parts: Part[]): string => `Parte ${parts.length + 1} · comece onde a parte ${parts.length} acabou`;
+/** The orientation for the next part (in the parts screen and on the in-app camera). */
+export const nextPartText = (parts: readonly Pick<Part, "id">[]): string => `Parte ${parts.length + 1} · comece onde a parte ${parts.length} acabou`;

@@ -62,4 +62,40 @@ Fonte: `Documentation/design-ux-v2/AdicionarV2.dc.html` com a tabela «protótip
 | Corpo | os `message` do backend, separados por espaço |
 | Ação | Tire outra foto (ligação a `/adicionar`) |
 
-**Não aparece:** «Talão detetado · mantenha firme», «Captura automática» e qualquer moldura (spike); «Enviar nota»; a frase «Se os valores não estiverem certos, tire uma nova fotografia.» (a ação substitui-a).
+## Câmara própria (US4)
+
+Fonte no código: `src/features/capture/hints.ts` (`LIVE_TEXT`, `STILL_TEXT`) e `CameraCapture.tsx`. Um conselho de cada vez, por esta prioridade:
+
+| Situação | Código | Texto |
+|---|---|---|
+| Pouca luz no papel | `too_dark` | Está escuro: procure mais luz |
+| Nenhum talão na imagem | `no_receipt` | Aponte a câmara para o talão |
+| Papel e superfície igualmente claros | `bad_background` | Pouse o talão num fundo escuro: assim vemos onde acaba |
+| Talão a sair por um dos lados | `cut_side` | O talão está cortado de lado: centre-o |
+| Talão mais largo do que a imagem | `too_close` | Afaste um pouco a câmara |
+| Talão a sair em cima ou em baixo (só foto única) | `cut_ends` | O talão não cabe: afaste-se ou fotografe por partes |
+| Talão estreito demais (menos de 600 px na foto, com 10 % de folga) | `too_far` | Aproxime a câmara do talão |
+| Imagem tremida ou desfocada | `blurry` | Imagem tremida ou desfocada: segure firme |
+| Tudo bem | `ok` | Talão detetado · pode fotografar |
+
+| Onde | Texto |
+|---|---|
+| Diálogo (`aria-label`) | Fotografar o talão |
+| Título | Talão inteiro na imagem (foto única) · Parte N (partes seguintes) |
+| Partes | Linhas já fotografadas (sobre o fundo da parte anterior) · Parte N · comece onde a parte N-1 acabou |
+| Botões | Tirar a foto · Fechar a câmara (depois de cada foto a câmara fecha e volta «Confirme as partes») |
+| Sem acesso | A aplicação não tem acesso à câmara. Pode dar acesso nas definições do navegador ou usar a câmara do telemóvel. |
+| Sem câmara | Não foi possível abrir a câmara neste navegador. |
+| Recurso | Usar a câmara do telemóvel |
+
+## Verificação de cada foto (US5, no ecrã das partes)
+
+| Código | Texto |
+|---|---|
+| `too_dark` | A foto está escura. |
+| `too_far` | O talão ficou pequeno na foto: aproxime-se ou fotografe-o por partes. |
+| `blurry` | A foto está tremida ou desfocada. |
+| Fecho | Pode enviá-la na mesma. |
+| Ação | Fotografar de novo (`aria-label`: Fotografar de novo a parte N) |
+
+**Não aparece:** «Captura automática» (a foto é sempre tirada pela pessoa); «Enviar nota»; a frase «Se os valores não estiverem certos, tire uma nova fotografia.» (a ação substitui-a).

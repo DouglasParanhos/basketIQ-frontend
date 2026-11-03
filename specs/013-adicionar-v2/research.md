@@ -1,6 +1,6 @@
 # Research: Adicionar v2 (013)
 
-Fontes: `Documentation/design-ux-v2/AdicionarV2.dc.html` e `README.md`, plano UX v2 Fase 5, HANDOFF (A5), `specs/013-adicionar-v2/spec.md` (Clarifications), `../basketIQ-backend/openapi.json` (commit `4e327d4`) e o código do backend e do frontend (só leitura). Nada foi alterado fora de `specs/013-adicionar-v2`.
+Fontes: `Documentation/design-ux-v2/AdicionarV2.dc.html` e `README.md`, plano UX v2 Fase 5, Plano do Passo A (§3, A5), `specs/013-adicionar-v2/spec.md` (Clarifications), `../basketIQ-backend/openapi.json` (commit `4e327d4`) e o código do backend e do frontend (só leitura). Nada foi alterado fora de `specs/013-adicionar-v2`.
 
 ## R1. Estrutura: dividir o `AddPage`
 

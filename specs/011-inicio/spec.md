@@ -16,7 +16,7 @@
 
 ### Session 2026-10-31
 
-Respostas deduzidas dos documentos (HANDOFF, plano UX v2, README de design, spec 014 do backend, spec 010), dadas sem supervisão. **A 2026-10-31 a Liz decidiu D-P1 a D-P14** (ver a última entrada desta secção); onde uma resposta abaixo dizia «por confirmar», vale a decisão. O relatório está em `Documentation/ANALISE_spec011_frontend_2026-10-31.md`.
+Respostas deduzidas dos documentos (HANDOFF de 2026-10-30, hoje em `Documentation/_arquivo/`; plano UX v2, README de design, spec 014 do backend, spec 010), dadas sem supervisão. **A 2026-10-31 a Liz decidiu D-P1 a D-P14** (ver a última entrada desta secção); onde uma resposta abaixo dizia «por confirmar», vale a decisão. O relatório está em `Documentation/_arquivo/ANALISE_spec011_frontend_2026-10-31.md`.
 
 - Q: Para onde vai «Definir a minha meta pessoal»? → A: para a edição da meta no Perfil das Definições (spec 014 do frontend). O passo 4 do onboarding deixou de ser opção: `/boas-vindas` leva quem já concluiu para o Início (spec 010, decisão 17). Até o Perfil existir (Fase 6), o botão aponta para `/definicoes`. O lançamento espera pelo Perfil (decisão da Liz, 2026-10-30).
 - Q: Quem vê o anel sem meta? → A: **todas as contas anteriores ao onboarding** (a migração do backend marca-as como concluídas, sem meta) e quem saltou o passo da meta. É o estado normal de muita gente, não um caso raro.

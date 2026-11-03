@@ -90,6 +90,8 @@ description: "Tarefas da spec 013: Adicionar v2 (talão comprido, várias partes
 
 ---
 
+> **2026-11-01:** a US4 passou a «Câmara própria com orientação ao vivo» e a US5 a «Verificação de cada foto antes do envio» (spec). Implementadas em `src/features/capture/`, `AddPage.tsx`, `PartCard.tsx` e `photos.ts`; testes `F-203`/`F-204` em `AddPage.parts.test.tsx`, `src/features/capture/*.test.ts(x)` e `e2e/mock/camera.spec.ts`. O spike (T023) deixa de ser preciso.
+
 ## Phase 7: User Story 5 — Spike da câmara própria (P3) — ADIADA
 
 **Não implementar** até a Liz o pedir. É um documento, não código.

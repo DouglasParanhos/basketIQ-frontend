@@ -126,6 +126,35 @@ const PRODUCTS = [
   { id: "p4", name: "Água", unit_type: null, lines: 2, spent_cents: 120, last_purchase_at: "2026-10-10T10:00:00Z", avg_price_cents: null, price_basis: "un", purchases: 2, merchants: 1 },
 ];
 
+/** GET /v1/lists/articles: a counted item in two stores (one with a discount) and a weighed one. */
+const price = (price_cents: number, date: string, discounted = false) => ({ price_cents, date, discounted });
+const LIST_ARTICLES = {
+  window_days: 90,
+  date_from: "2026-08-18",
+  date_to: "2026-11-15",
+  excluded_lines: 2,
+  items: [
+    {
+      product_id: "p3", name: "Ovos M", purchases: 4, packages: "5", packages_per_month: 1.7, avg_interval_days: 24.3, spent_cents: 795,
+      price_basis: "un", mixed_units: false, avg_price_cents: 159, last_purchase: "2026-11-01",
+      articles: [
+        { merchant: "LIDL", merchant_name: "Lidl", purchases: 3, avg_price_cents: 149,
+          lowest: price(125, "2026-09-10", true), highest: price(161, "2026-10-20"), last: price(161, "2026-10-20") },
+        { merchant: null, merchant_name: "Mercearia do Bairro", purchases: 1, avg_price_cents: 199,
+          lowest: price(199, "2026-11-01"), highest: price(199, "2026-11-01"), last: price(199, "2026-11-01") },
+      ],
+    },
+    {
+      product_id: "p1", name: "Peito de frango", purchases: 2, packages: "2", packages_per_month: 0.7, avg_interval_days: 14, spent_cents: 850,
+      price_basis: "kg", mixed_units: true, avg_price_cents: 567, last_purchase: "2026-09-15",
+      articles: [
+        { merchant: "PINGO_DOCE", merchant_name: "Pingo Doce", purchases: 2, avg_price_cents: 567,
+          lowest: price(550, "2026-09-15"), highest: price(600, "2026-09-01"), last: price(550, "2026-09-15") },
+      ],
+    },
+  ],
+};
+
 const PRODUCT_ANALYTICS = {
   product: { id: "p1", name: "Peito de frango", unit_type: "kg" },
   price_basis: "kg",
@@ -368,6 +397,8 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
       return json(route, { items, next_cursor: null });
     }
     if (path === "/v1/analytics/months" && method === "GET") return json(route, state.empty ? [] : MONTHS);
+    // Like the API: every /v1/lists path is not found while the smart list is off.
+    if (path === "/v1/lists/articles" && method === "GET" && state.smartList) return json(route, LIST_ARTICLES);
     if (path === "/v1/products/p1/analytics" && method === "GET") return json(route, PRODUCT_ANALYTICS);
     if (path === "/v1/products" && method === "GET") {
       const q = (url.searchParams.get("q") ?? "").toLowerCase();

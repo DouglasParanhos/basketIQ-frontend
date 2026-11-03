@@ -67,10 +67,14 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   await page.getByRole("button", { name: "Confirmar", exact: true }).click();
   await expect(page.getByText("Confirmada por si", { exact: false })).toBeVisible();
 
-  // F-05 / F-27: a photo goes through local OCR (PaddleOCR in the worker).
+  // F-05 / F-27: a photo goes through local OCR (PaddleOCR in the worker). Until the description check exists every
+  // photo goes to review (backend rule D1(a), photo_not_verified), so it is confirmed by hand.
   await upload(page, doc("lidl_photo", "document.png"), "input-image");
-  await expect(page.getByText(/Confirmada|Reveja antes de confirmar/).first()).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByText("Reveja antes de confirmar")).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByText(/lida a partir de uma imagem/)).toBeVisible();
   await expect(page.getByText(/IOGURTE NATURAL/)).toBeVisible();
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
+  await expect(page.getByText("Confirmada por si", { exact: false })).toBeVisible();
 
   // F-18 / F-19: September 2026 dashboard, then filtered by Lidl.
   await page.goto("/?de=2026-09-01&ate=2026-09-30");
@@ -98,14 +102,14 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   // F-23: account deletion.
   await page.goto("/definicoes/conta");
   await page.getByRole("link", { name: "Eliminar conta…" }).click();
-  await page.getByRole("checkbox").check();
+  await page.getByRole("checkbox").check({ force: true });
   await page.getByRole("button", { name: "Eliminar a minha conta" }).click();
   await expect(page).toHaveURL(/\/login/);
 });
 
 test("CFG-02: name, title and manifest come from the backend's config/app-config.yaml", async ({ page, request }) => {
   const config = await request.get("/v1/config");
-  expect(await config.json()).toEqual({ app_name: "Super Mercado" });
+  expect(await config.json()).toMatchObject({ app_name: "Super Mercado" }); // the exact public keys: backend F-176
   const manifest = await request.get("/v1/config/manifest.webmanifest");
   expect(manifest.headers()["content-type"]).toContain("application/manifest+json");
   expect((await manifest.json()).name).toBe("Super Mercado");

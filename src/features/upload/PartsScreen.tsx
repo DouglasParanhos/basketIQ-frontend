@@ -5,6 +5,7 @@ import { FullScreen } from "../../components/FullScreen";
 import { Button, Notice, ROUND_NEUTRAL } from "../../components/ui";
 import { formatCents, formatDate } from "../../lib/format";
 import { merchantName } from "../../lib/merchants";
+import { stillText } from "../capture/hints";
 import { MAX_PHOTOS } from "../../lib/upload";
 import type { Edit } from "./edit";
 import { MerchantField } from "./MerchantPicker";
@@ -36,6 +37,7 @@ export function PartsScreen(props: {
   onEdit: (id: string | null) => void;
   onEditChange: (edit: Edit) => void;
   onRemove: (id: string) => void;
+  onRetake: (id: string) => void;
   onMove: (id: string, by: -1 | 1) => void;
   onLeave: () => void;
   onKeep: () => void;
@@ -47,6 +49,8 @@ export function PartsScreen(props: {
   const busy = ["hashing", "uploading", "starting"].includes(upload.phase);
   const hasPdf = parts.some((p) => p.type === "application/pdf");
   const atLimit = parts.length >= MAX_PHOTOS;
+  // The last photo already holds the whole receipt: another part is possible but not asked for.
+  const complete = !!parts.at(-1)?.whole;
   const editing = parts.findIndex((p) => p.id === editingId);
 
   // The first time the screen opens the focus goes to its title.
@@ -128,13 +132,32 @@ export function PartsScreen(props: {
             ))}
           </ul>
 
+          {/* What the backend would warn about a photo: said before sending, never blocking it (US5). */}
+          {parts.map(
+            (part, i) =>
+              part.warnings.length > 0 && (
+                <Notice
+                  key={part.id}
+                  tone="warning"
+                  title={`A parte ${i + 1} pode ser melhorada`}
+                  action={
+                    <Button type="button" variant="secondary" aria-label={`Fotografar de novo a parte ${i + 1}`} disabled={busy} onClick={() => props.onRetake(part.id)}>
+                      <Camera aria-hidden className="size-5" /> Fotografar de novo
+                    </Button>
+                  }
+                >
+                  {stillText(part.warnings)} Pode enviá-la na mesma.
+                </Notice>
+              ),
+          )}
+
           {props.fileError && <Notice tone="error">{props.fileError}</Notice>}
 
           {!hasPdf && (
             <div className="flex flex-col gap-2">
               {!atLimit && (
                 <p id="next-part" className="text-sm font-semibold">
-                  {nextPartText(parts)}
+                  {complete ? "O talão parece completo nesta foto: pode enviar." : nextPartText(parts)}
                 </p>
               )}
               <Button

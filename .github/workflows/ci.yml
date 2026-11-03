@@ -54,3 +54,72 @@ jobs:
           name: playwright-report
           path: playwright-report
           retention-days: 7
+
+  # Full journey against the real backend (public repo, main branch), mock OIDC and local OCR.
+  # Only on pull requests: the backend image build (PaddleOCR) and the OCR steps take minutes.
+  # Both repos are checked out side by side because the tests read ../basketIQ-backend/tests/golden/synthetic.
+  e2e-stack:
+    name: E2E (real backend), full journey
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    needs: quality
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: Frontend
+      - uses: actions/checkout@v4
+        with:
+          repository: DouglasParanhos/basketIQ-backend
+          path: basketIQ-backend
+      - name: Start the backend stack
+        working-directory: basketIQ-backend
+        run: |
+          cp .env.example .env
+          docker compose up -d --build
+          for i in $(seq 1 60); do
+            curl -fs http://localhost:8000/healthz >/dev/null && exit 0
+            sleep 2
+          done
+          docker compose logs
+          exit 1
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+          package_json_file: Frontend/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: Frontend/pnpm-lock.yaml
+      - name: Install and start the frontend
+        working-directory: Frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+          nohup pnpm dev > dev.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -fs http://localhost:5173/v1/config >/dev/null && exit 0
+            sleep 2
+          done
+          cat dev.log
+          exit 1
+      - name: Full journey
+        working-directory: Frontend
+        run: pnpm e2e --project=stack
+        env:
+          CI: "true"
+      - name: Backend logs
+        if: failure()
+        working-directory: basketIQ-backend
+        run: docker compose logs --no-color > ../backend-logs.txt
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-stack-report
+          path: |
+            Frontend/playwright-report
+            Frontend/test-results
+            Frontend/dev.log
+            backend-logs.txt
+          retention-days: 7

@@ -4,10 +4,8 @@ import { useDeferredValue } from "react";
 import { Link, useSearchParams } from "react-router";
 import { api, unwrap, type Schemas } from "../../api/client";
 import { Notice, Spinner } from "../../components/ui";
-import { formatCents } from "../../lib/format";
+import { formatUnitPrice } from "../../lib/format";
 import { ORDERS, parseOrder, sortProducts } from "./sort";
-
-const BASE: Record<string, string> = { kg: "/kg", l: "/l", un: "/un." };
 
 function Price({ product: p }: { product: Schemas["ProductSearchItem"] }) {
   // No average price (no unit or price known): nothing is shown in its place, so none is made up.
@@ -21,9 +19,7 @@ function Price({ product: p }: { product: Schemas["ProductSearchItem"] }) {
   }
   return (
     <span className="text-right">
-      <span className="amount block font-bold">
-        {formatCents(p.avg_price_cents)} {BASE[p.price_basis] ?? ""}
-      </span>
+      <span className="amount block font-bold">{formatUnitPrice(p.avg_price_cents, p.price_basis)}</span>
       <span className="block text-[0.6875rem] text-ink-soft">preço médio</span>
     </span>
   );

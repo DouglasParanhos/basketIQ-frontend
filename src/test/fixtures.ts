@@ -362,3 +362,74 @@ export function productAnalytics(overrides: Partial<Schemas["ProductAnalyticsOut
     ...overrides,
   };
 }
+
+/** GET /v1/lists/articles: a counted item in two stores (one purchase with a discount) and a weighed one. */
+export function listArticles(overrides: Partial<Schemas["ListArticlesOut"]> = {}): Schemas["ListArticlesOut"] {
+  const price = (price_cents: number, date: string, discounted = false): Schemas["ArticlePrice"] => ({ price_cents, date, discounted });
+  return {
+    window_days: 90,
+    date_from: "2026-08-18",
+    date_to: "2026-11-15",
+    excluded_lines: 0,
+    items: [
+      {
+        product_id: "p2",
+        name: "Iogurte grego",
+        purchases: 4,
+        packages: "5",
+        packages_per_month: 1.7,
+        avg_interval_days: 24.3,
+        spent_cents: 795,
+        price_basis: "un",
+        mixed_units: false,
+        avg_price_cents: 159,
+        last_purchase: "2026-11-01",
+        articles: [
+          {
+            merchant: "LIDL",
+            merchant_name: "Lidl",
+            purchases: 3,
+            avg_price_cents: 149,
+            lowest: price(125, "2026-09-10", true),
+            highest: price(161, "2026-10-20"),
+            last: price(161, "2026-10-20"),
+          },
+          {
+            merchant: "PINGO_DOCE",
+            merchant_name: "Pingo Doce",
+            purchases: 1,
+            avg_price_cents: 199,
+            lowest: price(199, "2026-11-01"),
+            highest: price(199, "2026-11-01"),
+            last: price(199, "2026-11-01"),
+          },
+        ],
+      },
+      {
+        product_id: "p1",
+        name: "Peito de frango",
+        purchases: 2,
+        packages: "2",
+        packages_per_month: 0.7,
+        avg_interval_days: 14,
+        spent_cents: 850,
+        price_basis: "kg",
+        mixed_units: false,
+        avg_price_cents: 567,
+        last_purchase: "2026-09-15",
+        articles: [
+          {
+            merchant: null,
+            merchant_name: "Talho Central",
+            purchases: 2,
+            avg_price_cents: 567,
+            lowest: price(550, "2026-09-15"),
+            highest: price(600, "2026-09-01"),
+            last: price(550, "2026-09-15"),
+          },
+        ],
+      },
+    ],
+    ...overrides,
+  };
+}

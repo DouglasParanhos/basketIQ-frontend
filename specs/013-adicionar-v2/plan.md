@@ -6,7 +6,7 @@
 
 ## Summary
 
-Reestilizar o ecrã Adicionar segundo o desenho aprovado e corrigir a edição por parte: o ecrã inicial passa a ter os três botões grandes, o aviso de talão comprido e os mercados da API em chips; depois da primeira foto, o ecrã «Confirme as partes» mostra cada parte com pré-visualização, «Recortar» e «Apagar», «Adicionar outra parte» com a orientação da parte seguinte, o mercado, o texto sobre a junção e «Enviar talão · N fotos». O `ImageEditor` passa a ser controlado, para a edição viver com a parte e sobreviver a trocar, reordenar e apagar (A5 do HANDOFF); o que se envia é o que se vê. O envio (`useUpload`) **não muda**. No detalhe da compra, o aviso de qualidade ganha a ação «Tire outra foto». A câmara própria é um spike separado e não entra.
+Reestilizar o ecrã Adicionar segundo o desenho aprovado e corrigir a edição por parte: o ecrã inicial passa a ter os três botões grandes, o aviso de talão comprido e os mercados da API em chips; depois da primeira foto, o ecrã «Confirme as partes» mostra cada parte com pré-visualização, «Recortar» e «Apagar», «Adicionar outra parte» com a orientação da parte seguinte, o mercado, o texto sobre a junção e «Enviar talão · N fotos». O `ImageEditor` passa a ser controlado, para a edição viver com a parte e sobreviver a trocar, reordenar e apagar (A5 do Plano do Passo A (§3)); o que se envia é o que se vê. O envio (`useUpload`) **não muda**. No detalhe da compra, o aviso de qualidade ganha a ação «Tire outra foto». A câmara própria é um spike separado e não entra.
 
 Sem bloqueio de contrato nem de decisão: o contrato já existe (`openapi.json` do backend, commit `4e327d4`) e as clarificações não deixam decisão de produto nova. Só frontend, sem dependências novas.
 
