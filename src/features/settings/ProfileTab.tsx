@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import type { Schemas } from "../../api/client";
+import { MarketPill } from "../../components/MarketBadge";
 import { Button, Notice, SMALL_CAPS, Spinner, Surface } from "../../components/ui";
-import { formatCents, merchantName } from "../../lib/format";
+import { formatCents } from "../../lib/format";
+import { merchantName } from "../../lib/merchants";
 import { GOAL_OPTIONS } from "../profile/goals";
 import { useMerchants, useProfile } from "../profile/useProfile";
 import { ProfileEditor, type Block } from "./ProfileEditor";
@@ -83,7 +85,7 @@ export function ProfileTab() {
 }
 
 function ReadBlocks({ saved, names, onEdit }: { saved: Profile; names: Schemas["MerchantOut"][] | undefined; onEdit: (block: Block) => void }) {
-  const merchantNames = saved.merchants.map((id) => names?.find((m) => m.id === id)?.name ?? merchantName(id));
+  const merchantChips = saved.merchants.map((id) => ({ id, name: names?.find((m) => m.id === id)?.name ?? merchantName(id) }));
   const goals = GOAL_OPTIONS.filter(({ goal }) => saved.goals.includes(goal)).map(({ title }) => title);
   const people = saved.household_size === null ? null : `${saved.household_size} ${saved.household_size === 1 ? "pessoa" : "pessoas"}`;
   const big = (text: string) => <p className="mt-1 text-2xl font-extrabold">{text}</p>;
@@ -96,9 +98,18 @@ function ReadBlocks({ saved, names, onEdit }: { saved: Profile; names: Schemas["
       ))}
     </ul>
   );
+  const marketChips = (
+    <ul className="mt-2 flex flex-wrap gap-2">
+      {merchantChips.map(({ id, name }) => (
+        <li key={id}>
+          <MarketPill code={id} name={name} />
+        </li>
+      ))}
+    </ul>
+  );
   const blocks: { block: Block; title: string; short: string; empty: boolean; value: ReactNode; note?: string }[] = [
     { block: "people", title: "Pessoas na casa", short: "pessoas na casa", empty: people === null, value: people && big(people) },
-    { block: "merchants", title: "Onde faz compras", short: "mercados", empty: merchantNames.length === 0, value: chips(merchantNames) },
+    { block: "merchants", title: "Onde faz compras", short: "mercados", empty: merchantChips.length === 0, value: marketChips },
     {
       block: "goal",
       title: "Meta pessoal do mês",

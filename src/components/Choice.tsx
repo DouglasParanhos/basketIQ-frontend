@@ -13,21 +13,6 @@ export function Tick({ checked, small = false, className = "" }: { checked: bool
   );
 }
 
-/** A choice as a pill (44 px): the tick sits before the name when it is chosen, so the state is not colour alone. */
-export function ChoicePill({ checked, onChange, children }: { checked: boolean; onChange: ChangeEventHandler<HTMLInputElement>; children: ReactNode }) {
-  return (
-    <label
-      className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full px-4 text-[13px] font-bold ring-1 ring-inset has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand ${
-        checked ? "bg-brand text-white ring-brand dark:text-ground" : "text-ink ring-line"
-      }`}
-    >
-      <input type="checkbox" checked={checked} onChange={onChange} className="sr-only" />
-      {checked && <Check aria-hidden className="size-4" strokeWidth={3} />}
-      {children}
-    </label>
-  );
-}
-
 export function ChoiceCard({
   checked,
   onChange,

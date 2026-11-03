@@ -1,8 +1,9 @@
 import { Minus, Plus } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { Schemas } from "../../api/client";
-import { ChoiceCard, ChoicePill, Tick } from "../../components/Choice";
+import { ChoiceCard, Tick } from "../../components/Choice";
 import { FullScreen } from "../../components/FullScreen";
+import { MarketPill } from "../../components/MarketBadge";
 import { Button, Field, Notice, ROUND_BUTTON, ROUND_NEUTRAL, Spinner, Surface } from "../../components/ui";
 import { toggle } from "../onboarding/state";
 import { GOAL_OPTIONS } from "../profile/goals";
@@ -124,11 +125,15 @@ export function ProfileEditor({ saved, focus, onDone }: { saved: Profile; focus:
               </Notice>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {merchants.data.map(({ id, name }) => (
-                  <ChoicePill key={id} checked={draft.merchants.includes(id)} onChange={() => setDraft({ ...draft, merchants: toggle(draft.merchants, id) })}>
-                    {name}
-                  </ChoicePill>
-                ))}
+                {merchants.data.map(({ id, name }) => {
+                  const checked = draft.merchants.includes(id);
+                  return (
+                    <label key={id} className="inline-flex min-h-11 cursor-pointer items-center rounded-full has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand">
+                      <input type="checkbox" checked={checked} onChange={() => setDraft({ ...draft, merchants: toggle(draft.merchants, id) })} className="sr-only" />
+                      <MarketPill code={id} name={name} selected={checked} checkmark />
+                    </label>
+                  );
+                })}
               </div>
             )}
           </div>

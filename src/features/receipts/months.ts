@@ -1,5 +1,6 @@
 import type { Schemas } from "../../api/client";
-import { formatCents, formatMonth, merchantName } from "../../lib/format";
+import { formatCents, formatMonth } from "../../lib/format";
+import { merchantName } from "../../lib/merchants";
 import { shortMonth } from "../../lib/month";
 import { lisbonToday } from "../../lib/period";
 

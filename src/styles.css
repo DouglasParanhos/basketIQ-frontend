@@ -8,11 +8,26 @@
 @import "@fontsource/martian-mono/latin-600.css";
 
 /*
-  Palette from the Super Mercado brand pack: deep teal is the brand colour, gold the "highlighter"
-  that marks anything needing the person's eyes, mint the soft tint. The pack's vivid green
-  (#12B76A) is 2.6:1 on white, so text and graphics use the darker greens below. The pack has no
-  dark palette: the dark values are derived. Text pairs are >= 4.5:1, graphics and focus ring
-  >= 3:1. The printed-receipt surface (.receipt-paper) is the one bold element.
+  Fraunces (headings and big figures): only the latin subset (covers the Portuguese diacritics) of the
+  variable file with the optical-size axis, so the workbox precache does not carry the other subsets.
+  The family name is the one @fontsource-variable/fraunces uses.
+*/
+@font-face {
+  font-family: "Fraunces Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("../node_modules/@fontsource-variable/fraunces/files/fraunces-latin-opsz-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/*
+  Palette of the approved design (canvas of 02/11/2026): green is the brand colour, cream the ground,
+  gold the "highlighter" that marks anything needing the person's eyes (and the middle band of the goal
+  ring), mint the soft tint. The marker yellow is 1.5:1 as a stroke, so strokes use the darker gold
+  (warn). The design has no dark palette: the dark values are derived. Text pairs are >= 4.5:1,
+  graphics and focus ring >= 3:1 (src/lib/contrast.test.ts measures them). The printed-receipt
+  surface (.receipt-paper, .torn) is the one bold element.
 
   Keep in sync by hand: --color-brand (light) = theme-color in index.html and in the backend
   manifest (Backend/src/basketiq/api/routers/config.py); --color-ground (light) = the manifest's
@@ -20,28 +35,35 @@
 */
 @theme {
   --font-sans: "Nunito Sans", system-ui, sans-serif;
+  --font-display: "Fraunces Variable", Georgia, serif;
   --font-receipt: "Martian Mono", ui-monospace, monospace;
 
-  --color-brand: #075b50;
-  --color-brand-deep: #04443b;
-  --color-brand-soft: #cdefe0;
-  --color-ground: #f1f8f5;
+  --color-brand: #1f6f4a;
+  --color-brand-deep: #165236;
+  --color-brand-soft: #e6f1ea;
+  /* The pill behind the active icon of the navigation bar. */
+  --color-brand-pill: #dcebe2;
+  --color-ground: #faf8f4;
   --color-paper: #ffffff;
-  --color-ink: #0e2b26;
-  --color-ink-soft: #44615b;
-  --color-line: #cfe0d8;
+  /* The desk the sheet of receipts lies on (Talões, Compras). */
+  --color-table: #e9e3d6;
+  --color-ink: #1b1b1a;
+  --color-ink-soft: #5a564f;
+  --color-line: #ece7de;
   --color-marker: #ffc928;
   --color-marker-ink: #5c3f00;
-  --color-ok: #067647;
-  --color-ok-soft: #d7f0e3;
+  --color-ok: #1f6f4a;
+  --color-ok-soft: #e6f1ea;
   --color-alert: #b3261e;
-  --color-alert-soft: #f9dedc;
+  --color-alert-soft: #fbe3e0;
   /* >= 3:1 against paper and ground, in both schemes. */
-  --color-chart: #0b8a52;
-  /* The orange band of the goal ring (the marker yellow is only 1.5:1 as a stroke): 3.9:1 against paper; the chip text 7:1. */
-  --color-warn: #c2691a;
-  --color-warn-soft: #fbebd6;
-  --color-warn-ink: #7a400a;
+  --color-chart: #1f6f4a;
+  /* The bars that are not the one in focus (the other weeks). Under 3:1 on purpose: the value is written above each bar. */
+  --color-muted-bar: #d5cfc2;
+  /* The gold band of the goal ring (the marker yellow is only 1.5:1 as a stroke); the chip text is warn-ink on warn-soft. */
+  --color-warn: #b8860b;
+  --color-warn-soft: #fff1bf;
+  --color-warn-ink: #5c3f00;
 
   --radius-control: 0.75rem;
   --radius-surface: 1.25rem;
@@ -62,24 +84,27 @@
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --color-ground: #07201c;
-      --color-paper: #0e2d28;
-      --color-ink: #e6f4ee;
-      --color-ink-soft: #9fc1b7;
-      --color-line: #1f4640;
-      --color-brand: #3dd68c;
-      --color-brand-deep: #7ce8b3;
-      --color-brand-soft: #0f3b32;
+      --color-ground: #121a15;
+      --color-paper: #1a261f;
+      --color-table: #1d2922;
+      --color-ink: #eaf2ec;
+      --color-ink-soft: #a9bbb0;
+      --color-line: #2c3b32;
+      --color-brand: #4cc38a;
+      --color-brand-deep: #86dcae;
+      --color-brand-soft: #1f3a2c;
+      --color-brand-pill: #26443a;
       --color-marker: #6b5200;
       --color-marker-ink: #ffe9a6;
       --color-ok: #6fd3a0;
-      --color-ok-soft: #0e3b2b;
+      --color-ok-soft: #17382a;
       --color-alert: #ffb4ab;
       --color-alert-soft: #4a1a17;
-      --color-chart: #3dd68c;
-      --color-warn: #f0a050;
-      --color-warn-soft: #4a2a0c;
-      --color-warn-ink: #ffd9ad;
+      --color-chart: #4cc38a;
+      --color-muted-bar: #3a4a40;
+      --color-warn: #e0b13a;
+      --color-warn-soft: #3f3000;
+      --color-warn-ink: #ffe9a6;
     }
   }
   :focus-visible {
@@ -98,7 +123,14 @@
 }
 
 @layer components {
-  /* The printed receipt: white thermal paper with a torn, zig-zag bottom edge. */
+  /* A sheet of paper with a torn, zig-zag bottom edge; --tear is the height of a tooth (the width is twice that). */
+  .torn,
+  .receipt-paper {
+    --tear: 10px;
+    mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / calc(var(--tear) * 2) var(--tear) repeat-x,
+      linear-gradient(#000 0 0) top / 100% calc(100% - var(--tear)) no-repeat;
+  }
+  /* The printed receipt: white thermal paper. */
   .receipt-paper {
     position: relative;
     background: var(--color-paper);
@@ -108,9 +140,6 @@
     line-height: 1.55;
     padding: 1.25rem 1rem 1.75rem;
     box-shadow: 0 1px 0 var(--color-line);
-    --tear: 10px;
-    mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / calc(var(--tear) * 2) var(--tear) repeat-x,
-      linear-gradient(#000 0 0) top / 100% calc(100% - var(--tear)) no-repeat;
   }
   .receipt-paper hr {
     border: 0;

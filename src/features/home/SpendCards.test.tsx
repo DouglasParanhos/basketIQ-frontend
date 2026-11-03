@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
-import { overviewGreen, overviewZeroMonth } from "../../test/fixtures";
+import { overviewGreen, overviewTwoReds, overviewZeroMonth } from "../../test/fixtures";
 import { PurchasesCard, SpendCards } from "./SpendCards";
 
 const plain = (s: string | null) => (s ?? "").replace(/\u00a0/g, " ");
@@ -48,6 +48,24 @@ describe("spending cards of the Início (spec 011, US4)", () => {
     cards();
     const list = within(region("Onde gasta mais")).getAllByRole("listitem");
     expect(list.map((li) => plain(li.textContent))).toEqual(["PPingo Doce62,00 €41 %", "LLidl50,00 €33 %", "MMercadona40,00 €26 %"]);
+  });
+
+  it("approved design: Continente and Auchan, which share a red, sit side by side in the bar and the legend and are told apart by shape and letters", () => {
+    cards(overviewTwoReds);
+    const card = region("Onde gasta mais");
+    const bar = card.querySelector('[aria-hidden="true"]')!;
+    const [continente, auchan] = Array.from(bar.children) as HTMLElement[];
+    // Continente: solid red with a white «C». Auchan: light with a red border and «AU».
+    expect(continente).toHaveTextContent("C");
+    expect(continente).toHaveStyle({ background: "#E30613", color: "#FFFFFF" });
+    expect(auchan).toHaveTextContent("AU");
+    expect(auchan).toHaveStyle({ background: "#F4F3EF", color: "#DF0613", borderColor: "#DF0613" });
+    // The segments are proportional to the share; the legend says every name, value and share in words.
+    expect(continente).toHaveStyle({ flex: "38 1 0" });
+    expect(auchan).toHaveStyle({ flex: "24 1 0" });
+    const list = within(card).getAllByRole("listitem");
+    expect(list.map((li) => plain(li.textContent))).toEqual(["CContinente57,76 €38 %", "AUAuchan36,48 €24 %", "PPingo Doce33,44 €22 %", "LLidl24,32 €16 %"]);
+    expect(overviewTwoReds.by_merchant.reduce((sum, m) => sum + m.share_pct, 0)).toBe(100);
   });
 
   it("F-186: the latest purchases show the store, the date and the total; the ones not confirmed say so in words and have a dash for a missing total", () => {

@@ -1,7 +1,7 @@
 import { Check, ChevronDown } from "lucide-react";
 import { useId } from "react";
+import { MarketTile } from "../../components/MarketBadge";
 import { SMALL_CAPS } from "../../components/ui";
-import { initialsOf } from "../onboarding/state";
 import { useMerchants } from "../profile/useProfile";
 
 const AUTO = "Detetar sozinho";
@@ -25,11 +25,7 @@ export function MerchantChips({ value, onChange }: { value: string; onChange: (m
             className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line has-checked:bg-brand has-checked:text-white has-checked:ring-brand has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand dark:has-checked:text-ground"
           >
             <input type="radio" name="merchant" value={id} checked={value === id} onChange={() => onChange(id)} className="sr-only" />
-            {id && (
-              <span aria-hidden className="grid size-6 place-items-center rounded-full bg-brand-soft text-xs font-extrabold text-brand-deep">
-                {initialsOf(name)}
-              </span>
-            )}
+            {id && <MarketTile code={id} size={24} fontSize={11} />}
             {name}
             {value === id && <Check aria-hidden className="size-4" strokeWidth={3} />}
           </label>

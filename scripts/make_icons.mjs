@@ -1,6 +1,6 @@
-// Writes the app icons from the Super Mercado brand icon (cart + euro coin on deep teal).
-// The brand pack's SVG draws the euro as <text> (font dependent); here it is a path so the SVG
-// and the PNGs look the same everywhere.
+// Writes the app icons from the Super Mercado brand icon (green cart + euro coin on cream, as in the
+// login of the approved design). The brand pack's SVG draws the euro as <text> (font dependent); here
+// it is a path so the SVG and the PNGs look the same everywhere.
 //
 // Run: node scripts/make_icons.mjs   (uses the Chromium that Playwright already installs)
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -9,9 +9,10 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "public", "icons");
-const TEAL = "#075B50";
-const GREEN = "#12B76A";
+const CREAM = "#FAF8F4";
+const GREEN = "#1F6F4A";
 const GOLD = "#FFC928";
+const INK = "#1B1B1A";
 
 // Cart, motion lines and coin, in the brand icon's own coordinates (x 0-346, y -3-220).
 const SYMBOL = `
@@ -21,11 +22,11 @@ const SYMBOL = `
   <path d="M62 42 H92 C106 42 117 50 123 65 L151 145 Q156 158 171 158 H286 Q301 158 308 142 L333 72"
         fill="none" stroke="${GREEN}" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M143 141 H295 L282 169 H160 Z" fill="${GREEN}"/>
-  <circle cx="184" cy="205" r="15" fill="#FFFFFF"/>
-  <circle cx="278" cy="205" r="15" fill="#FFFFFF"/>
+  <circle cx="184" cy="205" r="15" fill="${GREEN}"/>
+  <circle cx="278" cy="205" r="15" fill="${GREEN}"/>
   <circle cx="244" cy="52" r="55" fill="${GOLD}"/>
-  <path d="M262 38 A22.8 22.8 0 1 0 262 66" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/>
-  <path d="M224 46 H252 M224 58 H252" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>`;
+  <path d="M262 38 A22.8 22.8 0 1 0 262 66" fill="none" stroke="${INK}" stroke-width="9" stroke-linecap="round"/>
+  <path d="M224 46 H252 M224 58 H252" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round"/>`;
 
 const svg = (body) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">${body}</svg>\n`;
 
@@ -34,8 +35,8 @@ const PLACED = `<g transform="translate(256,256) scale(0.9) translate(-173,-108.
 
 // "any": rounded square. FULL: full-bleed square for maskable and iOS (iOS fills transparent
 // corners with black and rounds the square itself).
-const ANY = svg(`<rect width="512" height="512" rx="112" fill="${TEAL}"/>${PLACED}`);
-const FULL = svg(`<rect width="512" height="512" fill="${TEAL}"/>${PLACED}`);
+const ANY = svg(`<rect width="512" height="512" rx="112" fill="${CREAM}"/>${PLACED}`);
+const FULL = svg(`<rect width="512" height="512" fill="${CREAM}"/>${PLACED}`);
 
 mkdirSync(OUT, { recursive: true });
 writeFileSync(join(OUT, "icon.svg"), ANY);

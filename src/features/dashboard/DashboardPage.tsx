@@ -4,7 +4,8 @@ import { Link, useSearchParams } from "react-router";
 import { api, unwrap, type Merchant, type Schemas } from "../../api/client";
 import { DataTable, SpendBars, type Point } from "../../components/charts";
 import { LinkButton, Notice, Select, Spinner } from "../../components/ui";
-import { formatCents, formatMonth, formatVariation, merchantName, MERCHANT_NAMES } from "../../lib/format";
+import { formatCents, formatMonth, formatVariation } from "../../lib/format";
+import { MERCHANT_OPTIONS, merchantName, merchantStyle } from "../../lib/merchants";
 import { describePeriod, lisbonToday, periodFor, type Period, type PeriodKind } from "../../lib/period";
 import { PeriodPicker } from "./PeriodPicker";
 
@@ -110,13 +111,11 @@ export function DashboardPage() {
               className="min-w-44 flex-1"
             >
               <option value="">Todos os mercados</option>
-              {Object.entries(MERCHANT_NAMES)
-                .filter(([c]) => c !== "UNKNOWN")
-                .map(([code, name]) => (
-                  <option key={code} value={code}>
-                    {name}
-                  </option>
-                ))}
+              {MERCHANT_OPTIONS.map(([code, name]) => (
+                <option key={code} value={code}>
+                  {name}
+                </option>
+              ))}
             </Select>
             {product && (
               <span className="inline-flex min-h-12 items-center gap-2 rounded-full bg-brand-soft pl-4 pr-1 text-sm font-semibold">
@@ -242,7 +241,7 @@ function SummaryView({
               <div className="grid grid-cols-[5.25rem_1fr_auto] items-center gap-3 text-sm">
                 <span className="truncate font-semibold">{merchantName(m.merchant)}</span>
                 <div aria-hidden className="h-2.5 rounded-full bg-ground">
-                  <div className="h-2.5 rounded-full bg-[var(--color-chart)]" style={{ width: `${Math.max(m.share_pct, 1)}%` }} />
+                  <div className="h-2.5 rounded-full" style={{ width: `${Math.max(m.share_pct, 1)}%`, backgroundColor: merchantStyle(m.merchant).bar }} />
                 </div>
                 <span>
                   {formatCents(m.spent_cents)} <span className="text-ink-soft">({m.share_pct.toLocaleString("pt-PT")} %)</span>

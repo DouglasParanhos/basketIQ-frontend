@@ -225,6 +225,21 @@ export const overviewGreen: Overview = {
   empty: false,
 };
 
+/** The same month with Continente and Auchan side by side (they share a red): 38 %, 24 %, 22 % and 16 % of 152 €. */
+export const overviewTwoReds: Overview = {
+  ...overviewGreen,
+  by_merchant: [
+    { merchant: "CONTINENTE", name: "Continente", spent_cents: 5776, purchases: 3, share_pct: 38 },
+    { merchant: "AUCHAN", name: "Auchan", spent_cents: 3648, purchases: 2, share_pct: 24 },
+    { merchant: "PINGO_DOCE", name: "Pingo Doce", spent_cents: 3344, purchases: 1, share_pct: 22 },
+    { merchant: "LIDL", name: "Lidl", spent_cents: 2432, purchases: 1, share_pct: 16 },
+  ],
+  recent_receipts: [
+    { id: "d1", merchant: "CONTINENTE", name: "Continente", date: "2026-10-29", total_cents: 5776, status: "CONFIRMED" },
+    { id: "d2", merchant: "AUCHAN", name: "Auchan", date: "2026-10-28", total_cents: 3648, status: "CONFIRMED" },
+  ],
+};
+
 /** 248 € of 400 € (62 %, orange), average on target. */
 export const overviewOrange: Overview = { ...overviewGreen, spent_cents: 24800, goal_pct: 62, band: "attention", recent_vs_average_pct: 2, average_trend: "on_average" };
 /** 352 € of 400 € (88 %, red), average 12 % above. */

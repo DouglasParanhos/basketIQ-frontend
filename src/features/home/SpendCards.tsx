@@ -2,10 +2,10 @@ import { useId, type ReactNode } from "react";
 import { Link } from "react-router";
 import type { Schemas } from "../../api/client";
 import { DataTable } from "../../components/charts";
+import { MarketSegment, MarketTile } from "../../components/MarketBadge";
 import { SMALL_CAPS, StatusBadge } from "../../components/ui";
 import { formatCents } from "../../lib/format";
 import { formatDayMonth, shortMonth } from "../../lib/month";
-import { initialsOf } from "../onboarding/state";
 
 type Overview = Schemas["OverviewOut"];
 
@@ -67,27 +67,32 @@ function Weeks({ weeks }: { weeks: Overview["weeks"] }) {
   );
 }
 
+const merchantKey = (m: Overview["by_merchant"][number]) => `${m.merchant ?? "outros"}-${m.name}`;
+
 function Merchants({ merchants }: { merchants: Overview["by_merchant"] }) {
   return (
     <Card title="Onde gasta mais">
       {merchants.length === 0 ? (
         <p className="text-sm text-ink-soft">Sem compras confirmadas neste mês.</p>
       ) : (
-        <ul className="flex flex-col gap-3">
-          {merchants.map((m) => (
-            <li key={`${m.merchant ?? "outros"}-${m.name}`} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-3 gap-y-1 text-sm">
-              <span aria-hidden className="grid size-8 place-items-center rounded-control bg-brand-soft text-sm font-extrabold text-brand-deep">
-                {initialsOf(m.name)}
-              </span>
-              <span className="min-w-0 truncate font-semibold">{m.name}</span>
-              <span className="amount text-ink-soft">{formatCents(m.spent_cents)}</span>
-              <span className="w-11 text-right font-bold">{m.share_pct} %</span>
-              <span aria-hidden className="col-span-4 block h-2 overflow-hidden rounded-full bg-ground">
-                <span className="block h-full rounded-full bg-chart" style={{ width: `${Math.max(m.share_pct, 1)}%` }} />
-              </span>
-            </li>
-          ))}
-        </ul>
+        <>
+          {/* One bar split by store; the legend below says each name, value and share in words. */}
+          <div aria-hidden className="flex h-[26px] gap-0.5 overflow-hidden rounded-[9px]">
+            {merchants.map((m) => (
+              <MarketSegment key={merchantKey(m)} code={m.merchant} share={m.share_pct} />
+            ))}
+          </div>
+          <ul className="flex flex-col gap-3">
+            {merchants.map((m) => (
+              <li key={merchantKey(m)} className="flex items-center gap-2.5 text-sm">
+                <MarketTile code={m.merchant} size={20} fontSize={11} />
+                <span className="min-w-0 flex-1 truncate font-medium">{m.name}</span>
+                <span className="amount text-ink-soft">{formatCents(m.spent_cents)}</span>
+                <span className="w-10 text-right font-bold">{m.share_pct} %</span>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </Card>
   );
@@ -112,9 +117,7 @@ function Recent({ receipts }: { receipts: Overview["recent_receipts"] }) {
           {receipts.map((r) => (
             <li key={r.id} className="border-t border-line">
               <Link to={`/compras/${r.id}`} className="flex min-h-14 items-center gap-3 py-2">
-                <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-control bg-brand-soft text-lg font-extrabold text-brand-deep">
-                  {initialsOf(r.name)}
-                </span>
+                <MarketTile code={r.merchant} size={40} fontSize={18} />
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate font-semibold">{r.name}</span>
                   <span className="text-xs text-ink-soft">{formatDayMonth(r.date)}</span>

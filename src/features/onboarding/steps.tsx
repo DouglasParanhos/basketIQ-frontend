@@ -1,6 +1,7 @@
 import { Minus, Plus } from "lucide-react";
 import type { Dispatch } from "react";
 import { ChoiceCard, Tick } from "../../components/Choice";
+import { MarketTile } from "../../components/MarketBadge";
 import { Button, Notice, Spinner } from "../../components/ui";
 import { formatWholeEuros } from "../../lib/format";
 import { GOAL_OPTIONS } from "../profile/goals";
@@ -12,7 +13,6 @@ import {
   PEOPLE_MAX,
   PEOPLE_MIN,
   isAllGoals,
-  initialsOf,
   type Action,
   type OnboardingState,
 } from "./state";
@@ -106,9 +106,7 @@ export function MerchantsStep({ state, dispatch }: { state: OnboardingState; dis
             onChange={() => dispatch({ type: "toggleMerchant", id })}
             className="min-h-[6.5rem] flex-col items-center justify-center gap-2 px-1 py-2 text-center"
           >
-            <span aria-hidden className="grid size-11 place-items-center rounded-[14px] bg-brand-soft text-[22px] font-extrabold text-brand-deep">
-              {initialsOf(name)}
-            </span>
+            <MarketTile code={id} size={44} fontSize={22} />
             <span className="text-[0.8125rem] font-bold leading-tight [overflow-wrap:anywhere]">{name}</span>
             <Tick checked={checked} small className="absolute right-1.5 top-1.5" />
           </ChoiceCard>
