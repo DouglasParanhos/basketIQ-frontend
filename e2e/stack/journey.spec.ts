@@ -102,7 +102,7 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   // F-23: account deletion.
   await page.goto("/definicoes/conta");
   await page.getByRole("link", { name: "Eliminar conta…" }).click();
-  await page.getByRole("checkbox").check();
+  await page.getByRole("checkbox").check({ force: true });
   await page.getByRole("button", { name: "Eliminar a minha conta" }).click();
   await expect(page).toHaveURL(/\/login/);
 });
