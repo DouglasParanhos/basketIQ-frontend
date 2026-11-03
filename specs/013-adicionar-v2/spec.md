@@ -94,16 +94,18 @@ A deteção é do backend e acontece depois do envio, por isso a mensagem vive n
 
 *Decisão (2026-11-01, Douglas): a câmara própria (`getUserMedia`) avança sem o spike; a deteção é um porte em TypeScript das regras do backend (`preprocess.py`, `quality.py`), sem OpenCV.js, calibrado nas fotos reais e nas suas variantes. Código: `src/features/capture/`. Substitui a «Orientação sem moldura» e o spike (US5) desta spec.*
 
+*Decisão (2026-11-03, Douglas): captura automática. Assim que o conselho estabilizado é «ok», a câmara tira a foto sozinha (o mesmo disparo do obturador, sem espera); numa parte seguinte só dispara depois de a imagem deixar de estar «ok» e voltar (a pessoa mexeu o telemóvel); o obturador fica, como alternativa e para acessibilidade. Inverte a regra «a foto é sempre tirada pela pessoa» (FR-017, `contracts/copy.md`).*
+
 **Acceptance Scenarios**:
 
 1. **Given** «Fotografar» (ou «Adicionar outra parte») num navegador com câmara, **When** é tocado, **Then** abre a câmara própria (traseira) em ecrã inteiro, com a imagem rodeada por uma borda amarela que fica verde quando o talão está bem. — §4.2
 2. **Given** a câmara aberta, **When** o talão está longe, perto demais, cortado de lado, a sair em cima ou em baixo (foto única), sobre um fundo claro, com pouca luz ou tremido, **Then** o ecrã diz o que fazer com o texto de `contracts/copy.md`, um conselho de cada vez, sem piscar. — §4.2, RF-05
-3. **Given** o talão inteiro, perto o suficiente e nítido, **When** a câmara o vê, **Then** mostra «Talão detetado · pode fotografar». — §4.2
-4. **Given** qualquer conselho, **When** a pessoa toca no obturador, **Then** a foto é tirada (a orientação avisa, nunca bloqueia), a câmara fecha e aparece «Confirme as partes»: um talão que cabe numa foto não pede mais nada. — RF-05, RF-04, US2.1
-5. **Given** «Adicionar outra parte» (ou «Fotografar de novo» numa parte), **When** a câmara abre, **Then** vê no topo o fundo da parte anterior com «Linhas já fotografadas» e `nextPartText` («Parte 2 · comece onde a parte 1 acabou»); numa parte o talão pode sair em cima e em baixo sem aviso. — §4.2, RF-04
+3. **Given** o talão inteiro, perto o suficiente e nítido, **When** a câmara o vê, **Then** mostra «Talão detetado · segure firme» e tira a foto sozinha: a câmara fecha e aparece «Confirme as partes», sem tocar no obturador. — §4.2, decisão de 2026-11-03
+4. **Given** qualquer conselho, **When** a pessoa toca no obturador, **Then** a foto é tirada (a orientação avisa, nunca bloqueia), a câmara fecha e aparece «Confirme as partes»: um talão que cabe numa foto não pede mais nada. — RF-05, RF-04, US2.15. **Given** «Adicionar outra parte» (ou «Fotografar de novo» numa parte), **When** a câmara abre, **Then** vê no topo o fundo da parte anterior com «Linhas já fotografadas» e `nextPartText` («Parte 2 · comece onde a parte 1 acabou»); numa parte o talão pode sair em cima e em baixo sem aviso. — §4.2, RF-04
 6. **Given** a câmara própria recusada ou indisponível, **When** a pessoa toca «Fotografar», **Then** vê porquê e «Usar a câmara do telemóvel», que abre a câmara do sistema (`capture="environment"`, F-06); na mesma sessão não volta a pedir. — F-06
 7. **Given** a câmara aberta, **When** a aplicação vai para segundo plano ou a câmara fecha, **Then** a câmara é desligada e volta ao regressar. — constituição IV
 8. **Given** um leitor de ecrã, **When** o conselho muda, **Then** é anunciado (no máximo a cada 2,5 s); alvos de pelo menos 44 px; o ecrã passa o axe. — §8
+9. **Given** a câmara de uma parte seguinte, já com o talão «ok» ao abrir, **When** a imagem continua «ok», **Then** não dispara (seria a parte anterior outra vez); dispara uma vez quando a imagem deixa de estar «ok» e volta. — decisão de 2026-11-03
 
 ---
 
@@ -162,7 +164,7 @@ A deteção é do backend e acontece depois do envio, por isso a mensagem vive n
 - **FR-014**: Todo o texto MUST estar em português europeu conforme a tabela do `README.md` e o vocabulário «Talões» («Adicionar talão», «Enviar talão», «Supermercado (opcional)», «Detetar sozinho»); os mercados MUST aparecer por texto e inicial. — US6.4
 - **FR-015**: O estado do envio (a enviar com progresso, duplicado, falha) MUST ser anunciado por leitor de ecrã e MUST NOT depender só da cor; a ordem de Tab MUST seguir a ordem visual. — US6.5, US6.6
 - **FR-016**: Fotos e edições MUST ficar só em memória: nada em `localStorage` nem `sessionStorage`; os URLs de pré-visualização MUST libertar-se ao sair. — US6.7, constituição IV
-- **FR-017**: A câmara própria (moldura, deteção de contorno, captura automática) MUST NOT ser integrada; o spike (US5) é um documento. — US5
+- **FR-017**: A câmara própria MUST tirar a foto sozinha quando o conselho estabilizado é «ok» (numa parte seguinte, só depois de a imagem deixar de estar «ok» e voltar) e MUST manter o obturador; MUST NOT desenhar moldura nem contorno detetado sobre a imagem. — US4.3, US4.4, US4.9 (decisão de 2026-11-03; antes: sem câmara própria)
 - **FR-018**: «Recortar» MUST abrir o editor no lugar da lista de partes, com o título «Recortar a parte N» e «Concluir»; o foco MUST ir ao título ao abrir e ao botão «Recortar» da parte ao fechar. Durante o envio (`hashing`, `uploading`, `starting`), «Adicionar outra parte», «Apagar», «Recortar» e as setas MUST ficar desativados; depois de um erro ou duplicado, MUST ficar ativos (e tratam-se como outro envio). — US2.3, US6.5
 - **FR-019**: O aviso de qualidade MUST ter o título «A fotografia pode ser melhorada», os `message` do backend e a ação «Tire outra foto» (ligação a `/adicionar`, ≥ 44 px). — US3.1, US3.4
 

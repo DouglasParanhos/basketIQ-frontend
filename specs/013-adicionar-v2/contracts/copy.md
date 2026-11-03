@@ -76,7 +76,7 @@ Fonte no código: `src/features/capture/hints.ts` (`LIVE_TEXT`, `STILL_TEXT`) e 
 | Talão a sair em cima ou em baixo (só foto única) | `cut_ends` | O talão não cabe: afaste-se ou fotografe por partes |
 | Talão estreito demais (menos de 600 px na foto, com 10 % de folga) | `too_far` | Aproxime a câmara do talão |
 | Imagem tremida ou desfocada | `blurry` | Imagem tremida ou desfocada: segure firme |
-| Tudo bem | `ok` | Talão detetado · pode fotografar |
+| Tudo bem (e a foto é tirada sozinha) | `ok` | Talão detetado · segure firme |
 
 | Onde | Texto |
 |---|---|
@@ -98,4 +98,4 @@ Fonte no código: `src/features/capture/hints.ts` (`LIVE_TEXT`, `STILL_TEXT`) e 
 | Fecho | Pode enviá-la na mesma. |
 | Ação | Fotografar de novo (`aria-label`: Fotografar de novo a parte N) |
 
-**Não aparece:** «Captura automática» (a foto é sempre tirada pela pessoa); «Enviar nota»; a frase «Se os valores não estiverem certos, tire uma nova fotografia.» (a ação substitui-a).
+**Não aparece:** «Captura automática» (a foto também é tirada sozinha, mas o ecrã não o anuncia com este texto); «Enviar nota»; a frase «Se os valores não estiverem certos, tire uma nova fotografia.» (a ação substitui-a).

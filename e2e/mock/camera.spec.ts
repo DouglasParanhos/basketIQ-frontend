@@ -20,12 +20,9 @@ async function openCamera(page: Page, scene: SceneName): Promise<Locator> {
 const advice = (dialog: Locator) => dialog.locator("[aria-live=polite]");
 
 test.describe("in-app camera (spec 013 US4)", () => {
-  test("a receipt that fits: ready, no axe violations; one photo, then the parts screen, without a warning", async ({ page }) => {
+  test("a receipt that fits: the photo is taken by itself, then the parts screen, without a warning", async ({ page }) => {
     const dialog = await openCamera(page, "framed");
-    await expect(advice(dialog)).toHaveText("Talão detetado · pode fotografar");
-    await noA11yViolations(page);
-    await dialog.getByRole("button", { name: "Tirar a foto" }).click();
-    await expect(dialog).toBeHidden(); // the receipt fit in one photo: nothing asks for more
+    await expect(dialog).toBeHidden(); // no tap: «ok» took the photo, and the receipt fit in one, so nothing asks for more
     await expect(page.getByRole("heading", { name: "Confirme as partes" })).toBeVisible();
     await expect(page.getByText("parte-1.jpg")).toBeVisible();
     await expect(page.getByRole("button", { name: "Enviar talão" })).toBeVisible();
@@ -42,13 +39,15 @@ test.describe("in-app camera (spec 013 US4)", () => {
     test(`${scene}: advises «${text}», and the shutter still works`, async ({ page }) => {
       const dialog = await openCamera(page, scene);
       await expect(advice(dialog)).toHaveText(text);
+      if (scene === "far") await noA11yViolations(page); // the advice in yellow; the green «ok» is checked below
+      await expect(dialog).toBeVisible(); // advice other than «ok» does not take the photo by itself
       await dialog.getByRole("button", { name: "Tirar a foto" }).click();
       await expect(dialog).toBeHidden();
       await expect(page.getByText("parte-1.jpg")).toBeVisible();
     });
   }
 
-  test("a receipt too long for one photo: three parts, each from where the last ended, a cut top and bottom fine", async ({ page }) => {
+  test("a receipt too long for one photo: three parts, each from where the last ended, a cut top and bottom fine; no axe violations", async ({ page }) => {
     const dialog = await openCamera(page, "tooLong");
     const shutter = dialog.getByRole("button", { name: "Tirar a foto" });
     await expect(advice(dialog)).toHaveText("O talão não cabe: afaste-se ou fotografe por partes");
@@ -57,7 +56,10 @@ test.describe("in-app camera (spec 013 US4)", () => {
       await page.getByRole("button", { name: "Adicionar outra parte" }).click();
       await expect(dialog.getByText(`Parte ${n} · comece onde a parte ${n - 1} acabou`)).toBeVisible();
       await expect(dialog.getByText("Linhas já fotografadas")).toBeVisible();
-      await expect(advice(dialog)).toHaveText("Talão detetado · pode fotografar"); // a part may be cut top and bottom
+      // A part may be cut top and bottom. The picture has not moved since the last part, so it is not taken by
+      // itself: the dialog is still open for the shutter.
+      await expect(advice(dialog)).toHaveText("Talão detetado · segure firme");
+      if (n === 2) await noA11yViolations(page);
       await shutter.click();
       await expect(dialog).toBeHidden();
     }

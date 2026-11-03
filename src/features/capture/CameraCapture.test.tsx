@@ -13,10 +13,15 @@ vi.mock("./useCamera", () => ({
 
 type Before = Parameters<typeof CameraCapture>[0]["before"];
 
+/** Lets the JPEG encoding of a photo, if one was taken, settle. */
+const flush = () => act(() => new Promise<void>((done) => setTimeout(done, 0)));
+
 function renderCamera(before: Before = []) {
   const handlers = { onCapture: vi.fn(), onSystemCamera: vi.fn(), onClose: vi.fn() };
-  const view = render(<CameraCapture before={before} {...handlers} />);
-  return { ...handlers, ...view };
+  const { rerender } = render(<CameraCapture before={before} {...handlers} />);
+  /** Renders again with the same props, as when the advice changes. */
+  const again = () => rerender(<CameraCapture before={before} {...handlers} />);
+  return { ...handlers, again };
 }
 
 describe("CameraCapture", () => {
@@ -35,25 +40,47 @@ describe("CameraCapture", () => {
     const { onCapture } = renderCamera();
     expect(screen.getByRole("dialog", { name: "Fotografar o talão" })).toBeInTheDocument();
     expect(screen.getByText("Aproxime a câmara do talão")).toBeInTheDocument();
+    await flush();
+    expect(onCapture).not.toHaveBeenCalled(); // advice other than «ok» never takes the photo by itself
     await user.click(screen.getByRole("button", { name: "Tirar a foto" }));
     expect(onCapture).toHaveBeenCalledWith(expect.objectContaining({ name: "parte-1.jpg", type: "image/jpeg" }));
   });
 
-  it("tells when the receipt is ready", () => {
+  it("when the receipt is ready, says so and takes the photo by itself", async () => {
     camera.hint = "ok";
-    renderCamera();
-    expect(screen.getByText("Talão detetado · pode fotografar")).toBeInTheDocument();
+    const { onCapture } = renderCamera();
+    expect(screen.getByText("Talão detetado · segure firme")).toBeInTheDocument();
+    await flush();
+    expect(onCapture).toHaveBeenCalledWith(expect.objectContaining({ name: "parte-1.jpg", type: "image/jpeg" }));
+  });
+
+  it("for the next part: waits for the picture to change before taking it by itself", async () => {
+    const before = [{ id: "p1", previewUrl: "blob:p1" }];
+    camera.hint = null; // not analysed yet: this is not a move
+    const { onCapture, again } = renderCamera(before);
+    const show = async (hint: Hint) => {
+      camera.hint = hint;
+      again();
+      await flush();
+    };
+    await show("ok"); // still the part just taken
+    expect(onCapture).not.toHaveBeenCalled();
+    await show("too_far"); // the person moved on
+    expect(onCapture).not.toHaveBeenCalled();
+    await show("ok");
+    expect(onCapture).toHaveBeenCalledTimes(1);
+    expect(onCapture).toHaveBeenCalledWith(expect.objectContaining({ name: "parte-2.jpg" }));
   });
 
   it("announces a change of advice to screen readers at most every few seconds", () => {
     vi.useFakeTimers();
     try {
-      const { rerender, onCapture, onSystemCamera, onClose } = renderCamera();
+      const { again } = renderCamera();
       const live = () => document.querySelector("[aria-live=polite]")!.textContent;
       act(() => void vi.advanceTimersByTime(0));
       expect(live()).toBe("Aproxime a câmara do talão");
       camera.hint = "too_close";
-      rerender(<CameraCapture before={[]} {...{ onCapture, onSystemCamera, onClose }} />);
+      again();
       act(() => void vi.advanceTimersByTime(1000));
       expect(live()).toBe("Aproxime a câmara do talão");
       act(() => void vi.advanceTimersByTime(1600));
