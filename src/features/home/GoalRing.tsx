@@ -36,13 +36,13 @@ export function GoalRing({ overview, isCurrentMonth }: { overview: Schemas["Over
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={`text-3xl font-extrabold leading-none ${view.tone === "none" ? "text-ink-soft" : ""}`}>{view.percentText}</span>
+            <span className={`font-display text-3xl font-semibold leading-none ${view.tone === "none" ? "text-ink-soft" : ""}`}>{view.percentText}</span>
             <span className="text-xs text-ink-soft">da meta</span>
           </div>
         </div>
         <div className="flex min-w-0 flex-col gap-1">
-          <p className={SMALL_CAPS}>Gasto em mercado no mês</p>
-          <p className="amount text-3xl font-extrabold leading-tight min-[420px]:text-4xl">{formatCents(overview.spent_cents)}</p>
+          <p className={SMALL_CAPS}>Gasto no mês</p>
+          <p className="amount font-display text-3xl font-semibold leading-[1.05] min-[420px]:text-4xl">{formatCents(overview.spent_cents)}</p>
           {overview.goal_cents !== null ? (
             <p className="text-sm text-ink-soft">
               A sua meta pessoal: {formatCents(overview.goal_cents)}{" "}

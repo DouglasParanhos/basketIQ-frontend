@@ -16,8 +16,8 @@ describe("goal ring (spec 011, US1)", () => {
   it("F-183: each band is an image with a text alternative, and says the band and the balance in words", () => {
     for (const [overview, label, chip] of [
       [overviewGreen, "Anel verde, 38 % da meta usada", "Tranquilo · saldo da meta: 248,00 €"],
-      [overviewOrange, "Anel laranja, 62 % da meta usada", "Quase lá · saldo da meta: 152,00 €"],
-      [overviewRed, "Anel vermelho, 88 % da meta usada", "Reta final · saldo da meta: 48,00 €"],
+      [overviewOrange, "Anel dourado, 62 % da meta usada", "Quase lá · saldo da meta: 152,00 €"],
+      [overviewRed, "Anel dourado, 88 % da meta usada", "Reta final · saldo da meta: 48,00 €"],
     ] as const) {
       const view = ring(overview);
       expect(screen.getByRole("img", { name: label })).toBeInTheDocument();
@@ -31,13 +31,14 @@ describe("goal ring (spec 011, US1)", () => {
     expect(text()).toContain("152,00 €");
     expect(text()).toContain("A sua meta pessoal: 400,00 €");
     expect(screen.getByText("38 %")).toBeInTheDocument();
-    expect(screen.getByText("Gasto em mercado no mês")).toBeInTheDocument();
+    expect(screen.getByText("Gasto no mês")).toBeInTheDocument();
     expect(screen.getByText("A meta pessoal é um objetivo seu, não um limite. Pode mudá-la quando quiser.")).toBeInTheDocument();
   });
 
   it("F-183: above the goal the ring is full, says so, and does not scold", () => {
     ring(overviewOver);
-    expect(text()).toContain("Acima da meta pessoal este mês · 52,00 € além da meta");
+    expect(text()).toContain("Acima da meta · 52,00 € além da meta");
+    expect(screen.getByRole("img", { name: "Anel completo e vermelho, meta ultrapassada, 113 % da meta" })).toBeInTheDocument();
     expect(screen.getByText("113 %")).toBeInTheDocument();
     expect(forbidden(text())).toBe(false);
   });

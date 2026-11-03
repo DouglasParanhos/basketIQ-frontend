@@ -40,8 +40,8 @@ interno ao vitest, e não é coberto por estes valores. Está comentado em `vite
 | Passo | Estado | Commit |
 |---|---|---|
 | 4 Login e Política | feito | `22822fd` |
-| 5 Onboarding | feito, **sem** a meta acima de € 800 (backend) | (ver `git log`) |
-| 6 Início | não feito | |
+| 5 Onboarding | feito, **sem** a meta acima de € 800 (backend) | `a6f2fd0` |
+| 6 Início | feito | (ver `git log`) |
 | 7 Talões | não feito | |
 | 8 Rever talão | não feito | |
 | 9 Adicionar | não feito | |
@@ -94,6 +94,29 @@ Os passos de mercados já usavam o `MarketTile` do passo 2.
 (`MONTHLY_GOAL_CENTS_RANGE = (5_000, 80_000)` em `domain/status.py`, validador com 422 `out_of_range` e `CHECK`
 `ck_user_profiles_monthly_goal` na tabela). Mostrar o campo daria um erro ao concluir. Escondido; ver «Dependências do backend».
 
+### Passo 6: Início
+
+- **Anel:** verde (faixa `ok`), dourado (`attention` e `high`) e vermelho **só quando o gasto passa a meta** (decidido pelo
+  sinal de `goal − spent`, não pela faixa). Textos do canvas: «Acima da meta · € X além da meta»; aria-label «Anel
+  dourado, 62 % da meta usada» e «Anel completo e vermelho, meta ultrapassada, 113 % da meta». A faixa do backend só escolhe
+  as palavras («Tranquilo», «Quase lá», «Reta final»). Percentagem e valor em Fraunces; rótulo «Gasto no mês» (D7).
+- **Média mensal:** cartão sempre neutro (sem fundo verde/vermelho; o texto diz «abaixo»/«acima»). Retirado o teste F-184 dos fundos.
+- **Novo «Por pessoa no mês»:** gasto ÷ pessoas do perfil (divisão no cliente, em cêntimos arredondados); escondido sem
+  `household_size`. Com 152,00 € e 2 pessoas mostra 76,00 €.
+- **«Gasto por semana»** (a API tem as semanas): barras das outras semanas em `muted-bar` e o valor a negrito por cima.
+- **«O que mudou de preço»:** escondido no Início real (sem endpoint); só aparece no exemplo.
+- **Estado vazio:** o Início fantasma (cartões tracejados, mês incluído) fica `inert` por baixo de uma folha translúcida
+  (`bg-ground/80`) com «A aguardar o seu primeiro talão», «Adicionar o meu primeiro talão» e «Ver com dados de exemplo». A folha
+  cobre o conteúdo e não a barra de navegação.
+- **Modo exemplo** (`/?exemplo=1`): componente à parte, **sem nenhum hook de dados** (nenhum pedido ao backend, nenhuma
+  escrita; testado por pedidos observados no msw e no Playwright). Banner «Dados de exemplo · loja fictícia» e «Sair do exemplo»
+  (ligação de 44 px). Dados inventados só em `exampleData.ts`, com Continente e Auchan lado a lado. As compras do exemplo
+  não são ligações (os talões não existem) e «Ver todas» não aparece.
+- **Defeito apanhado pelos testes e corrigido:** o Início passou a ler o perfil (para o «Por pessoa»); com o perfil a falhar,
+  o segundo leitor da mesma query repunha-a em «a carregar» e o `RequireOnboarding` desmontava o Início em ciclo (a pessoa
+  ficava presa no indicador). `useProfile` passa a ter `retryOnMount: false`: um perfil que falhou não é pedido outra vez por cada
+  ecrã que monta; os botões «Tentar de novo» fazem `refetch`.
+
 ## Decisões a rever
 
 1. **Colunas de talões do login em conteúdo gerado por CSS.** O axe mediu 1,21:1 no texto decorativo a 10 % de
@@ -125,12 +148,19 @@ Os passos de mercados já usavam o `MarketTile` do passo 2.
 13. **Onboarding: o «Avançar» bloqueado tem 40 % de opacidade** (como no canvas); o axe não mede contraste de controlos
     inativos (`aria-disabled`) e o WCAG isenta-os, mas o texto fica claramente menos legível. A razão está escrita por cima.
 14. **«— €» em vez de «€ —»** para a meta por definir, para seguir o formato `300 €` já usado na app (formato do dinheiro: ainda em aberto).
+15. **Início: a legenda das semanas** ficou «Sem. 1 / 1–7 nov.» (a do canvas é «S1»), por ser mais clara e ser o texto que a tabela alternativa também usa.
+16. **Início: o subtítulo «média € 79 por semana»** do canvas **não** foi aplicado: o número do canvas não corresponde às suas próprias barras (58+91+54+45 dão 62 por semana) e a média semanal não está definida na API. Não inventei o número.
+17. **Início, exemplo: sem seletor de mês** (o canvas tem-no, mas navegar meses de um exemplo não faz sentido) e com as compras sem ligação.
+18. **Início: formato do dinheiro e da percentagem** mantido como `22,75 €` e `38 %` (o canvas escreve `€ 22,75` e `38%`): ainda por decidir.
+19. **Os documentos de `specs/011-inicio/`** (copy, plan, research, spec, tasks) ainda descrevem os textos e as cores antigos do anel («laranja», «vermelho» a 88 %, «Acima da meta pessoal este mês», «Gasto em mercado no mês»). Não os alterei; ficam para a passagem final.
 
 ## Dependências do backend
 
 | Elemento escondido | O que falta no backend |
 |---|---|
 | Login por e-mail | decidido (D6): fica para depois |
+| Início: cartão «O que mudou de preço» (só no exemplo) | endpoint com o mesmo produto, mesmo mercado, as duas últimas compras, ≥ 15 % e ≥ 0,20 € (B-04) |
+| Início: «Por pessoa no mês» | funciona com o perfil que já existe; se o backend passar a devolver o valor por pessoa, deixa de ser divisão no cliente |
 | Onboarding e Definições: ligação «Precisa de mais de € 800? Escreva o valor» (até € 5 000) | `PATCH /v1/me/profile` rejeita `monthly_goal_cents` > 80 000 (422 `out_of_range`; `CHECK` na base de dados). Falta subir `MONTHLY_GOAL_CENTS_RANGE` (e a migração do `CHECK`) para 500 000 (B-11). Quando houver: uma constante única em `features/profile/goals.ts`, o campo numérico no passo 4 e no `ProfileEditor`, mensagem «Indique um valor entre € 801 e € 5 000.» |
 
 ## Problemas em aberto
@@ -142,4 +172,5 @@ Os passos de mercados já usavam o `MarketTile` do passo 2.
 ## Capturas
 
 - Passo 4 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-4/` do projeto: `login-*`, `login-erro-*`, `politica-*`, `politica-aberta-*`.
+- Passo 6 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-6/`: `inicio-*` (um estado por captura), `vazio-*`, `exemplo-*`.
 - Passo 5 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-5/` do projeto: `passoN-vazio-*` (sem resposta, «Avançar» bloqueado), `passoN-resposta-*`, `pronto-*`.

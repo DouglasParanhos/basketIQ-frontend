@@ -12,7 +12,7 @@ export function MonthStepper({ month, current, onChange }: { month: string; curr
       </button>
       <div aria-live="polite" className="text-center">
         <p className="text-xs font-semibold uppercase tracking-widest text-ink-soft">{monthLabel(month, current)}</p>
-        <p className="text-xl font-extrabold">{monthRange(month)}</p>
+        <p className="font-display text-xl font-semibold">{monthRange(month)}</p>
       </div>
       <button type="button" aria-label="Mês seguinte" className={ROUND} disabled={month >= current} onClick={() => onChange(shiftMonth(month, 1))}>
         <ChevronRight aria-hidden className="size-5" />

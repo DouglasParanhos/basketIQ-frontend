@@ -12,15 +12,16 @@ const ringView: typeof rawRingView = (overview, isCurrentMonth) => {
 const FORBIDDEN = /excedeu|perdeu|negativ|limite|−|-\d/i;
 
 describe("the goal ring, as the API describes it (spec 011, US1)", () => {
-  it("F-183: green, orange and red say the band in words, the balance and the percentage", () => {
+  it("F-183: green, gold and gold say the band in words, the balance and the percentage; red is only for above the goal", () => {
     const green = ringView(overviewGreen, true);
     expect(green).toMatchObject({ tone: "ok", text: "Tranquilo · saldo da meta: 248,00 €", percentText: "38 %", ariaLabel: "Anel verde, 38 % da meta usada", dash: "148 390" });
 
     const orange = ringView(overviewOrange, true);
-    expect(orange).toMatchObject({ tone: "warn", text: "Quase lá · saldo da meta: 152,00 €", ariaLabel: "Anel laranja, 62 % da meta usada", dash: "242 390" });
+    expect(orange).toMatchObject({ tone: "warn", text: "Quase lá · saldo da meta: 152,00 €", ariaLabel: "Anel dourado, 62 % da meta usada", dash: "242 390" });
 
+    // «Reta final» (88 %) is still gold: red means the goal was passed.
     const red = ringView(overviewRed, true);
-    expect(red).toMatchObject({ tone: "alert", text: "Reta final · saldo da meta: 48,00 €", ariaLabel: "Anel vermelho, 88 % da meta usada", dash: "343 390" });
+    expect(red).toMatchObject({ tone: "warn", text: "Reta final · saldo da meta: 48,00 €", ariaLabel: "Anel dourado, 88 % da meta usada", dash: "343 390" });
   });
 
   it("F-183: without a goal the ring is empty, dashed, with «—» and the invitation", () => {
@@ -33,20 +34,26 @@ describe("the goal ring, as the API describes it (spec 011, US1)", () => {
     });
   });
 
-  it("F-183: spending exactly the goal is still «Reta final», with a balance of zero", () => {
+  it("F-183: spending exactly the goal is still «Reta final» and gold, with a balance of zero: red starts above it", () => {
     const exact = ringView({ ...overviewGreen, spent_cents: 40000, goal_pct: 100, band: "high" }, true);
-    expect(exact).toMatchObject({ tone: "alert", text: "Reta final · saldo da meta: 0,00 €", percentText: "100 %", dash: "390 390" });
+    expect(exact).toMatchObject({ tone: "warn", text: "Reta final · saldo da meta: 0,00 €", percentText: "100 %", dash: "390 390" });
   });
 
   it("F-183: above the goal says so without «excedeu» or a minus sign, and the stroke stops at 100 %", () => {
     const over = ringView(overviewOver, true);
-    expect(over).toMatchObject({ tone: "alert", text: "Acima da meta pessoal este mês · 52,00 € além da meta", percentText: "113 %", dash: "390 390" });
+    expect(over).toMatchObject({
+      tone: "alert",
+      text: "Acima da meta · 52,00 € além da meta",
+      percentText: "113 %",
+      dash: "390 390",
+      ariaLabel: "Anel completo e vermelho, meta ultrapassada, 113 % da meta",
+    });
     expect(over.text).not.toMatch(FORBIDDEN);
   });
 
   it("F-183: the text follows the sign of goal − spent, not goal_pct, which rounds", () => {
     // 401,00 € of 400,00 €: goal_pct rounds to 100 but the person is above the goal.
-    expect(ringView({ ...overviewGreen, spent_cents: 40100, goal_pct: 100, band: "high" }, true).text).toBe("Acima da meta pessoal este mês · 1,00 € além da meta");
+    expect(ringView({ ...overviewGreen, spent_cents: 40100, goal_pct: 100, band: "high" }, true).text).toBe("Acima da meta · 1,00 € além da meta");
     // 399,00 € of 400,00 €: goal_pct is 100 too, but there is still a balance.
     expect(ringView({ ...overviewGreen, spent_cents: 39900, goal_pct: 100, band: "high" }, true).text).toBe("Reta final · saldo da meta: 1,00 €");
   });
@@ -58,7 +65,7 @@ describe("the goal ring, as the API describes it (spec 011, US1)", () => {
       [20200, "51 %", "warn"],
       [30000, "75 %", "warn"],
       [30160, "75 %", "warn"],
-      [30200, "76 %", "alert"],
+      [30200, "76 %", "warn"],
     ];
     for (const [spent, pct, tone] of cases) {
       const view = ringView(overviewFor(spent), true);
@@ -66,13 +73,16 @@ describe("the goal ring, as the API describes it (spec 011, US1)", () => {
       expect(view.tone, String(spent)).toBe(tone);
     }
     // A band that disagrees with the percentage: the API's wins.
-    expect(ringView({ ...overviewFor(20000), band: "high" }, true).tone).toBe("alert");
+    expect(ringView({ ...overviewFor(20000), band: "high" }, true).tone).toBe("warn");
+    // Red follows the money, not the band: above the goal it is red whatever the band says.
+    expect(ringView({ ...overviewFor(40100), band: "ok" }, true).tone).toBe("alert");
   });
 
   it("F-183: in a month that is not the current one the goal is marked as the current goal", () => {
     const past = ringView(overviewGreen, false);
     expect(past.goalNote).toBe("Meta atual");
     expect(past.ariaLabel).toBe("Anel verde, 38 % da meta atual usada");
+    expect(ringView(overviewOver, false).ariaLabel).toBe("Anel completo e vermelho, meta ultrapassada, 113 % da meta atual");
     expect(ringView(overviewGreen, true).goalNote).toBeNull();
   });
 

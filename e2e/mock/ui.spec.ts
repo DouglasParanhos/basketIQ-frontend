@@ -771,6 +771,54 @@ test.describe("início (spec 011)", () => {
     }
   }
 
+  for (const scheme of ["light", "dark"] as const) {
+    for (const width of [320, 390, 820]) {
+      test(`the Início with example data has no axe violations and no horizontal scroll (${scheme}, ${width}px)`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.setViewportSize({ width, height: 800 });
+        await fakeApi(page);
+        await page.goto("/?exemplo=1");
+        await expect(page.getByText("Dados de exemplo · loja fictícia")).toBeVisible();
+        await noA11yViolations(page);
+        await noHorizontalScroll(page);
+      });
+    }
+  }
+
+  test("the Início with example data asks for no figure and writes nothing, and its way out is a 44 px link", async ({ page }) => {
+    const calls: string[] = [];
+    page.on("request", (request) => {
+      const { pathname } = new URL(request.url());
+      if (pathname.startsWith("/v1/")) calls.push(`${request.method()} ${pathname}`);
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await fakeApi(page);
+    await page.goto("/?exemplo=1");
+    await expect(page.getByRole("heading", { level: 1, name: "Início, com dados de exemplo" })).toBeAttached();
+    await expect(page.getByText("Continente", { exact: true }).first()).toBeVisible();
+    // The shell asks for the session, the profile and the configuration; the page asks for nothing of its own and nothing is written.
+    expect(calls.filter((call) => !call.startsWith("GET "))).toEqual([]);
+    expect(calls.filter((call) => /analytics|receipts|lists/.test(call))).toEqual([]);
+    expect((await page.getByRole("link", { name: "Sair do exemplo" }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await page.getByRole("link", { name: "Sair do exemplo" }).click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeAttached();
+  });
+
+  test("with no receipt the sheet covers the content but not the navigation bar, and the bar still works", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const state = await fakeApi(page);
+    state.overview = "empty";
+    await page.goto("/");
+    const sheet = page.getByRole("region", { name: "A aguardar o seu primeiro talão" });
+    await expect(sheet).toBeVisible();
+    const [box, nav] = [(await sheet.boundingBox())!, (await page.getByRole("navigation", { name: "Navegação principal" }).boundingBox())!];
+    expect(box.y + box.height).toBeLessThanOrEqual(nav.y);
+    await expect(page.getByRole("link", { name: "Ver com dados de exemplo" })).toBeVisible();
+    await page.getByRole("link", { name: "Talões" }).click();
+    await expect(page).toHaveURL(/\/compras$/);
+  });
+
   test("F-187: every control of the Início has a touch target of at least 44 px", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
     const state = await fakeApi(page);
