@@ -65,11 +65,15 @@ describe("colours of the Início (spec 011, D-P3)", () => {
       expect(ratio(token("alert", scheme), token("alert-soft", scheme)), "alert").toBeGreaterThanOrEqual(4.5);
     });
 
-    it(`approved design: the brand text and the secondary text have at least 4.5:1 on the ground, the paper (navigation bar), the pill and the desk (${scheme})`, () => {
+    it(`approved design: the brand text and the secondary text have at least 4.5:1 on the ground, the paper (navigation bar), the pill, the mint card and the desk (${scheme})`, () => {
       const pairs: [string, string][] = [
         ["brand", "ground"],
         ["brand", "paper"],
         ["brand", "brand-pill"],
+        // «EM RESUMO» of the privacy policy: the label, the text and the ticks on the mint card.
+        ["ink", "brand-soft"],
+        ["ink-soft", "brand-soft"],
+        ["brand", "brand-soft"],
         ["ink-soft", "paper"],
         ["ink-soft", "ground"],
         ["ink-soft", "table"],

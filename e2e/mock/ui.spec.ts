@@ -145,12 +145,97 @@ test.describe("bottom navigation: the approved design (canvas NavBar)", () => {
   }
 });
 
+test.describe("login and privacy policy: the approved design", () => {
+  // Motion off so the ticket is whole (printed, marker painted) when axe reads it.
+  for (const scheme of ["light", "dark"] as const) {
+    for (const width of [320, 390, 820]) {
+      test(`login has no axe violations, with and without an error (${scheme}, ${width}px)`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
+        await page.setViewportSize({ width, height: 800 });
+        await fakeApi(page, { signedIn: false });
+        for (const path of ["/login", "/login?error=cancelled"]) {
+          await page.goto(path);
+          await expect(page.getByRole("link", { name: "Entrar com Google" })).toBeVisible();
+          await noA11yViolations(page);
+          await noHorizontalScroll(page);
+        }
+      });
+
+      test(`privacy policy has no axe violations, closed and with every section open (${scheme}, ${width}px)`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
+        await page.setViewportSize({ width, height: 800 });
+        await fakeApi(page, { consented: false });
+        await page.goto("/privacidade");
+        await expect(page.getByRole("button", { name: "Li a política e continuar" })).toBeVisible();
+        await noA11yViolations(page);
+        for (const button of await page.locator("main h3 button").all()) await button.click();
+        await noA11yViolations(page);
+        await noHorizontalScroll(page);
+      });
+    }
+  }
+
+  test("the ticket prints and the receipts scroll; with reduced motion nothing moves", async ({ page }) => {
+    await fakeApi(page, { signedIn: false });
+    for (const [reducedMotion, expected] of [
+      ["no-preference", { reveal: "ticket-reveal", up: "ticket-up", down: "ticket-down", marker: "ticket-wipe" }],
+      ["reduce", { reveal: "none", up: "none", down: "none", marker: "none" }],
+    ] as const) {
+      await page.emulateMedia({ reducedMotion });
+      await page.goto("/login");
+      await expect(page.getByRole("link", { name: "Entrar com Google" })).toBeVisible();
+      const names = await page.evaluate(() => {
+        const name = (selector: string) => getComputedStyle(document.querySelector(selector)!).animationName;
+        return { reveal: name(".ticket-reveal"), up: name(".ticket-up"), down: name(".ticket-down"), marker: name(".ticket-marker") };
+      });
+      expect(names, reducedMotion).toEqual(expected);
+    }
+  });
+
+  test("login: the Google button is 56 px, the legal link has a 44 px hit area, and there is no way in by e-mail", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await fakeApi(page, { signedIn: false });
+    await page.goto("/login");
+    const google = page.getByRole("link", { name: "Entrar com Google" });
+    expect((await google.boundingBox())!.height).toBe(56);
+    await expect(google).toHaveCSS("border-radius", "28px");
+    await expect(google).toHaveCSS("background-color", "rgb(31, 111, 74)");
+    expect((await page.getByRole("link", { name: "Política de privacidade" }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await expect(page.getByRole("button")).toHaveCount(0);
+    await expect(page.getByRole("textbox")).toHaveCount(0);
+    // The ticket sits above the button and nothing overlaps (390x844 is the size of the design).
+    const [ticket, button] = await Promise.all([page.getByRole("heading", { level: 1 }).boundingBox(), google.boundingBox()]);
+    expect(ticket!.y + ticket!.height).toBeLessThan(button!.y);
+  });
+
+  for (const [width, height] of [[320, 568], [390, 844]] as const) {
+    test(`privacy policy: the fixed footer is 164 px, its buttons are 56 and 48 px, and it does not cover the last section (${width}px)`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await fakeApi(page, { consented: false });
+      await page.goto("/privacidade");
+      const accept = page.getByRole("button", { name: "Li a política e continuar" });
+      const leave = page.getByRole("button", { name: "Sair" });
+      await expect(accept).toBeVisible();
+      expect((await accept.boundingBox())!.height).toBe(56);
+      expect((await leave.boundingBox())!.height).toBe(48);
+      const footer = await page.locator("main > div.fixed").boundingBox();
+      expect(footer!.height).toBe(164);
+      expect(footer!.y + footer!.height).toBe(height);
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      const last = await page.getByRole("button", { name: "Os seus direitos" }).boundingBox();
+      expect(last!.y + last!.height).toBeLessThanOrEqual(footer!.y);
+    });
+  }
+});
+
 test.describe("customer-facing name (CFG-02)", () => {
   test("title, login and manifest follow the name served by the backend", async ({ page }) => {
     await fakeApi(page, { signedIn: false, appName: "Mercado do Zé" });
     await page.goto("/login");
     await expect(page).toHaveTitle("Mercado do Zé");
-    await expect(page.getByText(/O Mercado do Zé lê os produtos/)).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Mercado do Zé" })).toBeVisible();
     await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href", "/v1/config/manifest.webmanifest");
     // Fetched from the page, like the browser does (page.request would bypass the fake API).
     const manifest = await page.evaluate(() => fetch("/v1/config/manifest.webmanifest").then((r) => r.json()));
@@ -170,7 +255,7 @@ test.describe("flows with a fake API", () => {
     await fakeApi(page, { consented: false });
     await page.goto("/");
     await expect(page).toHaveURL(/\/privacidade$/);
-    await page.getByRole("button", { name: "Aceitar e continuar" }).click();
+    await page.getByRole("button", { name: "Li a política e continuar" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
     await page.getByRole("link", { name: "Talões" }).click();
     await page.getByRole("tab", { name: "Resumo" }).click();

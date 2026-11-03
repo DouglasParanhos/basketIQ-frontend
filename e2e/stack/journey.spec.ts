@@ -17,7 +17,7 @@ async function signIn(page: Page, subject: string) {
   await page.getByPlaceholder("Enter any user/subject").fill(subject);
   await page.getByRole("button", { name: "Sign-in" }).click();
   await expect(page).toHaveURL(/\/privacidade$/);
-  await page.getByRole("button", { name: "Aceitar e continuar" }).click();
+  await page.getByRole("button", { name: "Li a política e continuar" }).click();
   // A new account goes through the onboarding (spec 010) before anything else: skip the four steps.
   await expect(page).toHaveURL(/\/boas-vindas$/);
   for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Saltar" }).click();
@@ -116,7 +116,7 @@ test("CFG-02: name, title and manifest come from the backend's config/app-config
 
   await page.goto("/login");
   await expect(page).toHaveTitle("Super Mercado");
-  await expect(page.getByText(/O Super Mercado lê os produtos/)).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Super Mercado" })).toBeVisible();
 });
 
 test("F-03: cancelling at the identity provider returns to sign-in with a message", async ({ page }) => {

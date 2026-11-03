@@ -28,6 +28,14 @@ export function errorBody(code: string, message: string, extra: Record<string, u
   return { code, message, request_id: "req-1", ...extra };
 }
 
+/** A person who never signed in: GET /v1/me answers 401, and so does the one silent refresh the client tries before giving up. */
+export function anonymous() {
+  server.use(
+    http.get(`${API}/v1/me`, () => HttpResponse.json(errorBody("unauthenticated", "x"), { status: 401 })),
+    http.post(`${API}/v1/auth/refresh`, () => HttpResponse.json(errorBody("unauthenticated", "x"), { status: 401 })),
+  );
+}
+
 /** Overrides GET /v1/config for one test. */
 export function serveConfig(body: Record<string, unknown>) {
   server.use(http.get(`${API}/v1/config`, () => HttpResponse.json(body)));

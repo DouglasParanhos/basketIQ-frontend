@@ -4,18 +4,11 @@ import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { consumption, line, receipt, summary } from "../test/fixtures";
 import { renderRoutes } from "../test/render";
-import { API, errorBody, server } from "../test/server";
+import { anonymous, API, errorBody, server } from "../test/server";
 import { LoginPage } from "./auth/LoginPage";
 import { DashboardPage } from "./dashboard/DashboardPage";
 import { ReceiptPage } from "./receipts/ReceiptPage";
 import { AddPage } from "./upload/AddPage";
-
-const anonymous = () =>
-  server.use(
-    http.get(`${API}/v1/me`, () => HttpResponse.json(errorBody("unauthenticated", "x"), { status: 401 })),
-    // The client tries one silent refresh before giving up.
-    http.post(`${API}/v1/auth/refresh`, () => HttpResponse.json(errorBody("unauthenticated", "x"), { status: 401 })),
-  );
 
 describe("login (RF-01)", () => {
   it("F-03a: offers Google as the only sign-in method", async () => {
