@@ -81,23 +81,3 @@ export function formatMonth(period: string): string {
 export function formatVariation(value: number | null | undefined): string | null {
   return value === null || value === undefined ? null : `${pct.format(value)} %`;
 }
-
-export const MERCHANT_NAMES: Record<string, string> = {
-  CONTINENTE: "Continente",
-  PINGO_DOCE: "Pingo Doce",
-  LIDL: "Lidl",
-  AUCHAN: "Auchan",
-  ALDI: "Aldi",
-  MERCADONA: "Mercadona",
-  EL_CORTE_INGLES: "El Corte Inglés",
-  UNKNOWN: "Outra loja",
-};
-
-/** The stores a person can pick: every known chain, not "Outra loja". */
-export const MERCHANT_OPTIONS = Object.entries(MERCHANT_NAMES).filter(([code]) => code !== "UNKNOWN");
-
-/** Name shown for a purchase: a store without a parser shows the name read from the receipt or typed. */
-export function merchantName(code: string | null | undefined, name?: string | null): string {
-  if (name && (!code || code === "UNKNOWN")) return name;
-  return code ? (MERCHANT_NAMES[code] ?? code) : "Loja por identificar";
-}

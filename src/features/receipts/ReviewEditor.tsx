@@ -3,7 +3,8 @@ import { AlertTriangle, Check, Pencil, Plus, Scissors, Trash2 } from "lucide-rea
 import { useMemo, useState } from "react";
 import { ApiError, api, unwrap, type Merchant, type Schemas } from "../../api/client";
 import { Button, Field, Notice, Select } from "../../components/ui";
-import { centsToInput, formatCents, formatQuantity, MERCHANT_NAMES, parseEurToCents } from "../../lib/format";
+import { centsToInput, formatCents, formatQuantity, parseEurToCents } from "../../lib/format";
+import { MERCHANT_CHOICES } from "../../lib/merchants";
 import { invalidateReceiptData } from "./cache";
 import {
   emptyLine,
@@ -141,7 +142,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
       <article className="receipt-paper" aria-label="Nota da compra">
         <div className="flex flex-col gap-3 font-sans text-sm">
           <Select label="Loja" value={merchant} onChange={(e) => (setMerchant(e.target.value), setDirty(true))}>
-            {Object.entries(MERCHANT_NAMES).map(([code, name]) => (
+            {MERCHANT_CHOICES.map(([code, name]) => (
               <option key={code} value={code}>
                 {name}
               </option>

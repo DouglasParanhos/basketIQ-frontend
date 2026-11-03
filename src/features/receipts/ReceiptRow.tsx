@@ -1,6 +1,7 @@
 import { AlertCircle } from "lucide-react";
 import { Link } from "react-router";
 import type { Schemas } from "../../api/client";
+import { MarketTile } from "../../components/MarketBadge";
 import { formatCents } from "../../lib/format";
 import { rowState, STATUS } from "../../lib/status";
 import { dayMonthOf, receiptName } from "./months";
@@ -30,8 +31,8 @@ export function ReceiptRow({ receipt: r }: { receipt: Schemas["ReceiptSummaryOut
   return (
     <li>
       <Link to={`/compras/${r.id}`} className="flex min-h-16 items-center gap-3 border-t border-line py-2.5">
-        <span aria-hidden className="relative grid size-10 shrink-0 place-items-center rounded-control bg-brand-soft text-lg font-extrabold text-brand-deep">
-          {r.merchant ? name.charAt(0).toLocaleUpperCase("pt-PT") : "?"}
+        <span className="relative shrink-0">
+          <MarketTile code={r.merchant} size={40} fontSize={18} />
           {state !== "confirmed" && <Badge state={state} />}
         </span>
         <span className="flex min-w-0 flex-1 flex-col">

@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api, unwrap, type JobStatus, type Merchant, type Schemas } from "../../api/client";
 import { Button, Field, Notice, PageHeader, Select, Spinner, Surface } from "../../components/ui";
-import { formatCents, formatDateTime, merchantName } from "../../lib/format";
+import { formatCents, formatDateTime } from "../../lib/format";
+import { merchantName } from "../../lib/merchants";
 import { lisbonToday } from "../../lib/period";
 
 const TABS = [

@@ -3,7 +3,6 @@ import { emptyProfile, profile } from "../../test/fixtures";
 import {
   buildPatch,
   initialState,
-  initialsOf,
   isAllGoals,
   progressPercent,
   reduce,
@@ -51,18 +50,6 @@ describe("goal amount (F-113, RF-13)", () => {
     expect(moved.goalUnknown).toBe(false);
     expect(reduce(start(), { type: "goalEuros", euros: 5 }).goalEuros).toBe(50);
     expect(reduce(start(), { type: "goalEuros", euros: 9000 }).goalEuros).toBe(800);
-  });
-});
-
-describe("initials of a merchant (F-113, RF-13)", () => {
-  it("F-113: first letter, or two letters when the name starts with an article", () => {
-    expect(initialsOf("Pingo Doce")).toBe("P");
-    expect(initialsOf("Lidl")).toBe("L");
-    expect(initialsOf("El Corte Inglés")).toBe("EC");
-    expect(initialsOf("el corte inglés")).toBe("EC");
-    expect(initialsOf("O Talho")).toBe("OT");
-    expect(initialsOf("El")).toBe("E");
-    expect(initialsOf("")).toBe("");
   });
 });
 

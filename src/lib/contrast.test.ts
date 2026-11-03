@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { KNOWN_MERCHANTS, merchantStyle } from "./merchants";
 
 // The axe does not measure the contrast of graphics (ring and bars, 3:1) and cannot see the chips'
 // text on the token pairs: this reads the tokens from styles.css and measures them in both schemes.
@@ -37,6 +38,16 @@ describe("brand colours kept in sync by hand (header of styles.css)", () => {
     expect(constant("GREEN"), "GREEN of make_icons.mjs").toBe(token("brand", "light"));
     expect(constant("CREAM"), "CREAM of make_icons.mjs").toBe(token("ground", "light"));
   });
+});
+
+describe("colours of the stores (approved design)", () => {
+  // The letters of the tiles are 9 to 22 px: small text, so 4.5:1 for every store (Auchan's red was darkened for it, see merchants.ts).
+  for (const code of [...KNOWN_MERCHANTS, "UNKNOWN"]) {
+    it(`the letters of ${code} on its tile have at least 4.5:1`, () => {
+      const { letter, background } = merchantStyle(code);
+      expect(ratio(letter, background)).toBeGreaterThanOrEqual(4.5);
+    });
+  }
 });
 
 describe("colours of the Início (spec 011, D-P3)", () => {

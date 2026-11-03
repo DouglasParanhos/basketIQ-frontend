@@ -59,15 +59,6 @@ export function toggleAllGoals(goals: readonly Goal[]): Goal[] {
   return isAllGoals(goals) ? [] : [...GOALS];
 }
 
-const ARTICLES = new Set(["el", "la", "los", "las", "o", "a", "os", "as"]);
-
-/** First letter of a merchant name, or the first two when the name starts with an article ("El Corte Inglés" → "EC"). */
-export function initialsOf(name: string): string {
-  const [first = "", second] = name.trim().split(/\s+/);
-  const letters = second && ARTICLES.has(first.toLowerCase()) ? first.charAt(0) + second.charAt(0) : first.charAt(0);
-  return letters.toLocaleUpperCase("pt-PT");
-}
-
 export function progressPercent(step: number): number {
   return Math.round(((step + 1) / STEP_COUNT) * 100);
 }

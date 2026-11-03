@@ -4,7 +4,8 @@ import { Link, useParams } from "react-router";
 import { api, unwrap } from "../../api/client";
 import { DataTable, PriceLine } from "../../components/charts";
 import { Notice, Spinner } from "../../components/ui";
-import { formatCents, formatDate, formatQuantity, merchantName } from "../../lib/format";
+import { formatCents, formatDate, formatQuantity } from "../../lib/format";
+import { merchantName } from "../../lib/merchants";
 
 const BASIS: Record<string, string> = { un: "por unidade", kg: "por kg", l: "por litro" };
 
