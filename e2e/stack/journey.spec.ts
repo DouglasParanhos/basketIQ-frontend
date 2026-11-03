@@ -67,10 +67,14 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   await page.getByRole("button", { name: "Confirmar", exact: true }).click();
   await expect(page.getByText("Confirmada por si", { exact: false })).toBeVisible();
 
-  // F-05 / F-27: a photo goes through local OCR (PaddleOCR in the worker).
+  // F-05 / F-27: a photo goes through local OCR (PaddleOCR in the worker). Until the description check exists every
+  // photo goes to review (backend rule D1(a), photo_not_verified), so it is confirmed by hand.
   await upload(page, doc("lidl_photo", "document.png"), "input-image");
-  await expect(page.getByText(/Confirmada|Reveja antes de confirmar/).first()).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByText("Reveja antes de confirmar")).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByText(/lida a partir de uma imagem/)).toBeVisible();
   await expect(page.getByText(/IOGURTE NATURAL/)).toBeVisible();
+  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
+  await expect(page.getByText("Confirmada por si", { exact: false })).toBeVisible();
 
   // F-18 / F-19: September 2026 dashboard, then filtered by Lidl.
   await page.goto("/?de=2026-09-01&ate=2026-09-30");

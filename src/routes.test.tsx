@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
@@ -10,6 +10,8 @@ import { API, errorBody, server } from "./test/server";
 /** The real route table, with the default happy-path API of the tests. */
 const renderApp = (initial: string) => ({ ...renderRoutes(routes, initial), user: userEvent.setup() });
 
+// router.navigate goes through act() so the new screen (and any <Navigate> redirect) commits before the next query;
+// otherwise findBy* can return a node of the old screen.
 describe("route table (spec 009)", () => {
   it("F-97: /compras/resumo is the Resumo, with the Talões tabs and Talões as the current destination", async () => {
     renderApp("/compras/resumo");
@@ -23,7 +25,7 @@ describe("route table (spec 009)", () => {
     const home = renderApp("/");
     expect(await screen.findByRole("heading", { level: 1, name: "Início" })).toBeInTheDocument();
     expect(currentDestinations()).toEqual(["Início"]);
-    home.router.navigate("/compras/r1");
+    await act(() => home.router.navigate("/compras/r1"));
     expect(await screen.findByRole("link", { name: "Voltar às compras" })).toBeInTheDocument();
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
     expect(currentDestinations()).toEqual(["Talões"]);
@@ -44,11 +46,11 @@ describe("route table (spec 009)", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Talões" })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { level: 2, name: "Compras" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Compras", selected: true })).toBeInTheDocument();
-    await router.navigate("/produtos");
+    await act(() => router.navigate("/produtos"));
     expect(await screen.findByRole("heading", { level: 2, name: "Produtos" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Talões" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Produtos", selected: true })).toBeInTheDocument();
-    await router.navigate("/produtos/p1");
+    await act(() => router.navigate("/produtos/p1"));
     expect(await screen.findByText("Produto não encontrado.")).toBeInTheDocument();
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
     expect(currentDestinations()).toEqual(["Talões"]);
@@ -58,7 +60,7 @@ describe("route table (spec 009)", () => {
     const { router } = renderApp("/lista");
     expect(await screen.findByText("Não foi possível mostrar esta página")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Voltar ao início" })).toHaveAttribute("href", "/");
-    await router.navigate("/xyz");
+    await act(() => router.navigate("/xyz"));
     expect(await screen.findByText("Não foi possível mostrar esta página")).toBeInTheDocument();
     expect(within(nav()).queryByRole("link", { name: "Lista" })).not.toBeInTheDocument();
   });
@@ -67,7 +69,7 @@ describe("route table (spec 009)", () => {
     const { router } = renderApp("/adicionar");
     expect(await screen.findByRole("heading", { level: 1, name: "Adicionar talão" })).toBeInTheDocument();
     expect(currentDestinations()).toEqual(["Adicionar talão"]);
-    await router.navigate("/definicoes");
+    await act(() => router.navigate("/definicoes"));
     expect(await screen.findByRole("heading", { level: 1, name: "Definições" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/definicoes/perfil");
     expect(currentDestinations()).toEqual(["Definições"]);
@@ -78,7 +80,7 @@ describe("route table (spec 009)", () => {
     await screen.findByRole("heading", { level: 1, name: "Início" });
     await user.click(within(nav()).getByRole("link", { name: "Adicionar talão" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Adicionar talão" })).toBeInTheDocument();
-    await router.navigate(-1);
+    await act(() => router.navigate(-1));
     expect(await screen.findByRole("heading", { level: 1, name: "Início" })).toBeInTheDocument();
     expect(currentDestinations()).toEqual(["Início"]);
   });
