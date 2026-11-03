@@ -163,7 +163,7 @@ export function StatusBadge({ status }: { status: ReceiptStatus }) {
 export function PageHeader({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <header className="flex flex-wrap items-end justify-between gap-3 pb-4 pt-6">
-      <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight">{title}</h1>
+      <h1 className="font-display text-[1.75rem] font-semibold leading-tight">{title}</h1>
       {children}
     </header>
   );
