@@ -18,17 +18,21 @@ export function TaloesLayout() {
   const path = pathname.replace(/(.)\/$/, "$1");
   return (
     <>
-      <div className="flex items-center justify-between gap-3 pt-6">
-        <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight">Talões</h1>
+      {/* The list of purchases lies on a desk, behind the whole screen: the desk comes first and the content is positioned, so it paints above it (a negative z-index would go behind the background of the shell). */}
+      {path === "/compras" && <div aria-hidden className="fixed inset-0 bg-table" />}
+      <div className="relative flex items-center justify-between gap-3 pt-6">
+        <h1 className="font-display text-[1.75rem] font-semibold leading-tight">Talões</h1>
         {path === "/compras" && <YearSelect />}
       </div>
-      <div className="pt-3">
+      <div className="relative pt-3">
         <SegmentedTabs label="Talões" tabs={TABS} value={path} onChange={navigate} />
       </div>
       {/* Produtos is a lazy chunk: only the body waits, the tabs stay. */}
-      <Suspense fallback={<Spinner />}>
-        <Outlet />
-      </Suspense>
+      <div className="relative">
+        <Suspense fallback={<Spinner />}>
+          <Outlet />
+        </Suspense>
+      </div>
     </>
   );
 }

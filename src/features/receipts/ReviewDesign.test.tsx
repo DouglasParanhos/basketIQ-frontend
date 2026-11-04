@@ -1,0 +1,233 @@
+import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
+import { describe, expect, it } from "vitest";
+import { receipt } from "../../test/fixtures";
+import { renderRoutes } from "../../test/render";
+import { API, errorBody, server } from "../../test/server";
+import { revertField, setField, toDraft } from "./draft";
+import { ReceiptPage } from "./ReceiptPage";
+
+const open = () =>
+  renderRoutes(
+    [
+      { path: "/compras/:id", element: <ReceiptPage /> },
+      { path: "/compras", element: <p>lista</p> },
+    ],
+    "/compras/r1",
+  );
+
+/** The foot of the review: the sentence above the three actions. */
+const foot = () => screen.getByText("Ao confirmar, os valores entram nos seus gastos.").parentElement as HTMLElement;
+
+/** Opens the line «LEITE MEIO GORDO» (85 cents each, 1,70 in all) and types a new total, then leaves the field. */
+async function correctTotal(user: ReturnType<typeof userEvent.setup>, value: string) {
+  const row = await screen.findByRole("button", { name: /leite meio gordo/i });
+  if (row.getAttribute("aria-expanded") !== "true") await user.click(row);
+  const total = screen.getByLabelText("Total da linha (€)");
+  await user.clear(total);
+  await user.type(total, value);
+  await user.tab();
+}
+
+describe("Rever talão (approved design)", () => {
+  it("the warning to review is the gold of the chips, with the warning icon, and says it in words", async () => {
+    open();
+    const notice = (await screen.findByText("Reveja antes de confirmar")).closest("[role=status]") as HTMLElement;
+    expect(notice.className).toContain("bg-warn-soft");
+    expect(notice.className).toContain("text-warn-ink");
+    expect(notice.querySelector("svg[aria-hidden=true]")).not.toBeNull();
+  });
+
+  it("the foot has the three actions in the order of the design: «Confirmar talão» (56 px), «Guardar e rever depois» and «Eliminar talão» in red", async () => {
+    open();
+    await screen.findByText("Reveja antes de confirmar");
+    const buttons = within(foot()).getAllByRole("button");
+    expect(buttons.map((b) => b.textContent)).toEqual(["Confirmar talão", "Guardar e rever depois", "Eliminar talão"]);
+    expect(buttons[0]!.className).toContain("min-h-14");
+    expect(buttons[0]!.className).toContain("rounded-[28px]");
+    for (const b of buttons.slice(1)) expect(b.className).toContain("min-h-11");
+    expect(buttons[2]!.className).toContain("text-alert");
+    expect(screen.queryByRole("button", { name: "Guardar" })).toBeNull();
+  });
+
+  it("the title of the purchase is set in Fraunces", async () => {
+    open();
+    await screen.findByText("Reveja antes de confirmar");
+    expect(screen.getByRole("heading", { level: 1 }).className).toContain("font-display");
+  });
+
+  describe("«Guardar e rever depois»", () => {
+    it("without changes it only goes back to the list: nothing is sent", async () => {
+      let patches = 0;
+      server.use(
+        http.patch(`${API}/v1/receipts/r1`, () => {
+          patches += 1;
+          return HttpResponse.json(receipt());
+        }),
+      );
+      open();
+      await userEvent.setup().click(await screen.findByRole("button", { name: "Guardar e rever depois" }));
+      expect(await screen.findByText("lista")).toBeInTheDocument();
+      expect(patches).toBe(0);
+    });
+
+    it("saves what was edited and then goes back to the list", async () => {
+      let patch: unknown = null;
+      server.use(
+        http.patch(`${API}/v1/receipts/r1`, async ({ request }) => {
+          patch = await request.json();
+          return HttpResponse.json(receipt({ version: 4 }));
+        }),
+      );
+      const user = userEvent.setup();
+      open();
+      await correctTotal(user, "1,90");
+      await user.click(screen.getByRole("button", { name: "Guardar e rever depois" }));
+      expect(await screen.findByText("lista")).toBeInTheDocument();
+      expect(patch).toMatchObject({ version: 3, lines: [{ id: "l1", line_total_cents: 190 }, { id: "l2" }] });
+    });
+
+    it("a failure to save stays on the screen, with the message, and the button works again", async () => {
+      server.use(http.patch(`${API}/v1/receipts/r1`, () => HttpResponse.json(errorBody("internal_error", "Não foi possível guardar."), { status: 500 })));
+      const user = userEvent.setup();
+      open();
+      await correctTotal(user, "1,90");
+      await user.click(screen.getByRole("button", { name: "Guardar e rever depois" }));
+      expect(await screen.findByText("Não foi possível guardar.")).toBeVisible();
+      expect(screen.queryByText("lista")).toBeNull();
+      expect(screen.getByRole("button", { name: "Guardar e rever depois" })).toBeEnabled();
+    });
+
+    it("a version conflict stays on the screen and says the purchase changed", async () => {
+      server.use(http.patch(`${API}/v1/receipts/r1`, () => HttpResponse.json(errorBody("version_conflict", "x"), { status: 409 })));
+      const user = userEvent.setup();
+      open();
+      await correctTotal(user, "1,90");
+      await user.click(screen.getByRole("button", { name: "Guardar e rever depois" }));
+      expect(await screen.findByText(/foi alterada noutro dispositivo/)).toBeVisible();
+      expect(screen.queryByText("lista")).toBeNull();
+    });
+
+    it("is off while a value is invalid", async () => {
+      const user = userEvent.setup();
+      open();
+      await correctTotal(user, "abc");
+      expect(screen.getByRole("button", { name: "Guardar e rever depois" })).toBeDisabled();
+    });
+  });
+
+  describe("«Eliminar talão»", () => {
+    it("asks first, with the confirmation that was already there, and Cancelar changes nothing", async () => {
+      let deletes = 0;
+      server.use(
+        http.delete(`${API}/v1/receipts/r1`, () => {
+          deletes += 1;
+          return new HttpResponse(null, { status: 204 });
+        }),
+      );
+      const user = userEvent.setup();
+      open();
+      await user.click(await screen.findByRole("button", { name: "Eliminar talão" }));
+      expect(screen.getByText("Eliminar esta compra?")).toBeVisible();
+      expect(deletes).toBe(0);
+      await user.click(screen.getByRole("button", { name: "Cancelar" }));
+      expect(screen.queryByText("Eliminar esta compra?")).toBeNull();
+      expect(screen.getByRole("button", { name: "Eliminar talão" })).toHaveFocus();
+      expect(deletes).toBe(0);
+    });
+
+    it("deletes after the confirmation and goes back to the list", async () => {
+      let deletes = 0;
+      server.use(
+        http.delete(`${API}/v1/receipts/r1`, () => {
+          deletes += 1;
+          return new HttpResponse(null, { status: 204 });
+        }),
+      );
+      const user = userEvent.setup();
+      open();
+      await user.click(await screen.findByRole("button", { name: "Eliminar talão" }));
+      await user.click(screen.getByRole("button", { name: "Eliminar compra" }));
+      expect(await screen.findByText("lista")).toBeInTheDocument();
+      expect(deletes).toBe(1);
+    });
+
+    it("is the only way to delete while it is under review (no second «Eliminar compra» below)", async () => {
+      open();
+      await screen.findByRole("button", { name: "Eliminar talão" });
+      expect(screen.queryByRole("button", { name: "Eliminar compra" })).toBeNull();
+    });
+
+    it("a confirmed purchase keeps «Eliminar compra» in «Ficheiro e dados» and has no review actions", async () => {
+      server.use(http.get(`${API}/v1/receipts/r1`, () => HttpResponse.json(receipt({ status: "CONFIRMED", review_reasons: [] }))));
+      open();
+      expect(await screen.findByRole("button", { name: "Eliminar compra" })).toBeVisible();
+      expect(screen.queryByRole("button", { name: "Eliminar talão" })).toBeNull();
+    });
+  });
+
+  describe("«Preço alterado de X para Y» with «Desfazer»", () => {
+    it("appears after a price is corrected, and says from what to what", async () => {
+      const user = userEvent.setup();
+      open();
+      await correctTotal(user, "1,90");
+      expect(screen.getByText("Preço alterado de 1,70 para 1,90")).toBeVisible();
+      expect(screen.getByRole("button", { name: "Desfazer" })).toBeEnabled();
+    });
+
+    it("«Desfazer» puts the price back and the line is no longer sent as edited", async () => {
+      let patch: { lines: unknown[] } | null = null;
+      server.use(
+        http.patch(`${API}/v1/receipts/r1`, async ({ request }) => {
+          patch = (await request.json()) as { lines: unknown[] };
+          return HttpResponse.json(receipt({ version: 4 }));
+        }),
+      );
+      const user = userEvent.setup();
+      open();
+      await correctTotal(user, "1,90");
+      await user.click(screen.getByRole("button", { name: "Desfazer" }));
+      expect(screen.getByLabelText("Total da linha (€)")).toHaveValue("1,70");
+      expect(screen.queryByText(/Preço alterado de/)).toBeNull();
+      await user.click(screen.getByRole("button", { name: "Guardar e rever depois" }));
+      await waitFor(() => expect(patch).not.toBeNull());
+      expect(patch!.lines[0]).toEqual({ id: "l1" });
+    });
+
+    it("does not appear when the price is the same, or is not a valid value", async () => {
+      const user = userEvent.setup();
+      open();
+      await correctTotal(user, "1,7");
+      expect(screen.queryByText(/Preço alterado de/)).toBeNull();
+      await correctTotal(user, "abc");
+      expect(screen.queryByText(/Preço alterado de/)).toBeNull();
+    });
+
+    it("goes away with the line", async () => {
+      const user = userEvent.setup();
+      open();
+      await correctTotal(user, "1,90");
+      await user.click(screen.getByRole("button", { name: /remover linha/i }));
+      expect(screen.queryByText(/Preço alterado de/)).toBeNull();
+    });
+
+    it("gives way to the question of «Eliminar talão» while it is open", async () => {
+      const user = userEvent.setup();
+      open();
+      await correctTotal(user, "1,90");
+      await user.click(screen.getByRole("button", { name: "Eliminar talão" }));
+      expect(screen.queryByText(/Preço alterado de/)).toBeNull();
+    });
+  });
+});
+
+describe("revertField", () => {
+  const line = toDraft(receipt().lines[0]!);
+
+  it("keeps the field touched when it was already", () => {
+    const first = setField(line, "line_total", "1,80");
+    const second = setField(first, "line_total", "1,90");
+    expect(revertField(second, "line_total", "1,80", true).touched).toEqual(["line_total"]);
+  });
+});

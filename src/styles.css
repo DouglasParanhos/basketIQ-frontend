@@ -86,7 +86,7 @@
     :root {
       --color-ground: #121a15;
       --color-paper: #1a261f;
-      --color-table: #1d2922;
+      --color-table: #0c110e;
       --color-ink: #eaf2ec;
       --color-ink-soft: #a9bbb0;
       --color-line: #2c3b32;
@@ -150,5 +150,90 @@
   .marker {
     background: linear-gradient(transparent 35%, var(--color-marker) 35% 90%, transparent 90%);
     color: var(--color-ink);
+  }
+
+  /* Paper in both schemes (the ticket of the login): what is inside takes the light values of the tokens it uses. */
+  .ticket-paper {
+    --color-paper: #ffffff;
+    --color-ink: #1b1b1a;
+    --color-brand: #1f6f4a;
+    --color-marker: #ffc928;
+  }
+  /* The ticket of the login prints itself (reveal), trembles while it does, and the receipts in the background scroll. */
+  .ticket-reveal {
+    animation: ticket-reveal 2.4s steps(24, end) 0.3s both;
+  }
+  .ticket-shake {
+    animation: ticket-shake 0.1s linear 24 0.3s;
+  }
+  /* The lines of a column come from data-lines, twice in a row so that the loop (translateY -50 %) has no seam. */
+  .receipt-column::before {
+    content: attr(data-lines) "\A" attr(data-lines);
+    white-space: pre;
+  }
+  .ticket-up {
+    animation: ticket-up 26s linear infinite;
+  }
+  .ticket-down {
+    animation: ticket-down 32s linear infinite;
+  }
+  /* The highlighter paints under the slogan once the ticket is printed. */
+  .ticket-marker {
+    background: linear-gradient(transparent 30%, var(--color-marker) 30% 92%, transparent 92%) no-repeat left / 100% 100%;
+    animation: ticket-wipe 0.6s ease-out 2.8s both;
+  }
+  /* «none», not a shorter duration: an infinite animation of 0.01 ms would flicker. Without animation the ticket is whole. */
+  @media (prefers-reduced-motion: reduce) {
+    .ticket-reveal,
+    .ticket-shake,
+    .ticket-up,
+    .ticket-down,
+    .ticket-marker {
+      animation: none;
+    }
+  }
+  @keyframes ticket-reveal {
+    from {
+      clip-path: inset(0 0 100% 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+  @keyframes ticket-shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(0.7px);
+    }
+    75% {
+      transform: translateX(-0.7px);
+    }
+  }
+  @keyframes ticket-up {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-50%);
+    }
+  }
+  @keyframes ticket-down {
+    from {
+      transform: translateY(-50%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  @keyframes ticket-wipe {
+    from {
+      background-size: 0 100%;
+    }
+    to {
+      background-size: 100% 100%;
+    }
   }
 }

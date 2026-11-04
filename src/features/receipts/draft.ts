@@ -53,10 +53,19 @@ export function emptyLine(): DraftLine {
   };
 }
 
+/** The two prices of a line that can be corrected (and undone). */
+export type PriceField = "unit_price" | "line_total";
+
+const draftKey = (field: LineField) => (field === "product" ? "product_name" : field);
+
 export function setField(line: DraftLine, field: LineField, value: string): DraftLine {
-  const key = field === "product" ? "product_name" : field;
   const touched = line.touched.includes(field) ? line.touched : [...line.touched, field];
-  return { ...line, [key]: value, touched };
+  return { ...line, [draftKey(field)]: value, touched };
+}
+
+/** «Desfazer»: the field goes back to its value, and is only «touched» again if it was before the edit (so the PATCH leaves it out). */
+export function revertField(line: DraftLine, field: LineField, value: string, wasTouched: boolean): DraftLine {
+  return { ...line, [draftKey(field)]: value, touched: wasTouched ? line.touched : line.touched.filter((f) => f !== field) };
 }
 
 /** Split one line into two (RF-07): integer quantities are divided, otherwise the total is halved. */

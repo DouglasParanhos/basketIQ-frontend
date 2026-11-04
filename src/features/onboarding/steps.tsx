@@ -17,12 +17,12 @@ import {
   type OnboardingState,
 } from "./state";
 
-/** Title and help line of each step, by step index. */
+/** Title and help line of each step, by step index, and what «Avançar» says while the step has no answer. */
 export const STEP_COPY = [
-  { title: "Qual é o seu objetivo com a aplicação?", hint: "Escolha quantos quiser." },
-  { title: "Quantas pessoas vivem em sua casa?", hint: "Pode alterar este número mais tarde, no Perfil." },
-  { title: "Onde costuma fazer compras?", hint: "Escolha todos os mercados que usa." },
-  { title: "Qual é a sua meta pessoal por mês?", hint: "Por mês. Pode mudá-la quando quiser." },
+  { title: "Qual é o seu objetivo com a aplicação?", hint: "Escolha quantos quiser.", blocked: "Escolha uma opção para avançar, ou salte este passo." },
+  { title: "Quantas pessoas vivem em sua casa?", hint: "Pode alterar este número mais tarde, no Perfil.", blocked: "Indique quantas pessoas, ou salte este passo." },
+  { title: "Onde costuma fazer compras?", hint: "Escolha todos os mercados que usa.", blocked: "Escolha um mercado para avançar, ou salte este passo." },
+  { title: "Qual é a sua meta pessoal por mês?", hint: "Por mês. Pode mudá-la quando quiser.", blocked: "Defina um valor ou toque em «Ainda não sei»." },
 ] as const;
 
 export function GoalsStep({ state, dispatch }: { state: OnboardingState; dispatch: Dispatch<Action> }) {
@@ -50,14 +50,14 @@ export function PeopleStep({ state, dispatch }: { state: OnboardingState; dispat
   return (
     <div className="mt-[3.75rem] flex flex-col items-center text-center">
       <output aria-live="polite" className="flex flex-col items-center gap-2">
-        <span className="text-[clamp(4.5rem,30vw,7.5rem)] font-extrabold leading-none tabular-nums">{state.householdSize}</span>{" "}
+        <span className="font-display text-[clamp(4.5rem,30vw,7.5rem)] font-semibold leading-none">{state.householdSize ?? "—"}</span>{" "}
         <span className="text-base text-ink-soft">{state.householdSize === 1 ? "pessoa" : "pessoas"}</span>
       </output>
       <div className="mt-7 flex gap-7">
         <button
           type="button"
           aria-label="Menos uma pessoa"
-          disabled={state.householdSize <= PEOPLE_MIN}
+          disabled={state.householdSize === null || state.householdSize <= PEOPLE_MIN}
           onClick={() => dispatch({ type: "people", delta: -1 })}
           className={`${round} border-[1.5px] border-line bg-paper text-ink`}
         >
@@ -66,7 +66,7 @@ export function PeopleStep({ state, dispatch }: { state: OnboardingState; dispat
         <button
           type="button"
           aria-label="Mais uma pessoa"
-          disabled={state.householdSize >= PEOPLE_MAX}
+          disabled={state.householdSize !== null && state.householdSize >= PEOPLE_MAX}
           onClick={() => dispatch({ type: "people", delta: 1 })}
           className={`${round} bg-brand text-white dark:text-ground`}
         >
@@ -118,10 +118,11 @@ export function MerchantsStep({ state, dispatch }: { state: OnboardingState; dis
 
 export function GoalAmountStep({ state, dispatch }: { state: OnboardingState; dispatch: Dispatch<Action> }) {
   const unknown = state.goalUnknown;
+  const euros = state.goalEuros;
   return (
     <div className="mt-8 flex flex-col items-center text-center">
-      <p data-testid="goal-value" className={`text-[clamp(3rem,20vw,5rem)] font-extrabold leading-none tabular-nums ${unknown ? "text-ink-soft" : ""}`}>
-        {unknown ? "Ainda não sei" : formatWholeEuros(state.goalEuros)}
+      <p data-testid="goal-value" className={`font-display text-[clamp(3rem,20vw,5rem)] font-semibold leading-none ${unknown || euros === null ? "text-ink-soft" : ""}`}>
+        {unknown ? "Ainda não sei" : euros === null ? "— €" : formatWholeEuros(euros)}
       </p>
       <p className="mt-1 text-ink-soft">{unknown ? "Pode definir a sua meta pessoal mais tarde, nas Definições." : "por mês"}</p>
       <div className={`mt-10 w-full ${unknown ? "opacity-[.35]" : ""}`}>
@@ -130,10 +131,10 @@ export function GoalAmountStep({ state, dispatch }: { state: OnboardingState; di
           min={GOAL_MIN_EUROS}
           max={GOAL_MAX_EUROS}
           step={GOAL_STEP_EUROS}
-          value={state.goalEuros}
+          value={euros ?? GOAL_MIN_EUROS}
           disabled={unknown}
           aria-label="Meta pessoal mensal, em euros"
-          aria-valuetext={`${state.goalEuros} euros`}
+          aria-valuetext={euros === null ? "ainda sem valor" : `${euros} euros`}
           onChange={(e) => dispatch({ type: "goalEuros", euros: Number(e.target.value) })}
           className="h-11 w-full accent-brand"
         />

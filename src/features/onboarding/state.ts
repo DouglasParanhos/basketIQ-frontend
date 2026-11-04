@@ -9,11 +9,9 @@ const GOALS: readonly Goal[] = ["finances", "shopping_list", "savings"];
 
 export const PEOPLE_MIN = 1;
 export const PEOPLE_MAX = 12;
-const PEOPLE_SUGGESTED = 2;
 export const GOAL_MIN_EUROS = 50;
 export const GOAL_MAX_EUROS = 800;
 export const GOAL_STEP_EUROS = 10;
-const GOAL_SUGGESTED_EUROS = 300;
 export const STEP_COUNT = 4;
 export const LAST_STEP = STEP_COUNT - 1;
 
@@ -24,9 +22,11 @@ export interface OnboardingState {
   step: number;
   phase: "asking" | "done";
   goals: Goal[];
-  householdSize: number;
+  /** `null` until the person says it: nothing is suggested. */
+  householdSize: number | null;
   merchants: string[];
-  goalEuros: number;
+  /** `null` until the person moves the bar. */
+  goalEuros: number | null;
   goalUnknown: boolean;
   /** Steps the person confirmed with «Avançar». «Saltar» never marks one. */
   confirmed: Confirmed;
@@ -63,16 +63,16 @@ export function progressPercent(step: number): number {
   return Math.round(((step + 1) / STEP_COUNT) * 100);
 }
 
-/** The screen starts from what is saved (a profile without conclusion) or from the suggestions. Nothing is confirmed yet. */
+/** The screen starts from what is saved (a profile without conclusion) or empty: nothing is suggested, nothing is confirmed. */
 export function initialState(saved: Profile | null): OnboardingState {
   const euros = saved?.monthly_goal_cents
     ? clamp(Math.round(saved.monthly_goal_cents / 100 / GOAL_STEP_EUROS) * GOAL_STEP_EUROS, GOAL_MIN_EUROS, GOAL_MAX_EUROS)
-    : GOAL_SUGGESTED_EUROS;
+    : null;
   return {
     step: 0,
     phase: "asking",
     goals: [...(saved?.goals ?? [])],
-    householdSize: saved?.household_size ?? PEOPLE_SUGGESTED,
+    householdSize: saved?.household_size ?? null,
     merchants: [...(saved?.merchants ?? [])],
     goalEuros: euros,
     goalUnknown: false,
@@ -87,6 +87,8 @@ export function reduce(state: OnboardingState, action: Action): OnboardingState 
     case "toggleAllGoals":
       return { ...state, goals: toggleAllGoals(state.goals) };
     case "people":
+      // The first «+» says 1; «−» with nothing said stays at nothing.
+      if (state.householdSize === null) return action.delta === 1 ? { ...state, householdSize: PEOPLE_MIN } : state;
       return { ...state, householdSize: clamp(state.householdSize + action.delta, PEOPLE_MIN, PEOPLE_MAX) };
     case "toggleMerchant":
       return { ...state, merchants: toggle(state.merchants, action.id) };
@@ -105,6 +107,20 @@ export function reduce(state: OnboardingState, action: Action): OnboardingState 
   }
 }
 
+/** «Avançar» needs an answer on the step (or «Ainda não sei» on the last one); «Saltar» is the way to leave it empty. */
+export function canAdvance(state: OnboardingState): boolean {
+  switch (state.step) {
+    case 0:
+      return state.goals.length > 0;
+    case 1:
+      return state.householdSize !== null;
+    case 2:
+      return state.merchants.length > 0;
+    default:
+      return state.goalEuros !== null || state.goalUnknown;
+  }
+}
+
 /**
  * The body of the one PATCH: only what the person confirmed with «Avançar» (constitution III), never a suggestion she
  * skipped, never null or an empty list. `knownMerchants` drops ids the API no longer lists (it would answer 422).
@@ -113,11 +129,11 @@ export function buildPatch(state: OnboardingState, knownMerchants?: readonly str
   const patch: ProfilePatch = { onboarding_completed: true };
   const { confirmed } = state;
   if (confirmed.goals && state.goals.length > 0) patch.goals = GOALS.filter((goal) => state.goals.includes(goal));
-  if (confirmed.people) patch.household_size = state.householdSize;
+  if (confirmed.people && state.householdSize !== null) patch.household_size = state.householdSize;
   if (confirmed.merchants) {
     const ids = knownMerchants ? state.merchants.filter((id) => knownMerchants.includes(id)) : state.merchants;
     if (ids.length > 0) patch.merchants = ids;
   }
-  if (confirmed.goal && !state.goalUnknown) patch.monthly_goal_cents = state.goalEuros * 100;
+  if (confirmed.goal && !state.goalUnknown && state.goalEuros !== null) patch.monthly_goal_cents = state.goalEuros * 100;
   return patch;
 }

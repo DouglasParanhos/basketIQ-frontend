@@ -83,7 +83,7 @@ export function ProfileEditor({ saved, focus, onDone }: { saved: Profile; focus:
               <button type="button" aria-label="Menos uma pessoa" disabled={draft.people === null || draft.people <= 1} onClick={() => setDraft({ ...draft, people: stepPeople(draft.people, -1) })} className={ROUND_NEUTRAL}>
                 <Minus aria-hidden className="size-5" />
               </button>
-              <output aria-live="polite" className="min-w-8 text-center text-[26px] font-extrabold leading-none">
+              <output aria-live="polite" className="min-w-8 text-center font-display text-[26px] font-semibold leading-none">
                 {draft.people ?? "—"}
               </output>
               <button

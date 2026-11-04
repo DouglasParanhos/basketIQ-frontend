@@ -5,15 +5,9 @@ import { describe, expect, it } from "vitest";
 import { LoginPage } from "../features/auth/LoginPage";
 import AdminPage from "../features/admin/AdminPage";
 import { renderRoutes } from "../test/render";
-import { API, errorBody, failConfig, server, serveConfig } from "../test/server";
+import { anonymous, API, errorBody, failConfig, server, serveConfig } from "../test/server";
 import { SettingsLayout } from "../features/settings/SettingsLayout";
 import { DocumentTitle, FALLBACK_APP_NAME, useSmartListEnabled } from "./appConfig";
-
-const anonymous = () =>
-  server.use(
-    http.get(`${API}/v1/me`, () => HttpResponse.json(errorBody("unauthenticated", "x"), { status: 401 })),
-    http.post(`${API}/v1/auth/refresh`, () => HttpResponse.json(errorBody("unauthenticated", "x"), { status: 401 })),
-  );
 
 const serveName = (name: string) =>
   server.use(http.get(`${API}/v1/config`, () => HttpResponse.json({ app_name: name })));
@@ -27,8 +21,7 @@ describe("customer-facing name comes from the backend (CFG-02)", () => {
     anonymous();
     serveName("Mercado do Zé");
     renderRoutes(login, "/login");
-    expect(await screen.findByText("Mercado do Zé")).toBeInTheDocument();
-    expect(screen.getByText(/O Mercado do Zé lê os produtos/)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Mercado do Zé" })).toBeInTheDocument();
     expect(screen.queryByText(/Super Mercado/i)).not.toBeInTheDocument();
   });
 
@@ -57,8 +50,7 @@ describe("customer-facing name comes from the backend (CFG-02)", () => {
     server.use(http.get(`${API}/v1/config`, () => HttpResponse.json(errorBody("internal_error", "x"), { status: 500 })));
     renderRoutes(login, "/login");
     expect(FALLBACK_APP_NAME).toBe("Super Mercado");
-    expect(await screen.findByText("Super Mercado")).toBeInTheDocument();
-    expect(screen.getByText(/O Super Mercado lê os produtos/)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Super Mercado" })).toBeInTheDocument();
   });
 });
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { emptyProfile, profile } from "../../test/fixtures";
 import {
   buildPatch,
+  canAdvance,
   initialState,
   isAllGoals,
   progressPercent,
@@ -30,10 +31,11 @@ describe("goals (F-113, RF-14)", () => {
 });
 
 describe("people (F-113, RF-13)", () => {
-  it("F-113: starts at 2, never goes below 1 or above 12", () => {
-    expect(start().householdSize).toBe(2);
-    expect(run(start(), { type: "people", delta: -1 }).householdSize).toBe(1);
-    expect(run(start(), { type: "people", delta: -1 }, { type: "people", delta: -1 }).householdSize).toBe(1);
+  it("F-113: starts with nothing said, the first «+» says 1, and it never goes below 1 or above 12", () => {
+    expect(start().householdSize).toBeNull();
+    expect(run(start(), { type: "people", delta: -1 }).householdSize).toBeNull();
+    expect(run(start(), { type: "people", delta: 1 }).householdSize).toBe(1);
+    expect(run(start(), { type: "people", delta: 1 }, { type: "people", delta: -1 }, { type: "people", delta: -1 }).householdSize).toBe(1);
     let state = start();
     for (let i = 0; i < 20; i++) state = reduce(state, { type: "people", delta: 1 });
     expect(state.householdSize).toBe(12);
@@ -41,8 +43,8 @@ describe("people (F-113, RF-13)", () => {
 });
 
 describe("goal amount (F-113, RF-13)", () => {
-  it("F-113: starts at 300 €, stays between 50 € and 800 €, and moving it turns «Ainda não sei» off", () => {
-    expect(start().goalEuros).toBe(300);
+  it("F-113: starts with no value, stays between 50 € and 800 €, and moving it turns «Ainda não sei» off", () => {
+    expect(start().goalEuros).toBeNull();
     const unknown = run(start(), { type: "toggleGoalUnknown" });
     expect(unknown.goalUnknown).toBe(true);
     const moved = reduce(unknown, { type: "goalEuros", euros: 420 });
@@ -68,9 +70,9 @@ describe("progress and steps (F-113, RF-14)", () => {
   });
 
   it("F-113: «Voltar» keeps what was answered", () => {
-    const state = run(start(), { type: "people", delta: 1 }, { type: "next" }, { type: "back" });
+    const state = run(start(), { type: "people", delta: 1 }, { type: "people", delta: 1 }, { type: "next" }, { type: "back" });
     expect(state.step).toBe(0);
-    expect(state.householdSize).toBe(3);
+    expect(state.householdSize).toBe(2);
   });
 });
 
@@ -85,6 +87,8 @@ describe("what is sent (F-114, RF-14, constituição III)", () => {
       start(),
       { type: "skip" },
       { type: "people", delta: 1 },
+      { type: "people", delta: 1 },
+      { type: "people", delta: 1 },
       { type: "next" },
       { type: "skip" },
       { type: "skip" },
@@ -92,9 +96,9 @@ describe("what is sent (F-114, RF-14, constituição III)", () => {
     expect(buildPatch(state)).toEqual({ household_size: 3, onboarding_completed: true });
   });
 
-  it("F-114: «Avançar» on the suggested 2 people confirms them", () => {
-    const state = run(start(), { type: "skip" }, { type: "next" });
-    expect(buildPatch(state)).toEqual({ household_size: 2, onboarding_completed: true });
+  it("F-114: nothing is suggested, so a confirmation with no answer sends no value (the page does not offer it)", () => {
+    const state = run(start(), { type: "skip" }, { type: "next" }, { type: "skip" }, { type: "next" });
+    expect(buildPatch(state)).toEqual({ onboarding_completed: true });
   });
 
   it("F-114: goals and merchants confirmed with nothing chosen send no value", () => {
@@ -102,10 +106,10 @@ describe("what is sent (F-114, RF-14, constituição III)", () => {
     expect(buildPatch(state)).toEqual({ onboarding_completed: true });
   });
 
-  it("F-114: «Ainda não sei» confirmed sends no goal; a goal of 300 € is 30000 cents", () => {
-    const unknown = run(start(), { type: "skip" }, { type: "skip" }, { type: "skip" }, { type: "toggleGoalUnknown" }, { type: "next" });
+  it("F-114: «Ainda não sei» confirmed sends no goal, even after a value; a goal of 300 € is 30000 cents", () => {
+    const unknown = run(start(), { type: "skip" }, { type: "skip" }, { type: "skip" }, { type: "goalEuros", euros: 300 }, { type: "toggleGoalUnknown" }, { type: "next" });
     expect(buildPatch(unknown)).toEqual({ onboarding_completed: true });
-    const known = run(start(), { type: "skip" }, { type: "skip" }, { type: "skip" }, { type: "next" });
+    const known = run(start(), { type: "skip" }, { type: "skip" }, { type: "skip" }, { type: "goalEuros", euros: 300 }, { type: "next" });
     expect(buildPatch(known)).toEqual({ monthly_goal_cents: 30000, onboarding_completed: true });
   });
 
@@ -114,6 +118,8 @@ describe("what is sent (F-114, RF-14, constituição III)", () => {
       start(),
       { type: "toggleGoal", goal: "finances" },
       { type: "next" },
+      { type: "people", delta: 1 },
+      { type: "people", delta: 1 },
       { type: "next" },
       { type: "toggleMerchant", id: "LIDL" },
       { type: "toggleMerchant", id: "CONTINENTE" },
@@ -136,6 +142,8 @@ describe("what is sent (F-114, RF-14, constituição III)", () => {
     const state = run(
       start(),
       { type: "skip" },
+      { type: "people", delta: 1 },
+      { type: "people", delta: 1 },
       { type: "people", delta: 1 },
       { type: "next" },
       { type: "back" },
@@ -160,9 +168,10 @@ describe("saved values at the start (F-116, RF-14)", () => {
     expect(buildPatch(state)).toEqual({ onboarding_completed: true });
   });
 
-  it("F-116: an empty profile keeps the suggestions (2 people, 300 €) and none is saved", () => {
+  it("F-116: an empty profile starts empty, with no suggestion, and nothing is saved", () => {
     const state = initialState(emptyProfile());
-    expect(state).toMatchObject({ householdSize: 2, goalEuros: 300, goals: [], merchants: [] });
+    expect(state).toMatchObject({ householdSize: null, goalEuros: null, goals: [], merchants: [] });
+    expect(initialState(null)).toMatchObject({ householdSize: null, goalEuros: null });
     expect(buildPatch(state)).toEqual({ onboarding_completed: true });
   });
 
@@ -170,5 +179,30 @@ describe("saved values at the start (F-116, RF-14)", () => {
     expect(initialState({ ...emptyProfile(), monthly_goal_cents: 5000 }).goalEuros).toBe(50);
     expect(initialState({ ...emptyProfile(), monthly_goal_cents: 45500 }).goalEuros).toBe(460);
     expect(initialState({ ...emptyProfile(), monthly_goal_cents: 80000 }).goalEuros).toBe(800);
+  });
+});
+
+describe("«Avançar» needs an answer (F-113, constituição III)", () => {
+  const people = (state: OnboardingState) => run(state, { type: "people", delta: 1 });
+
+  it("F-113: each step opens without an answer, and one answer is enough to go on", () => {
+    const at = (step: number) => ({ ...start(), step });
+    expect([0, 1, 2, 3].map((step) => canAdvance(at(step)))).toEqual([false, false, false, false]);
+    expect(canAdvance(run(at(0), { type: "toggleGoal", goal: "savings" }))).toBe(true);
+    expect(canAdvance(people(at(1)))).toBe(true);
+    expect(canAdvance(run(at(2), { type: "toggleMerchant", id: "LIDL" }))).toBe(true);
+    expect(canAdvance(run(at(3), { type: "goalEuros", euros: 300 }))).toBe(true);
+  });
+
+  it("F-113: «Ainda não sei» is an answer on the last step, and taking the answer back blocks it again", () => {
+    const last = { ...start(), step: 3 };
+    expect(canAdvance(run(last, { type: "toggleGoalUnknown" }))).toBe(true);
+    expect(canAdvance(run(last, { type: "toggleGoalUnknown" }, { type: "toggleGoalUnknown" }))).toBe(false);
+    expect(canAdvance(run({ ...start(), step: 0 }, { type: "toggleGoal", goal: "savings" }, { type: "toggleGoal", goal: "savings" }))).toBe(false);
+  });
+
+  it("F-114: «Saltar» never saves, with or without an answer given before", () => {
+    const answered = run(start(), { type: "toggleGoal", goal: "finances" }, { type: "skip" }, { type: "people", delta: 1 }, { type: "skip" });
+    expect(buildPatch(answered)).toEqual({ onboarding_completed: true });
   });
 });

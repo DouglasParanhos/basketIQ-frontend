@@ -1,3 +1,4 @@
+import { Users } from "lucide-react";
 import { useId, type ReactNode } from "react";
 import { Link } from "react-router";
 import type { Schemas } from "../../api/client";
@@ -16,10 +17,28 @@ export function PurchasesCard({ overview, isCurrentMonth }: { overview: Overview
   return (
     <section aria-label="Compras no mês" className="flex flex-col gap-1.5 rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
       <p className={SMALL_CAPS}>Compras no mês</p>
-      <p className="amount text-3xl font-extrabold leading-tight">{overview.purchases_this_month}</p>
+      <p className="amount font-display text-3xl font-semibold leading-[1.1]">{overview.purchases_this_month}</p>
       <p className="text-xs leading-snug text-ink-soft">
         {isCurrentMonth ? "Mês passado" : "Mês anterior"}: {overview.purchases_last_month}
       </p>
+    </section>
+  );
+}
+
+/** «Por pessoa no mês»: the month's spending shared by the people of the house. The division is the client's (the API has no such figure). */
+export function PerPersonCard({ spentCents, people }: { spentCents: number; people: number }) {
+  return (
+    <section aria-label="Por pessoa no mês" className="flex items-center gap-3 rounded-surface bg-paper px-4 py-3.5 ring-1 ring-inset ring-line">
+      <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand">
+        <Users className="size-[22px]" strokeWidth={1.9} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className={SMALL_CAPS}>Por pessoa no mês</p>
+        <p className="text-xs text-ink-soft">
+          {people} {people === 1 ? "pessoa" : "pessoas"} em casa
+        </p>
+      </div>
+      <p className="amount font-display text-[1.625rem] font-semibold">{formatCents(Math.round(spentCents / people))}</p>
     </section>
   );
 }
@@ -48,9 +67,9 @@ function Weeks({ weeks }: { weeks: Overview["weeks"] }) {
       <ol className="flex h-[104px] items-end gap-3">
         {weeks.map((w, i) => (
           <li key={w.index} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
-            <span className="amount text-[0.6875rem] text-ink-soft">{formatCents(w.spent_cents)}</span>
+            <span className="amount text-xs font-bold">{formatCents(w.spent_cents)}</span>
             {/* The height only draws the value, which is written above. */}
-            <span aria-hidden className={`block w-full rounded-lg ${i === weeks.length - 1 ? "bg-chart" : "bg-brand-soft"}`} style={{ height: `${Math.max(4, (w.spent_cents / highest) * 100)}%` }} />
+            <span aria-hidden className={`block w-full rounded-lg ${i === weeks.length - 1 ? "bg-chart" : "bg-muted-bar"}`} style={{ height: `${Math.max(4, (w.spent_cents / highest) * 100)}%` }} />
             <span className="text-center text-[0.6875rem] leading-tight text-ink-soft">
               <span className="block font-semibold">Sem. {w.index}</span>
               <span className="block">{weekRange(w.from, w.to)}</span>
@@ -98,7 +117,8 @@ function Merchants({ merchants }: { merchants: Overview["by_merchant"] }) {
   );
 }
 
-function Recent({ receipts }: { receipts: Overview["recent_receipts"] }) {
+/** `example`: the rows are not links (the receipts of the example do not exist) and «Ver todas» is not offered. */
+function Recent({ receipts, example }: { receipts: Overview["recent_receipts"]; example: boolean }) {
   const id = useId();
   return (
     <section aria-labelledby={id} className="flex flex-col gap-1">
@@ -106,17 +126,19 @@ function Recent({ receipts }: { receipts: Overview["recent_receipts"] }) {
         <h2 id={id} className="text-sm font-bold">
           Últimas compras
         </h2>
-        <Link to="/compras" className="inline-flex min-h-11 items-center px-1 text-[13px] font-bold text-brand">
-          Ver todas
-        </Link>
+        {!example && (
+          <Link to="/compras" className="inline-flex min-h-11 items-center px-1 text-[13px] font-bold text-brand">
+            Ver todas
+          </Link>
+        )}
       </div>
       {receipts.length === 0 ? (
         <p className="text-sm text-ink-soft">Sem compras neste mês.</p>
       ) : (
         <ul className="flex flex-col">
-          {receipts.map((r) => (
-            <li key={r.id} className="border-t border-line">
-              <Link to={`/compras/${r.id}`} className="flex min-h-14 items-center gap-3 py-2">
+          {receipts.map((r) => {
+            const row = (
+              <>
                 <MarketTile code={r.merchant} size={40} fontSize={18} />
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate font-semibold">{r.name}</span>
@@ -128,9 +150,20 @@ function Recent({ receipts }: { receipts: Overview["recent_receipts"] }) {
                   )}
                 </span>
                 <span className="amount shrink-0 font-bold">{r.total_cents === null ? "—" : formatCents(r.total_cents)}</span>
-              </Link>
-            </li>
-          ))}
+              </>
+            );
+            return (
+              <li key={r.id} className="border-t border-line">
+                {example ? (
+                  <div className="flex min-h-14 items-center gap-3 py-2">{row}</div>
+                ) : (
+                  <Link to={`/compras/${r.id}`} className="flex min-h-14 items-center gap-3 py-2">
+                    {row}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>
@@ -138,12 +171,13 @@ function Recent({ receipts }: { receipts: Overview["recent_receipts"] }) {
 }
 
 /** The spending, the stores and the latest purchases of the month. Only confirmed purchases count in the values; the others only show in their own line. */
-export function SpendCards({ overview }: { overview: Overview }) {
+export function SpendCards({ overview, example = false, between }: { overview: Overview; example?: boolean; between?: ReactNode }) {
   return (
     <>
       <Weeks weeks={overview.weeks} />
       <Merchants merchants={overview.by_merchant} />
-      <Recent receipts={overview.recent_receipts} />
+      {between}
+      <Recent receipts={overview.recent_receipts} example={example} />
     </>
   );
 }

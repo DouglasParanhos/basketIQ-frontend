@@ -10,5 +10,9 @@ export default defineConfig({
     include: ["src/**/*.test.{ts,tsx}"],
     css: false,
     restoreMocks: true,
+    // Above asyncUtilTimeout (4000 ms) so a test with two slow waits fails on the query, with its message, not on the clock.
+    // Not covered: «Timeout calling "fetch"» (a worker waiting for the main process to load a module) when the whole run
+    // is on a saturated machine; that is another limit, internal to vitest.
+    testTimeout: 15000,
   },
 });

@@ -18,15 +18,16 @@ export interface RingView {
 }
 
 const PERIMETER = 390;
+// Green, gold, gold: red is only for a goal that was passed (below). The API's bands only choose the words.
 const BAND: Record<Exclude<Overview["band"], "none">, { tone: RingTone; label: string; colour: string }> = {
   ok: { tone: "ok", label: "Tranquilo", colour: "verde" },
-  attention: { tone: "warn", label: "Quase lá", colour: "laranja" },
-  high: { tone: "alert", label: "Reta final", colour: "vermelho" },
+  attention: { tone: "warn", label: "Quase lá", colour: "dourado" },
+  high: { tone: "warn", label: "Reta final", colour: "dourado" },
 };
 
 /**
  * What the ring shows. The band and the percentage are the API's, never recalculated; the only sum is the balance
- * (goal − spent, whole cents), which also decides «above the goal» because goal_pct rounds.
+ * (goal − spent, whole cents), which also decides «above the goal» (red) because goal_pct rounds.
  */
 export function ringView(overview: Overview, isCurrentMonth: boolean): RingView {
   const goalNote = isCurrentMonth ? null : "Meta atual";
@@ -37,12 +38,13 @@ export function ringView(overview: Overview, isCurrentMonth: boolean): RingView 
   const balance = overview.goal_cents - overview.spent_cents;
   const above = balance < 0;
   const filled = Math.round((Math.min(overview.goal_pct, 100) / 100) * PERIMETER);
+  const goal = `${overview.goal_pct} % da meta${isCurrentMonth ? "" : " atual"}`;
   return {
-    tone,
-    text: above ? `Acima da meta pessoal este mês · ${formatCents(-balance)} além da meta` : `${label} · saldo da meta: ${formatCents(balance)}`,
+    tone: above ? "alert" : tone,
+    text: above ? `Acima da meta · ${formatCents(-balance)} além da meta` : `${label} · saldo da meta: ${formatCents(balance)}`,
     percentText: `${overview.goal_pct} %`,
     dash: `${filled} ${PERIMETER}`,
-    ariaLabel: `Anel ${colour}, ${overview.goal_pct} % da meta${isCurrentMonth ? "" : " atual"} usada`,
+    ariaLabel: above ? `Anel completo e vermelho, meta ultrapassada, ${goal}` : `Anel ${colour}, ${goal} usada`,
     goalNote,
   };
 }

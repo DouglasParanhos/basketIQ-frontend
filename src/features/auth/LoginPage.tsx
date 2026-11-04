@@ -1,6 +1,6 @@
 import { Navigate, useSearchParams } from "react-router";
 import { BrandMark } from "../../components/BrandMark";
-import { Notice, Spinner } from "../../components/ui";
+import { Spinner } from "../../components/ui";
 import { useAppName } from "../../config/appConfig";
 import { useMe } from "./session";
 
@@ -13,6 +13,45 @@ const ERRORS: Record<string, string> = {
   session_expired: "A sua sessão terminou. Entre novamente para continuar.",
 };
 
+// Receipts that scroll behind the ticket (decoration only).
+const LEFT_LINES = [
+  "LEITE MEIO GORDO 0,79",
+  "BANANA 0,856 KG 1,23",
+  "PAO DE FORMA 1,29",
+  "ARROZ AGULHA 1KG 1,19",
+  "ATUM EM AZEITE 1,79",
+  "QUEIJO FLAMENGO 3,49",
+  "IOGURTE NATURAL X4 1,35",
+  "FRANGO PEITO KG 5,49",
+  "CAFE MOIDO 250G 2,49",
+  "MACA GALA KG 2,19",
+  "AZEITE VIRGEM 0,75L 6,99",
+  "OVOS M X12 2,89",
+  "BATATA KG 1,19",
+  "CEBOLA KG 0,99",
+  "MASSA ESPARGUETE 1,09",
+  "--------------------",
+];
+const RIGHT_LINES = [
+  "SUMO LARANJA 1L 1,69",
+  "TOMATE KG 2,19",
+  "CENOURA KG 0,89",
+  "FIAMBRE PERU 1,59",
+  "MANTEIGA 250G 2,39",
+  "CEREAIS 500G 2,79",
+  "ALFACE UN 0,79",
+  "PEIXE ESPADA KG 7,99",
+  "AGUA 6X1,5L 2,10",
+  "DETERGENTE 2L 4,49",
+  "PAPEL COZINHA X2 1,89",
+  "BOLACHA MARIA 0,89",
+  "PESSEGO KG 2,49",
+  "FEIJAO 500G 1,19",
+  "FARINHA 1KG 0,99",
+  "--------------------",
+];
+const STEPS = ["1x FAÇA COMPRAS", "2x FOTOGRAFE OU PARTILHE", "3x PERCEBA OS GASTOS", "4x ACOMPANHE"];
+
 function GoogleMark() {
   return (
     <svg aria-hidden viewBox="0 0 48 48" className="size-5">
@@ -21,6 +60,19 @@ function GoogleMark() {
       <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z" />
       <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 0 1-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
     </svg>
+  );
+}
+
+/**
+ * One column of receipts at the edge of the screen, cut by it, at a tenth of the opacity. The lines are generated
+ * content (.receipt-column::before, from data-lines), not text of the page: they are decoration, and at that
+ * opacity no colour could pass the 4.5:1 the checker asks of text.
+ */
+function ReceiptColumn({ lines, side }: { lines: string[]; side: "left" | "right" }) {
+  return (
+    <div aria-hidden className={`pointer-events-none absolute inset-y-0 w-[110px] overflow-hidden opacity-10 ${side === "left" ? "-left-[46px]" : "-right-[46px] text-right"}`}>
+      <div data-lines={lines.join("\n")} className={`receipt-column font-receipt text-[11px] leading-[1.7] ${side === "left" ? "ticket-up" : "ticket-down"}`} />
+    </div>
   );
 }
 
@@ -34,56 +86,59 @@ export function LoginPage() {
   if (me) return <Navigate to="/" replace />;
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-between px-6 pb-10 pt-16">
-      <div>
-        <div className="mb-8 flex items-center gap-3">
-          <BrandMark className="h-12 w-auto" />
-          <span className="text-2xl font-extrabold tracking-tight text-brand">{appName}</span>
-        </div>
-        <div aria-hidden className="receipt-paper mb-10 max-w-64 -rotate-2">
-          <p className="text-center font-semibold uppercase">Nota de compra</p>
-          <hr />
-          <p className="flex justify-between">
-            <span>LEITE MEIO GORDO</span>
-            <span>0,79</span>
-          </p>
-          <p className="flex justify-between">
-            <span>BANANA 0,856 X 1,44</span>
-            <span>1,23</span>
-          </p>
-          <p className="flex justify-between">
-            <span>PAO DE FORMA</span>
-            <span>1,29</span>
-          </p>
-          <hr />
-          <p className="flex justify-between font-semibold">
-            <span>TOTAL</span>
-            <span>3,31</span>
-          </p>
-        </div>
-        <h1 className="text-[2.6rem] font-extrabold leading-[1.05] tracking-tight">
-          As suas notas de supermercado, organizadas.
-        </h1>
-        <p className="mt-4 max-w-sm text-lg leading-relaxed text-ink-soft">
-          Fotografe ou envie a nota de qualquer loja: Continente, Pingo Doce, Lidl, Auchan, Aldi, Mercadona, El Corte Inglés e outras. O {appName} lê os produtos e mostra quanto gasta, onde e
-          como mudam os preços.
+    <main className="relative mx-auto flex min-h-dvh max-w-md flex-col justify-between gap-8 overflow-hidden px-6 pb-7 pt-8">
+      {error && (
+        <p role="status" className="absolute inset-x-4 top-3.5 z-10 rounded-2xl bg-warn-soft px-3.5 py-3 text-[13px] leading-[1.45] text-warn-ink shadow-[0_6px_16px_rgb(20_20_19/0.18)]">
+          {ERRORS[error] ?? ERRORS.login_failed}
         </p>
+      )}
+      <ReceiptColumn lines={LEFT_LINES} side="left" />
+      <ReceiptColumn lines={RIGHT_LINES} side="right" />
+
+      {/* Only the name and the slogan are read; the slot, the logo, the lines and the total are decoration. */}
+      <div className="ticket-paper relative">
+        <div aria-hidden className="relative z-[2] h-4 rounded-lg bg-ink shadow-[0_3px_0_rgb(27_27_26/0.15)]" />
+        <div className="ticket-shake relative z-[1] mx-5 -mt-1">
+          <div className="ticket-reveal torn bg-paper px-[18px] pb-[30px] pt-6 text-ink shadow-[0_1px_0_#e4ded3] [--tear:8px]">
+            <div className="flex flex-col items-center gap-1.5">
+              <BrandMark className="h-[30px] w-auto" />
+              <h1 className="font-display text-[21px] font-semibold uppercase tracking-[0.04em]">{appName}</h1>
+              <p className="font-display text-[15px] font-semibold tracking-[0.06em]">
+                <span className="ticket-marker px-1.5">CADA TALÃO CONTA</span>
+              </p>
+            </div>
+            <div aria-hidden>
+              <div className="mb-2.5 mt-3.5 border-t border-dashed border-[#8a857b]" />
+              <div className="font-receipt text-[12.5px] leading-[1.7]">
+                {STEPS.map((step) => (
+                  <div key={step}>{step}</div>
+                ))}
+              </div>
+              <div className="my-2.5 border-t border-dashed border-[#8a857b]" />
+              <div className="flex items-baseline justify-between">
+                <span className="font-receipt text-sm font-semibold">TOTAL</span>
+                <span className="font-display text-lg font-semibold text-brand">CONTROLO</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="mt-10 flex flex-col gap-4">
-        {error && <Notice tone={error === "cancelled" ? "info" : "error"}>{ERRORS[error] ?? ERRORS.login_failed}</Notice>}
+
+      <div className="relative flex flex-col gap-3">
         {/* Full-page navigation: the OAuth flow is handled by the API (BFF). */}
         <a
           href="/v1/auth/login"
-          className="inline-flex min-h-14 items-center justify-center gap-3 rounded-control bg-brand px-5 text-lg font-semibold text-white hover:bg-brand-deep dark:text-ground"
+          className="flex h-14 items-center justify-center gap-3 rounded-[28px] bg-brand text-base font-extrabold text-white hover:bg-brand-deep dark:text-ground"
         >
           <span className="grid size-8 place-items-center rounded-full bg-white">
             <GoogleMark />
           </span>
           Entrar com Google
         </a>
-        <p className="text-center text-sm text-ink-soft">
+        <p className="mt-0.5 text-center text-[13px] leading-[1.4] text-ink-soft">
           Usamos apenas o seu nome e e-mail.{" "}
-          <a className="font-medium text-brand underline" href="/privacidade">
+          {/* The padding makes the hit area 44 px high without changing the line. */}
+          <a className="py-[13px] font-bold text-brand underline" href="/privacidade">
             Política de privacidade
           </a>
         </p>

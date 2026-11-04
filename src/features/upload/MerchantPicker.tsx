@@ -1,13 +1,16 @@
 import { Check, ChevronDown } from "lucide-react";
 import { useId } from "react";
-import { MarketTile } from "../../components/MarketBadge";
+import { MarketPill } from "../../components/MarketBadge";
 import { SMALL_CAPS } from "../../components/ui";
 import { useMerchants } from "../profile/useProfile";
 
 const AUTO = "Detetar sozinho";
 const MISSING = "Não foi possível carregar os supermercados. Pode enviar na mesma.";
 
-/** The optional store, as chips (first screen). `""` means «Detetar sozinho». The names come from the API. */
+/**
+ * The optional store, as chips (first screen). `""` means «Detetar sozinho». The names come from the API. A store is its own
+ * pill (its colours when chosen, white with its border and its tile when not); «Detetar sozinho» is the brand green.
+ */
 export function MerchantChips({ value, onChange }: { value: string; onChange: (merchant: string) => void }) {
   const merchants = useMerchants();
   const labelId = useId();
@@ -20,14 +23,20 @@ export function MerchantChips({ value, onChange }: { value: string; onChange: (m
       {/* Native radios, hidden: the arrow keys move between the chips. */}
       <div role="radiogroup" aria-labelledby={labelId} className="flex flex-wrap gap-2">
         {options.map(({ id, name }) => (
-          <label
-            key={id || "auto"}
-            className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line has-checked:bg-brand has-checked:text-white has-checked:ring-brand has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand dark:has-checked:text-ground"
-          >
+          <label key={id || "auto"} className="inline-flex min-h-11 cursor-pointer items-center rounded-full has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand">
             <input type="radio" name="merchant" value={id} checked={value === id} onChange={() => onChange(id)} className="sr-only" />
-            {id && <MarketTile code={id} size={24} fontSize={11} />}
-            {name}
-            {value === id && <Check aria-hidden className="size-4" strokeWidth={3} />}
+            {id ? (
+              <MarketPill code={id} name={name} selected={value === id} checkmark />
+            ) : (
+              <span
+                className={`inline-flex h-10 items-center gap-2 rounded-full border-[1.5px] px-3.5 text-[13px] font-bold ${
+                  value === id ? "border-brand bg-brand text-white dark:text-ground" : "border-line bg-paper text-ink"
+                }`}
+              >
+                {value === id && <Check aria-hidden className="size-4" strokeWidth={3} />}
+                {name}
+              </span>
+            )}
           </label>
         ))}
       </div>

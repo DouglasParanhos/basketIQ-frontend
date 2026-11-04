@@ -7,21 +7,22 @@ const card = () => screen.getByRole("region", { name: "Média mensal" });
 const text = () => card().textContent!.replace(/\u00a0/g, " ");
 
 describe("monthly average card (spec 011, US2)", () => {
-  it("F-184: below the average shows the value, says «abaixo» in words and has a soft green background", () => {
+  it("F-184: below the average shows the value and says «abaixo» in words, on the same neutral card", () => {
     render(<AverageCard overview={overviewGreen} />);
     expect(text()).toContain("318,00 €");
     expect(text()).toContain("Últimos 2 meses: 7 % abaixo da média");
-    expect(card().className).toContain("bg-ok-soft");
+    expect(card().className).toContain("bg-paper");
   });
 
-  it("F-184: above the average says «acima», uses the soft red and has no alarm icon", () => {
+  it("F-184: above the average says «acima» on the same neutral card: no red, no green, no alarm icon", () => {
     render(<AverageCard overview={overviewRed} />);
     expect(text()).toContain("Últimos 2 meses: 12 % acima da média");
-    expect(card().className).toContain("bg-alert-soft");
+    expect(card().className).toContain("bg-paper");
+    expect(card().className).not.toMatch(/bg-(ok|alert)-soft/);
     expect(card().querySelector("svg")).toBeNull();
   });
 
-  it("F-184: on target says «na média» and has no coloured background (the client applies no threshold)", () => {
+  it("F-184: on target says «na média» (the client applies no threshold)", () => {
     render(<AverageCard overview={overviewOrange} />);
     expect(text()).toContain("Últimos 2 meses: na média");
     expect(card().className).not.toMatch(/bg-(ok|alert)-soft/);

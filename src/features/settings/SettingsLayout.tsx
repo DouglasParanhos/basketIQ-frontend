@@ -29,7 +29,7 @@ export function SettingsLayout() {
       {!full && <PageHeader title="Definições" />}
       {!full && (
         <Surface tone="bordered" className="mb-4 flex items-center gap-3">
-          <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-full bg-brand text-xl font-bold text-white dark:text-ground">
+          <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-full bg-brand font-display text-xl font-semibold text-white dark:text-ground">
             {(me.display_name ?? me.email).trim().charAt(0).toLocaleUpperCase("pt-PT")}
           </span>
           <div className="min-w-0">

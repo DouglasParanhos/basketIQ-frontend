@@ -23,7 +23,7 @@ describe("Início: states and composition (spec 011, US3)", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Início" })).toBeInTheDocument();
     await screen.findByRole("img", { name: "Anel verde, 38 % da meta usada" });
     const names = screen.getAllByRole("region").map((r) => r.getAttribute("aria-label") ?? within(r).getByRole("heading").textContent);
-    expect(names).toEqual(["Meta pessoal do mês", "Média mensal", "Compras no mês", "Gasto por semana", "Onde gasta mais", "Últimas compras"]);
+    expect(names).toEqual(["Meta pessoal do mês", "Média mensal", "Compras no mês", "Por pessoa no mês", "Gasto por semana", "Onde gasta mais", "Últimas compras"]);
   });
 
   it("F-185: an account with no confirmed purchase sees the final layout as dashed cards, with what each one unlocks", async () => {
@@ -32,7 +32,8 @@ describe("Início: states and composition (spec 011, US3)", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Início" })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "A aguardar o seu primeiro talão" })).toBeInTheDocument();
     expect(body()).toContain("Quanto mais talões registar, mais aprendemos sobre as suas compras.");
-    expect(screen.getByRole("link", { name: "Adicionar talão" })).toHaveAttribute("href", "/adicionar");
+    expect(screen.getByRole("link", { name: "Adicionar o meu primeiro talão" })).toHaveAttribute("href", "/adicionar");
+    expect(screen.getByRole("link", { name: "Ver com dados de exemplo" })).toHaveAttribute("href", "/?exemplo=1");
     expect(body()).toContain("Aparece com 2 meses de histórico");
     expect(body()).toContain("A aguardar dados");
     // The dashed cards are not values: the ghost figures are hidden from assistive technology.

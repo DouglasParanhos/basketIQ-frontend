@@ -6,7 +6,9 @@ export const isConsentError = (error: Error) => error instanceof ApiError && err
 
 /**
  * The person's profile (empty until saved). No retries: the onboarding guard waits for this query, and when it fails
- * the person must get in rather than wait for the backoff.
+ * the person must get in rather than wait for the backoff. A profile that failed is not asked again by each screen that
+ * mounts (retryOnMount): a second reader of a failed query would put it back to «loading», and the guard would take the
+ * screen away again. The «Tentar de novo» buttons refetch on purpose.
  */
 export function useProfile() {
   return useQuery({
@@ -14,6 +16,7 @@ export function useProfile() {
     queryFn: async () => unwrap(await api.GET("/v1/me/profile")),
     staleTime: 60_000,
     retry: false,
+    retryOnMount: false,
   });
 }
 

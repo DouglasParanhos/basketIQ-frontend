@@ -133,7 +133,9 @@ test.describe("bottom navigation: the approved design (canvas NavBar)", () => {
         const { content, bar } = await page.evaluate(() => {
           window.scrollTo(0, document.documentElement.scrollHeight);
           const main = document.getElementById("conteudo")!;
+          // A fixed element (the desk of Compras) fills the screen behind the content: it is not content.
           const content = Array.from(main.querySelectorAll("*")).reduce((lowest, e) => {
+            if (getComputedStyle(e).position === "fixed") return lowest;
             const r = e.getBoundingClientRect();
             return r.width > 1 && r.height > 1 ? Math.max(lowest, r.bottom) : lowest;
           }, 0);
@@ -145,12 +147,97 @@ test.describe("bottom navigation: the approved design (canvas NavBar)", () => {
   }
 });
 
+test.describe("login and privacy policy: the approved design", () => {
+  // Motion off so the ticket is whole (printed, marker painted) when axe reads it.
+  for (const scheme of ["light", "dark"] as const) {
+    for (const width of [320, 390, 820]) {
+      test(`login has no axe violations, with and without an error (${scheme}, ${width}px)`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
+        await page.setViewportSize({ width, height: 800 });
+        await fakeApi(page, { signedIn: false });
+        for (const path of ["/login", "/login?error=cancelled"]) {
+          await page.goto(path);
+          await expect(page.getByRole("link", { name: "Entrar com Google" })).toBeVisible();
+          await noA11yViolations(page);
+          await noHorizontalScroll(page);
+        }
+      });
+
+      test(`privacy policy has no axe violations, closed and with every section open (${scheme}, ${width}px)`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
+        await page.setViewportSize({ width, height: 800 });
+        await fakeApi(page, { consented: false });
+        await page.goto("/privacidade");
+        await expect(page.getByRole("button", { name: "Li a política e continuar" })).toBeVisible();
+        await noA11yViolations(page);
+        for (const button of await page.locator("main h3 button").all()) await button.click();
+        await noA11yViolations(page);
+        await noHorizontalScroll(page);
+      });
+    }
+  }
+
+  test("the ticket prints and the receipts scroll; with reduced motion nothing moves", async ({ page }) => {
+    await fakeApi(page, { signedIn: false });
+    for (const [reducedMotion, expected] of [
+      ["no-preference", { reveal: "ticket-reveal", up: "ticket-up", down: "ticket-down", marker: "ticket-wipe" }],
+      ["reduce", { reveal: "none", up: "none", down: "none", marker: "none" }],
+    ] as const) {
+      await page.emulateMedia({ reducedMotion });
+      await page.goto("/login");
+      await expect(page.getByRole("link", { name: "Entrar com Google" })).toBeVisible();
+      const names = await page.evaluate(() => {
+        const name = (selector: string) => getComputedStyle(document.querySelector(selector)!).animationName;
+        return { reveal: name(".ticket-reveal"), up: name(".ticket-up"), down: name(".ticket-down"), marker: name(".ticket-marker") };
+      });
+      expect(names, reducedMotion).toEqual(expected);
+    }
+  });
+
+  test("login: the Google button is 56 px, the legal link has a 44 px hit area, and there is no way in by e-mail", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await fakeApi(page, { signedIn: false });
+    await page.goto("/login");
+    const google = page.getByRole("link", { name: "Entrar com Google" });
+    expect((await google.boundingBox())!.height).toBe(56);
+    await expect(google).toHaveCSS("border-radius", "28px");
+    await expect(google).toHaveCSS("background-color", "rgb(31, 111, 74)");
+    expect((await page.getByRole("link", { name: "Política de privacidade" }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await expect(page.getByRole("button")).toHaveCount(0);
+    await expect(page.getByRole("textbox")).toHaveCount(0);
+    // The ticket sits above the button and nothing overlaps (390x844 is the size of the design).
+    const [ticket, button] = await Promise.all([page.getByRole("heading", { level: 1 }).boundingBox(), google.boundingBox()]);
+    expect(ticket!.y + ticket!.height).toBeLessThan(button!.y);
+  });
+
+  for (const [width, height] of [[320, 568], [390, 844]] as const) {
+    test(`privacy policy: the fixed footer is 164 px, its buttons are 56 and 48 px, and it does not cover the last section (${width}px)`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await fakeApi(page, { consented: false });
+      await page.goto("/privacidade");
+      const accept = page.getByRole("button", { name: "Li a política e continuar" });
+      const leave = page.getByRole("button", { name: "Sair" });
+      await expect(accept).toBeVisible();
+      expect((await accept.boundingBox())!.height).toBe(56);
+      expect((await leave.boundingBox())!.height).toBe(48);
+      const footer = await page.locator("main > div.fixed").boundingBox();
+      expect(footer!.height).toBe(164);
+      expect(footer!.y + footer!.height).toBe(height);
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      const last = await page.getByRole("button", { name: "Os seus direitos" }).boundingBox();
+      expect(last!.y + last!.height).toBeLessThanOrEqual(footer!.y);
+    });
+  }
+});
+
 test.describe("customer-facing name (CFG-02)", () => {
   test("title, login and manifest follow the name served by the backend", async ({ page }) => {
     await fakeApi(page, { signedIn: false, appName: "Mercado do Zé" });
     await page.goto("/login");
     await expect(page).toHaveTitle("Mercado do Zé");
-    await expect(page.getByText(/O Mercado do Zé lê os produtos/)).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Mercado do Zé" })).toBeVisible();
     await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href", "/v1/config/manifest.webmanifest");
     // Fetched from the page, like the browser does (page.request would bypass the fake API).
     const manifest = await page.evaluate(() => fetch("/v1/config/manifest.webmanifest").then((r) => r.json()));
@@ -170,7 +257,7 @@ test.describe("flows with a fake API", () => {
     await fakeApi(page, { consented: false });
     await page.goto("/");
     await expect(page).toHaveURL(/\/privacidade$/);
-    await page.getByRole("button", { name: "Aceitar e continuar" }).click();
+    await page.getByRole("button", { name: "Li a política e continuar" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
     await page.getByRole("link", { name: "Talões" }).click();
     await page.getByRole("tab", { name: "Resumo" }).click();
@@ -231,7 +318,15 @@ test.describe("flows with a fake API", () => {
 
 const ONBOARDING_STEPS = [/Qual é o seu objetivo/, /Quantas pessoas vivem/, /Onde costuma fazer compras/, /Qual é a sua meta pessoal por mês/];
 
-/** Walks the four steps and «Tudo pronto», running `check` on each screen. */
+/** Gives the step an answer, because «Avançar» does not go on without one. */
+async function answerOnboarding(page: Page, index: number) {
+  if (index === 0) await page.getByRole("checkbox", { name: /Organizar as minhas finanças/ }).check({ force: true });
+  if (index === 1) await page.getByRole("button", { name: "Mais uma pessoa" }).click();
+  if (index === 2) await page.getByRole("checkbox", { name: "Lidl" }).check({ force: true });
+  if (index === 3) await page.getByRole("slider").fill("300");
+}
+
+/** Walks the four steps and «Tudo pronto», running `check` on each screen, without an answer (the button is aria-disabled) and with one. */
 async function walkOnboarding(page: Page, check: () => Promise<void>) {
   await page.goto("/boas-vindas");
   for (const [index, title] of ONBOARDING_STEPS.entries()) {
@@ -239,6 +334,8 @@ async function walkOnboarding(page: Page, check: () => Promise<void>) {
     if (index === 2) await expect(page.getByRole("checkbox", { name: "Lidl" })).toBeVisible();
     // The page has moved on to this step before axe looks at it.
     await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", String((index + 1) * 25));
+    await check();
+    await answerOnboarding(page, index);
     await check();
     await page.getByRole("button", { name: index === 3 ? "Concluir" : "Avançar" }).click();
   }
@@ -282,17 +379,19 @@ test.describe("onboarding (spec 010)", () => {
     await expect(page.getByRole("navigation", { name: "Navegação principal" })).toHaveCount(0);
     await page.getByRole("checkbox", { name: /Organizar as minhas finanças/ }).check({ force: true });
     await page.getByRole("button", { name: "Avançar" }).click();
-    await page.getByRole("button", { name: "Mais uma pessoa" }).click();
+    for (let i = 0; i < 3; i++) await page.getByRole("button", { name: "Mais uma pessoa" }).click();
     await page.getByRole("button", { name: "Avançar" }).click();
     await page.getByRole("checkbox", { name: "El Corte Inglés" }).check({ force: true });
     await expect(page.getByText("EC", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Avançar" }).click();
+    await page.getByRole("slider").fill("300");
     await page.getByRole("button", { name: "Concluir" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Tudo pronto" })).toBeVisible();
     expect(state.profilePatches).toEqual([
       { goals: ["finances"], household_size: 3, merchants: ["EL_CORTE_INGLES"], monthly_goal_cents: 30000, onboarding_completed: true },
     ]);
-    await page.getByRole("button", { name: "Ir para o início" }).click();
+    await expect(page.getByRole("link", { name: "Adicionar o meu primeiro talão" })).toHaveAttribute("href", "/adicionar");
+    await page.getByRole("link", { name: "Ver o início" }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeVisible();
@@ -674,6 +773,54 @@ test.describe("início (spec 011)", () => {
     }
   }
 
+  for (const scheme of ["light", "dark"] as const) {
+    for (const width of [320, 390, 820]) {
+      test(`the Início with example data has no axe violations and no horizontal scroll (${scheme}, ${width}px)`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.setViewportSize({ width, height: 800 });
+        await fakeApi(page);
+        await page.goto("/?exemplo=1");
+        await expect(page.getByText("Dados de exemplo · loja fictícia")).toBeVisible();
+        await noA11yViolations(page);
+        await noHorizontalScroll(page);
+      });
+    }
+  }
+
+  test("the Início with example data asks for no figure and writes nothing, and its way out is a 44 px link", async ({ page }) => {
+    const calls: string[] = [];
+    page.on("request", (request) => {
+      const { pathname } = new URL(request.url());
+      if (pathname.startsWith("/v1/")) calls.push(`${request.method()} ${pathname}`);
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await fakeApi(page);
+    await page.goto("/?exemplo=1");
+    await expect(page.getByRole("heading", { level: 1, name: "Início, com dados de exemplo" })).toBeAttached();
+    await expect(page.getByText("Continente", { exact: true }).first()).toBeVisible();
+    // The shell asks for the session, the profile and the configuration; the page asks for nothing of its own and nothing is written.
+    expect(calls.filter((call) => !call.startsWith("GET "))).toEqual([]);
+    expect(calls.filter((call) => /analytics|receipts|lists/.test(call))).toEqual([]);
+    expect((await page.getByRole("link", { name: "Sair do exemplo" }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await page.getByRole("link", { name: "Sair do exemplo" }).click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeAttached();
+  });
+
+  test("with no receipt the sheet covers the content but not the navigation bar, and the bar still works", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const state = await fakeApi(page);
+    state.overview = "empty";
+    await page.goto("/");
+    const sheet = page.getByRole("region", { name: "A aguardar o seu primeiro talão" });
+    await expect(sheet).toBeVisible();
+    const [box, nav] = [(await sheet.boundingBox())!, (await page.getByRole("navigation", { name: "Navegação principal" }).boundingBox())!];
+    expect(box.y + box.height).toBeLessThanOrEqual(nav.y);
+    await expect(page.getByRole("link", { name: "Ver com dados de exemplo" })).toBeVisible();
+    await page.getByRole("link", { name: "Talões" }).click();
+    await expect(page).toHaveURL(/\/compras$/);
+  });
+
   test("F-187: every control of the Início has a touch target of at least 44 px", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
     const state = await fakeApi(page);
@@ -737,6 +884,43 @@ test.describe("início (spec 011)", () => {
 const TALOES_PAGES = ["/compras", "/compras?filtro=acao", "/compras?ano=2025", "/compras?vista=papel", "/compras/resumo", "/produtos", "/produtos/p1"] as const;
 
 test.describe("talões (spec 012)", () => {
+  test("Compras lies on a desk, each month is a torn sheet with dashed rows, and the old ?vista=papel address is cleaned", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.emulateMedia({ colorScheme: "light" });
+    await fakeApi(page);
+    await page.goto("/compras?vista=papel&filtro=acao");
+    await expect(page).toHaveURL(/\/compras\?filtro=acao$/);
+    await expect(page.getByRole("switch")).toHaveCount(0);
+    await expect(page.locator(".bg-table")).toHaveCSS("background-color", "rgb(233, 227, 214)");
+    // What is really seen: the desk is the top layer in the margin beside the sheet (not hidden behind the shell's
+    // background), and the sheet and the tabs are above the desk.
+    const seen = await page.evaluate(() => {
+      const classes = (x: number, y: number) => document.elementFromPoint(x, y)?.className ?? "";
+      const sheetBox = document.querySelector(".torn")!.getBoundingClientRect();
+      return { margin: classes(3, sheetBox.top + 40), sheet: !!document.elementFromPoint(sheetBox.left + 40, sheetBox.top + 40)?.closest(".torn") };
+    });
+    expect(seen.margin).toContain("bg-table");
+    expect(seen.sheet).toBe(true);
+    const sheet = page.locator(".torn").first();
+    await expect(sheet).toBeVisible();
+    // The torn edge is a mask (with the -webkit- prefix of Safari).
+    expect(await sheet.evaluate((el) => getComputedStyle(el).maskImage || getComputedStyle(el).webkitMaskImage)).not.toBe("none");
+    const row = sheet.getByRole("link").first();
+    await expect(row).toHaveCSS("border-top-style", "dashed");
+    expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(64);
+    await row.click();
+    await expect(page).toHaveURL(/\/compras\/[^/?]+$/);
+  });
+
+  test("the desk is only behind the list of purchases", async ({ page }) => {
+    await fakeApi(page);
+    for (const [path, desk] of [["/compras", 1], ["/compras/resumo", 0], ["/produtos", 0]] as const) {
+      await page.goto(path);
+      await expect(page.locator("main")).toBeVisible();
+      await expect(page.locator(".bg-table")).toHaveCount(desk);
+    }
+  });
+
   for (const scheme of ["light", "dark"] as const) {
     for (const width of [320, 375, 430, 820]) {
       test(`F-199: every tab and the product detail have no axe violations and no horizontal scroll (${scheme}, ${width}px)`, async ({ page }) => {
@@ -875,4 +1059,56 @@ test.describe("lista, artigos (spec 015 US-A)", () => {
     await off.goto("/lista");
     await expect(off.getByText("Não foi possível mostrar esta página")).toBeVisible();
   });
+});
+
+test.describe("review: the foot with the three actions and the undo of a price", () => {
+  async function correctedPrice(page: Page) {
+    await fakeApi(page);
+    await page.goto("/compras/r1");
+    await page.getByRole("button", { name: /LEITE MEIO GORDO/ }).click();
+    const total = page.getByLabel("Total da linha (€)");
+    await total.fill("1,90");
+    await total.blur();
+    await expect(page.getByText("Preço alterado de 1,70 para 1,90")).toBeVisible();
+  }
+
+  for (const scheme of ["light", "dark"] as const) {
+    for (const width of [320, 390]) {
+      test(`the bar «Desfazer» does not cover the actions and has no axe violations (${scheme}, ${width}px)`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.setViewportSize({ width, height: 568 });
+        await correctedPrice(page);
+        const buttons = ["Confirmar talão", "Guardar e rever depois", "Eliminar talão"].map((name) => page.getByRole("button", { name, exact: true }));
+        const bar = page.getByText("Preço alterado de 1,70 para 1,90").locator("..");
+        const barBox = (await bar.boundingBox())!;
+        for (const button of buttons) {
+          await expect(button).toBeVisible();
+          const box = (await button.boundingBox())!;
+          const hit = await button.evaluate((el) => {
+            const r = el.getBoundingClientRect();
+            return el.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2));
+          });
+          expect(hit).toBe(true);
+          expect(barBox.y + barBox.height).toBeLessThanOrEqual(box.y);
+          expect(box.height).toBeGreaterThanOrEqual(button === buttons[0] ? 56 : 44);
+        }
+        await noHorizontalScroll(page);
+        await noA11yViolations(page);
+      });
+    }
+  }
+
+  for (const scheme of ["light", "dark"] as const) {
+    test(`«Eliminar talão» opens the confirmation, without axe violations (${scheme})`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.setViewportSize({ width: 320, height: 568 });
+      await fakeApi(page);
+      await page.goto("/compras/r1");
+      await page.getByRole("button", { name: "Eliminar talão" }).click();
+      await expect(page.getByText("Eliminar esta compra?")).toBeVisible();
+      await expect(page.getByRole("button", { name: "Eliminar compra" })).toBeVisible();
+      await noHorizontalScroll(page);
+      await noA11yViolations(page);
+    });
+  }
 });

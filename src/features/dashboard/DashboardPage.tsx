@@ -197,7 +197,7 @@ function SummaryView({
           Gasto em mercado · {s.cards.purchases} {s.cards.purchases === 1 ? "talão" : "talões"}
         </h2>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <p className="amount text-[2.375rem] font-extrabold leading-none tracking-tight">{formatCents(s.cards.total_spent_cents)}</p>
+          <p className="amount font-display text-[2.375rem] font-semibold leading-none">{formatCents(s.cards.total_spent_cents)}</p>
           {variation && <span className="rounded-full bg-brand-soft px-3 py-1 text-[13px] font-bold text-brand-deep">{variation} face a {previousLabel}</span>}
         </div>
         <p className="mt-2 text-sm text-ink-soft first-letter:uppercase">
@@ -215,7 +215,7 @@ function SummaryView({
         </dl>
       </section>
 
-      <section aria-labelledby="evolucao" className="rounded-surface bg-paper p-4">
+      <section aria-labelledby="evolucao" className="rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
         <h2 id="evolucao" className="mb-2 font-bold">
           Gasto por {s.series.granularity === "day" ? "dia" : "mês"}
         </h2>
@@ -231,7 +231,7 @@ function SummaryView({
         />
       </section>
 
-      <section aria-labelledby="mercados" className="rounded-surface bg-paper p-4">
+      <section aria-labelledby="mercados" className="rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
         <h2 id="mercados" className="mb-3 font-bold">
           Por mercado
         </h2>
@@ -240,7 +240,7 @@ function SummaryView({
             <li key={m.merchant}>
               <div className="grid grid-cols-[5.25rem_1fr_auto] items-center gap-3 text-sm">
                 <span className="truncate font-semibold">{merchantName(m.merchant)}</span>
-                <div aria-hidden className="h-2.5 rounded-full bg-ground">
+                <div aria-hidden className="h-2.5 rounded-full bg-line">
                   <div className="h-2.5 rounded-full" style={{ width: `${Math.max(m.share_pct, 1)}%`, backgroundColor: merchantStyle(m.merchant).bar }} />
                 </div>
                 <span>
@@ -255,7 +255,7 @@ function SummaryView({
         </ul>
       </section>
 
-      <div className="grid grid-cols-2 gap-4 rounded-surface bg-paper p-4">
+      <div className="grid grid-cols-2 gap-4 rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
         <Ranking title="Mais gasto" items={s.top_products_by_value} value={(p) => formatCents(p.spent_cents)} onProduct={onProduct} />
         <Ranking title="Mais comprados" items={s.top_products_by_quantity} value={(p) => `${p.units.replace(".", ",")} un.`} onProduct={onProduct} />
       </div>

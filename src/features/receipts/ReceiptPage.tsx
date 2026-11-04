@@ -8,6 +8,7 @@ import { formatAmount, formatCents, formatDate, formatDateTime, formatQuantity }
 import { MERCHANT_OPTIONS, merchantName } from "../../lib/merchants";
 import { EDITABLE, IN_PROGRESS } from "../../lib/status";
 import { invalidateReceiptData } from "./cache";
+import { DeleteReceiptNotice } from "./DeleteReceipt";
 import { ReviewEditor } from "./ReviewEditor";
 
 type Receipt = Schemas["ReceiptOut"];
@@ -40,7 +41,7 @@ export function ReceiptPage() {
           <ArrowLeft aria-hidden className="size-5" />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-extrabold tracking-tight">{r.merchant_name || (r.merchant && r.merchant !== "UNKNOWN") ? merchantName(r.merchant, r.merchant_name) : "Nova compra"}</h1>
+          <h1 className="truncate font-display text-2xl font-semibold">{r.merchant_name || (r.merchant && r.merchant !== "UNKNOWN") ? merchantName(r.merchant, r.merchant_name) : "Nova compra"}</h1>
           {r.store_label && <p className="truncate text-sm font-semibold text-ink-soft">{r.store_label}</p>}
           <p className="text-sm text-ink-soft">{r.purchase_at ? formatDateTime(r.purchase_at) : `Enviada ${formatDateTime(r.created_at)}`}</p>
         </div>
@@ -53,6 +54,9 @@ export function ReceiptPage() {
     </>
   );
 }
+
+/** Under review the editor is what shows, with «Eliminar talão» at its foot. */
+const inReview = (r: Receipt) => !IN_PROGRESS.has(r.status) && !r.error && EDITABLE.has(r.status);
 
 function Body({ receipt: r }: { receipt: Receipt }) {
   if (IN_PROGRESS.has(r.status)) return <Processing receipt={r} />;
@@ -74,7 +78,7 @@ function Body({ receipt: r }: { receipt: Receipt }) {
       )}
       {r.duplicate_of_receipt_id && !r.duplicate_acknowledged && <DuplicateChoice receipt={r} />}
       {r.review_reasons.some((x) => x.code === "merchant_unknown") && <MerchantChoice receipt={r} />}
-      {EDITABLE.has(r.status) ? <ReviewEditor key={r.version} receipt={r} /> : <ConfirmedReceipt receipt={r} />}
+      {inReview(r) ? <ReviewEditor key={r.version} receipt={r} /> : <ConfirmedReceipt receipt={r} />}
     </>
   );
 }
@@ -289,7 +293,6 @@ function ConfirmedReceipt({ receipt: r }: { receipt: Receipt }) {
 
 function ManageOriginal({ receipt: r }: { receipt: Receipt }) {
   const qc = useQueryClient();
-  const navigate = useNavigate();
   const [confirming, setConfirming] = useState<"receipt" | "original" | null>(null);
   const view = useMutation({
     mutationFn: async (photo: number) =>
@@ -301,17 +304,6 @@ function ManageOriginal({ receipt: r }: { receipt: Receipt }) {
     onSuccess: (updated) => {
       qc.setQueryData(["receipt", r.id], updated);
       setConfirming(null);
-    },
-  });
-  const removeReceipt = useMutation({
-    mutationFn: async () => {
-      const res = await api.DELETE("/v1/receipts/{receipt_id}", { params: { path: { receipt_id: r.id } } });
-      if (!res.response.ok) unwrap(res);
-    },
-    onSuccess: () => {
-      void invalidateReceiptData(qc);
-      void qc.invalidateQueries({ queryKey: ["summary"] });
-      navigate("/compras", { replace: true });
     },
   });
   if (IN_PROGRESS.has(r.status) && r.processing) return null;
@@ -343,9 +335,11 @@ function ManageOriginal({ receipt: r }: { receipt: Receipt }) {
             </Button>
           </>
         )}
-        <Button variant="dangerQuiet" onClick={() => setConfirming("receipt")}>
-          Eliminar compra
-        </Button>
+        {!inReview(r) && (
+          <Button variant="dangerQuiet" onClick={() => setConfirming("receipt")}>
+            Eliminar compra
+          </Button>
+        )}
       </div>
       {confirming === "original" && (
         <Notice
@@ -365,25 +359,8 @@ function ManageOriginal({ receipt: r }: { receipt: Receipt }) {
           Os produtos, preços e totais continuam guardados. Deixa de poder ver a imagem ou o PDF.
         </Notice>
       )}
-      {confirming === "receipt" && (
-        <Notice
-          tone="warning"
-          title="Eliminar esta compra?"
-          action={
-            <>
-              <Button variant="danger" busy={removeReceipt.isPending} onClick={() => removeReceipt.mutate()}>
-                Eliminar compra
-              </Button>
-              <Button variant="quiet" onClick={() => setConfirming(null)}>
-                Cancelar
-              </Button>
-            </>
-          }
-        >
-          A compra e o ficheiro são apagados e deixam de contar no resumo. Não é possível desfazer.
-        </Notice>
-      )}
-      {[view.error, removeOriginal.error, removeReceipt.error].filter(Boolean).map((e, i) => (
+      {confirming === "receipt" && <DeleteReceiptNotice receiptId={r.id} onCancel={() => setConfirming(null)} />}
+      {[view.error, removeOriginal.error].filter(Boolean).map((e, i) => (
         <Notice key={i} tone="error">
           {e!.message}
         </Notice>

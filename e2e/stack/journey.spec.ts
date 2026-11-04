@@ -17,12 +17,12 @@ async function signIn(page: Page, subject: string) {
   await page.getByPlaceholder("Enter any user/subject").fill(subject);
   await page.getByRole("button", { name: "Sign-in" }).click();
   await expect(page).toHaveURL(/\/privacidade$/);
-  await page.getByRole("button", { name: "Aceitar e continuar" }).click();
+  await page.getByRole("button", { name: "Li a política e continuar" }).click();
   // A new account goes through the onboarding (spec 010) before anything else: skip the four steps.
   await expect(page).toHaveURL(/\/boas-vindas$/);
   for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Saltar" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Tudo pronto" })).toBeVisible();
-  await page.getByRole("button", { name: "Ir para o início" }).click();
+  await page.getByRole("link", { name: "Ver o início" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
   // The empty-account message now lives in the Resumo, under Talões (spec 009).
   await page.goto("/compras/resumo");
@@ -62,9 +62,12 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   const keep = page.getByRole("button", { name: "Manter as duas" });
   if (await keep.isVisible()) await keep.click();
   await page.getByLabel("Total da nota").fill("18,17");
-  await page.getByRole("button", { name: "Guardar", exact: true }).click();
+  const reviewUrl = page.url();
+  await page.getByRole("button", { name: "Guardar e rever depois", exact: true }).click();
+  await expect(page).toHaveURL(/\/compras$/); // «rever depois» goes back to the list; the purchase is still there to confirm
+  await page.goto(reviewUrl);
   await expect(page.getByText("Reveja antes de confirmar")).toBeHidden({ timeout: 15_000 });
-  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
+  await page.getByRole("button", { name: "Confirmar talão", exact: true }).click();
   await expect(page.getByText("Confirmada por si", { exact: false })).toBeVisible();
 
   // F-05 / F-27: a photo goes through local OCR (PaddleOCR in the worker). Until the description check exists every
@@ -73,7 +76,7 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   await expect(page.getByText("Reveja antes de confirmar")).toBeVisible({ timeout: 120_000 });
   await expect(page.getByText(/lida a partir de uma imagem/)).toBeVisible();
   await expect(page.getByText(/IOGURTE NATURAL/)).toBeVisible();
-  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
+  await page.getByRole("button", { name: "Confirmar talão", exact: true }).click();
   await expect(page.getByText("Confirmada por si", { exact: false })).toBeVisible();
 
   // F-18 / F-19: September 2026 dashboard, then filtered by Lidl.
@@ -116,7 +119,7 @@ test("CFG-02: name, title and manifest come from the backend's config/app-config
 
   await page.goto("/login");
   await expect(page).toHaveTitle("Super Mercado");
-  await expect(page.getByText(/O Super Mercado lê os produtos/)).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Super Mercado" })).toBeVisible();
 });
 
 test("F-03: cancelling at the identity provider returns to sign-in with a message", async ({ page }) => {

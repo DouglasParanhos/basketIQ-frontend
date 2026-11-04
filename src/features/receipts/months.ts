@@ -69,12 +69,6 @@ export function yearsToShow(totals: MonthTotal[] | undefined, standard: number, 
 /** The store of a purchase, or the placeholder while it is still being read. */
 export const receiptName = (r: Receipt): string => (r.merchant ? merchantName(r.merchant, r.merchant_name) : "Nota em processamento");
 
-/** «28/10» in Lisbon time, for the receipt paper. */
-export function dayMonthSlashOf(r: Receipt): string {
-  const { m0, d } = lisbonToday(dateOf(r));
-  return `${String(d).padStart(2, "0")}/${String(m0 + 1).padStart(2, "0")}`;
-}
-
 /** «28 out.» in Lisbon time, from the date of the purchase (or of sending while it is being read). */
 export function dayMonthOf(r: Receipt): string {
   const { m0, d } = lisbonToday(dateOf(r));
