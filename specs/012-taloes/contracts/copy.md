@@ -35,7 +35,7 @@ Mantém os textos atuais, com estas mudanças de apresentação:
 | Onde | Texto |
 |---|---|
 | Cartão do total | «GASTO EM MERCADO · 7 TALÕES» (rótulo em versaletes via CSS; texto `Gasto em mercado · 7 talões`) |
-| Variação | «23 % abaixo de setembro» (etiqueta; texto atual «… face a …» mantém-se para leitores de ecrã) |
+| Variação | «23 % abaixo de setembro» / «12,5 % acima de setembro» / «igual a setembro» (`formatVariationAgainst`; a mesma frase serve os leitores de ecrã) |
 | Tabela alternativa | «Ver como tabela» (já existe, recolhida; abre «Gasto por período») |
 | Períodos (grupo «Período») | Mês · Trimestre · Ano · Intervalo |
 | Setas do período | «Período anterior» · «Período seguinte» |
@@ -64,7 +64,7 @@ Mantém os textos atuais, com estas mudanças de apresentação:
 | Valores | Mínimo · Máximo · Comprou (`total_quantity` com unidade) |
 | Evolução | «Evolução do preço» / «Ver como tabela» / tabela «Histórico de compras» com «Data · Supermercado · Descrição original · Quantidade · Preço · Pago» |
 | Pouco histórico | «É preciso comprar este produto mais vezes para ver a evolução do preço.» |
-| Por mercado | «Por mercado, nos seus talões» / `Lidl` `4,99 €` «· último 4,99 €» / «3 compras» |
+| Por mercado | «Preço médio que pagou, por mercado» + «Nos seus talões» (do canvas, 04/11) / `Lidl` `4,99 €` «· último 4,99 €» / «3 compras» |
 | Várias unidades | «Algumas compras usam outra unidade e não entram no preço médio.» |
 
 **Não aparece:** «mais barato», qualquer etiqueta ou ordem por preço entre mercados, «A descrição original de cada compra fica guardada no histórico» (D-T3), «últimos 90 dias» (D-T2).

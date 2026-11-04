@@ -1,5 +1,7 @@
 # Research: Início
 
+> **Atualizado a 04/11/2026.** O desenho aprovado a 03/11 mudou as cores do anel (verde, dourado e dourado; vermelho só acima de 100 %), o texto acima da meta («Acima da meta · X € além da meta»), o rótulo do anel («Gasto no mês») e trocou o token laranja `--color-warn` (D-P3) pelo ouro `#b8860b`. As palavras «Tranquilo / Quase lá / Reta final» mantêm-se (o canvas `HomeG` tem-nas) e vêm da banda da API. Onde o texto abaixo diverge, vale esta nota; o histórico das decisões não se apaga.
+
 **R1. De onde vêm os tipos enquanto o endpoint não existe?**
 - Decisão: de lado nenhum. Não se escrevem tipos à mão nem se alarga `schema.d.ts`. A implementação (tarefas de código) só começa quando o backend publicar `overview` no OpenAPI e se correr `corepack pnpm@9 gen:api`. Até lá faz-se especificação, plano, tarefas, análise e a lista de perguntas.
 - Porquê: constituição VI («alterações de contrato começam no backend») e a regra «não inventes campos». Tipos à mão esconderiam um desvio do contrato real e os testes do msw passariam contra uma resposta que o backend não devolve.

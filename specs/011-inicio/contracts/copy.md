@@ -1,5 +1,7 @@
 # Textos do Início (português europeu)
 
+> **Atualizado a 04/11/2026.** O desenho aprovado a 03/11 mudou as cores do anel (verde, dourado e dourado; vermelho só acima de 100 %), o texto acima da meta («Acima da meta · X € além da meta»), o rótulo do anel («Gasto no mês») e trocou o token laranja `--color-warn` (D-P3) pelo ouro `#b8860b`. As palavras «Tranquilo / Quase lá / Reta final» mantêm-se (o canvas `HomeG` tem-nas) e vêm da banda da API. Onde o texto abaixo diverge, vale esta nota; o histórico das decisões não se apaga.
+
 Fonte: tabela do `Documentation/design-ux-v2/README.md` aplicada ao `HomeF` e ao `HomeG`. Valores em euros pelo `formatCents` («248,00 €»; decisão D-P4 da Liz, 2026-10-31). Os textos de produto da primeira versão foram aprovados a 2026-10-31 (D-P1, D-P2, D-P10); todos os textos estão decididos (D-P13 e D-P14 incluídos).
 
 | Elemento | Texto | Notas |
@@ -7,16 +9,16 @@ Fonte: tabela do `Documentation/design-ux-v2/README.md` aplicada ao `HomeF` e ao
 | Título | Início | `<h1>` |
 | Mês | Este mês · «1 – 31 out. 2026»; nos outros, «setembro de 2026» | botões «Mês anterior» e «Mês seguinte» |
 | Anel, legenda | da meta | por baixo da percentagem |
-| Anel, rótulo | Gasto em mercado no mês | por cima do valor |
+| Anel, rótulo | Gasto no mês | por cima do valor (D7, 03/11; antes «Gasto em mercado no mês») |
 | Meta | A sua meta pessoal: 400,00 € | protótipo: «Sua meta pessoal» |
 | Meta, mês passado | A sua meta pessoal: 400,00 € · **Meta atual** | só quando o mês mostrado não é o corrente: a API devolve sempre a meta de hoje (D-P7, C8) |
 | Faixa verde | Tranquilo · saldo da meta: 248,00 € | |
-| Faixa laranja | Quase lá · saldo da meta: 152,00 € | protótipo: «Chegando lá» |
-| Faixa vermelha | Reta final · saldo da meta: 48,00 € | |
+| Faixa dourada (Quase lá) | Quase lá · saldo da meta: 152,00 € | antes laranja (03/11); protótipo: «Chegando lá» |
+| Faixa dourada (Reta final) | Reta final · saldo da meta: 48,00 € | também dourada: o vermelho é só para acima da meta (03/11) |
 | Igual à meta | Reta final · saldo da meta: 0,00 € | |
-| Acima da meta | Acima da meta pessoal este mês · 52,00 € além da meta | D-P1 |
+| Acima da meta | Acima da meta · 52,00 € além da meta | D-P1, revisto a 03/11 (antes «Acima da meta pessoal este mês»); anel completo e vermelho |
 | Sem meta | Sem meta pessoal definida · botão «Definir a minha meta pessoal» | o anel mostra «—» |
-| Alternativa em texto do anel | «Anel verde, 38 % da meta usada»; «Anel laranja, 62 % …»; «Anel vermelho, 88 % …»; «Anel sem meta definida» | `role="img"`; num mês passado, «… da meta atual usada» |
+| Alternativa em texto do anel | «Anel verde, 38 % da meta usada»; «Anel dourado, 62 % …»; «Anel dourado, 88 % …»; «Anel completo e vermelho, meta ultrapassada, 113 % da meta»; «Anel sem meta definida» | `role="img"`; num mês passado, «… da meta atual usada» |
 | Nota fixa | A meta pessoal é um objetivo seu, não um limite. Pode mudá-la quando quiser. | README; a primeira frase é a da spec, a segunda a do protótipo |
 | Média, título | Média mensal | |
 | Média, com tendência | «Últimos 2 meses: 7 % abaixo da média» (`average_trend` `below`) / «12 % acima da média» (`above`) / «na média» (`on_average`) | o número é o valor absoluto de `recent_vs_average_pct`; a palavra e o tom vêm de `average_trend`, não de um limiar do cliente (D-P12) |

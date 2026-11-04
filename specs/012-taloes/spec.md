@@ -88,7 +88,7 @@ O `DashboardPage` atual, reestilizado, sem alterar a lógica nem os pedidos.
 3. **Given** a lista, **When** a pessoa escolhe «Mais comprados», «Mais gastos» ou «A–Z», **Then** a lista reordena-se no cliente; por defeito, «Mais comprados». — RF-10, D-T4
 4. **Given** o detalhe de «Peito de frango», **When** abre, **Then** vê o preço médio por kg, a nota «Média ponderada pelas quantidades que comprou», mínimo, máximo e quantidade comprada. — RF-10, constituição II
 5. **Given** o detalhe, **When** abre, **Then** vê a evolução do preço com «Ver como tabela». — RF-10, RF-11, §8
-6. **Given** o detalhe, **When** abre, **Then** vê «Por mercado, nos seus talões» com a média e o último preço de cada mercado. — RF-10
+6. **Given** o detalhe, **When** abre, **Then** vê «Preço médio que pagou, por mercado» («Nos seus talões») com a média e o último preço de cada mercado. — RF-10
 7. **Given** esse bloco, **When** abre, **Then** cada mercado mostra o «preço médio que pagou», o último preço e o número de compras, sem assinalar um mercado como «mais barato», sem os ordenar por preço (a ordem é a da API, por código do mercado) e sem escrever uma janela de dias, que a API não fornece. — RF-10, §8, D12, D-T2
 8. **Given** o detalhe, **When** abre, **Then** a tabela do histórico mostra a descrição original de cada compra (`raw_description`) e a frase «A descrição original de cada compra fica guardada no histórico» **não** aparece, porque editar uma linha de um talão pode alterar esse campo. — RF-10, constituição III, D-T3
 9. **Given** os testes atuais de Produtos, **When** correm adaptados, **Then** passam. — plano Fase 4

@@ -21,7 +21,7 @@ unidades por mês dos produtos mais comprados).
 
 **Acceptance Scenarios**:
 
-1. **Given** compras confirmadas, **When** abre o resumo, **Then** vê o total, a variação ("+12,5 % face a …") e a tabela alternativa ao gráfico. — RF-09, RF-11 — `src/features/features.test.tsx › dashboard (RF-09, RF-11) › shows totals, variation, an accessible table and empty periods`
+1. **Given** compras confirmadas, **When** abre o resumo, **Then** vê o total, a variação ("12,5 % acima de …") e a tabela alternativa ao gráfico. — RF-09, RF-11 — `src/features/features.test.tsx › dashboard (RF-09, RF-11) › shows totals, variation, an accessible table and empty periods`
 2. **Given** o mês de setembro de 2026, **When** é escolhido, **Then** só as compras desse mês entram no total. — F-18 — `e2e/stack/journey.spec.ts › journey: import, review, confirm, analyse, delete`; períodos: `src/lib/lib.test.ts › periods (F-18) › builds month, quarter and year ranges`, `… › moves across year boundaries`
 3. **Given** o filtro de supermercado, **When** é alterado, **Then** é enviado à API e todos os cartões e gráficos refletem o filtro. — F-19 — `src/features/features.test.tsx › dashboard (RF-09, RF-11) › F-19: the merchant filter is sent with the query`; `e2e/stack/journey.spec.ts › journey: import, review, confirm, analyse, delete` (45,39 € → 36,34 €)
 4. **Given** um produto no ranking, **When** toca "Filtrar resumo", **Then** o resumo combina período, supermercado e produto. — RF-11 — [NEEDS CLARIFICATION: combinação com produto sem teste de UI; agregação coberta no backend]

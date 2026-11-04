@@ -34,7 +34,7 @@ corepack pnpm@9 e2e:mock            # só com o Docker livre (F-199)
 | Escolher o ano de 2025 | a lista mostra só 2025 (carrega páginas até lá); «Requer ação» continua a mostrar todos os anos |
 | Confirmar uma compra | o cabeçalho do mês e o N do chip atualizam sem recarregar |
 | Produtos | «N compras · M mercados» e preço médio com base; um produto sem preço não mostra preço; «A–Z» reordena |
-| Detalhe do produto | mínimo, máximo, comprou; evolução por compra; «Por mercado, nos seus talões» sem «mais barato» nem ordem por preço; coluna «Descrição original» |
+| Detalhe do produto | mínimo, máximo, comprou; evolução por compra; «Preço médio que pagou, por mercado» (e «Nos seus talões») sem «mais barato» nem ordem por preço; coluna «Descrição original» |
 | Resumo | mesmos valores que antes (F-18, F-19, F-21); «Ver como tabela» abre «Gasto por período» |
 
 ## 4. Qualidade
