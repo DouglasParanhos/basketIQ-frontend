@@ -1,7 +1,10 @@
+import { Fingerprint } from "lucide-react";
+import { useState } from "react";
 import { Navigate, useSearchParams } from "react-router";
 import { BrandMark } from "../../components/BrandMark";
-import { Spinner } from "../../components/ui";
+import { Button, Spinner } from "../../components/ui";
 import { useAppName } from "../../config/appConfig";
+import { signInError, usePasskeySignIn, usePasskeySupport } from "./passkeys";
 import { useMe } from "./session";
 
 const ERRORS: Record<string, string> = {
@@ -76,20 +79,44 @@ function ReceiptColumn({ lines, side }: { lines: string[]; side: "left" | "right
   );
 }
 
+/** «Entrar com passkey»: only on a phone that can use one. The tap opens the phone's lock at once (see passkeys.ts). */
+function PasskeyButton({ onError }: { onError: (message: string) => void }) {
+  const { ready, mutation: signIn } = usePasskeySignIn();
+  return (
+    <Button
+      variant="outline"
+      size="lg"
+      className="gap-3 py-2"
+      disabled={!ready}
+      busy={signIn.isPending}
+      onClick={() => signIn.mutate(undefined, { onError: (e) => onError(signInError(e) ?? ERRORS.cancelled!) })}
+    >
+      <Fingerprint aria-hidden className="size-6 shrink-0" />
+      <span className="flex flex-col text-left">
+        <span className="font-extrabold">Entrar com passkey</span>
+        <span className="text-[12px] font-normal text-ink-soft">Digital, rosto ou PIN do telemóvel</span>
+      </span>
+    </Button>
+  );
+}
+
 export function LoginPage() {
   const { data: me, isLoading } = useMe();
   const appName = useAppName();
+  const passkeys = usePasskeySupport();
   const [params] = useSearchParams();
+  const [passkeyMessage, setPasskeyMessage] = useState<string | null>(null);
   const error = params.get("error");
 
   if (isLoading) return <Spinner />;
   if (me) return <Navigate to="/" replace />;
 
+  const message = passkeyMessage ?? (error && (ERRORS[error] ?? ERRORS.login_failed));
   return (
     <main className="relative mx-auto flex min-h-dvh max-w-md flex-col justify-between gap-8 overflow-hidden px-6 pb-7 pt-8">
-      {error && (
+      {message && (
         <p role="status" className="absolute inset-x-4 top-3.5 z-10 rounded-2xl bg-warn-soft px-3.5 py-3 text-[13px] leading-[1.45] text-warn-ink shadow-[0_6px_16px_rgb(20_20_19/0.18)]">
-          {ERRORS[error] ?? ERRORS.login_failed}
+          {message}
         </p>
       )}
       <ReceiptColumn lines={LEFT_LINES} side="left" />
@@ -135,6 +162,7 @@ export function LoginPage() {
           </span>
           Entrar com Google
         </a>
+        {passkeys && <PasskeyButton onError={setPasskeyMessage} />}
         <p className="mt-0.5 text-center text-[13px] leading-[1.4] text-ink-soft">
           Usamos apenas o seu nome e e-mail.{" "}
           {/* The padding makes the hit area 44 px high without changing the line. */}

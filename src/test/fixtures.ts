@@ -9,8 +9,8 @@ export const me: Schemas["MeOut"] = {
   display_name: "Maria Silva",
   role: "user",
   privacy_accepted_at: "2026-10-01T10:00:00Z",
-  privacy_version: "2026-10-15",
-  current_privacy_version: "2026-10-15",
+  privacy_version: "2026-11-04",
+  current_privacy_version: "2026-11-04",
   created_at: "2026-10-01T10:00:00Z",
 };
 
@@ -163,11 +163,12 @@ export const profile: Schemas["ProfileOut"] = {
   goals: ["finances"],
   monthly_goal_cents: 30000,
   onboarding_completed_at: "2026-10-02T10:00:00Z",
+  passkey_offer_dismissed_at: null,
 };
 
 /** A new account: nothing saved yet. */
 export function emptyProfile(overrides: Partial<Schemas["ProfileOut"]> = {}): Schemas["ProfileOut"] {
-  return { household_size: null, merchants: [], goals: [], monthly_goal_cents: null, onboarding_completed_at: null, ...overrides };
+  return { household_size: null, merchants: [], goals: [], monthly_goal_cents: null, onboarding_completed_at: null, passkey_offer_dismissed_at: null, ...overrides };
 }
 
 /** An account from before the onboarding: finished and empty (what the backend migration leaves). */

@@ -8,6 +8,7 @@ import { EXAMPLE_PEOPLE, EXAMPLE_PRICE_CHANGES, exampleOverview } from "./exampl
 import { GoalRing } from "./GoalRing";
 import { HomeEmpty } from "./HomeEmpty";
 import { MonthStepper } from "./MonthStepper";
+import { PasskeyOffer } from "./PasskeyOffer";
 import { PriceChangesCard } from "./PriceChangesCard";
 import { PerPersonCard, PurchasesCard, SpendCards } from "./SpendCards";
 import { useOverview } from "./useOverview";
@@ -66,6 +67,9 @@ function MonthHome() {
   return (
     <div className="relative flex flex-col gap-3.5 pb-6 pt-6">
       <h1 className="sr-only">Início</h1>
+      {/* Its own slot, so the month stepper below keeps its place (and focus) as the data loads. Not on an empty account:
+          there «A aguardar o seu primeiro talão» covers the page. */}
+      {overview.data && !overview.data.empty && <PasskeyOffer />}
       {overview.isError ? (
         <>
           {stepper}

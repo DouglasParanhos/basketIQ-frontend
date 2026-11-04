@@ -20,12 +20,15 @@ export function useProfile() {
   });
 }
 
+// Partial: the generated type requires the set-once flags (`onboarding_completed`, `passkey_offer_dismissed`) because the API
+// defaults them; omitted, the API leaves them alone.
+export type ProfilePatch = Partial<Schemas["ProfilePatch"]>;
+
 /** PATCH /v1/me/profile: omitted fields are kept. The answer replaces the cached profile; a consent error refreshes the session. */
 export function useSaveProfile() {
   const qc = useQueryClient();
   return useMutation({
-    // The generated body type requires `onboarding_completed` because the API defaults it; omitted, the API leaves it alone.
-    mutationFn: async (patch: Partial<Schemas["ProfilePatch"]>) => unwrap(await api.PATCH("/v1/me/profile", { body: patch as Schemas["ProfilePatch"] })),
+    mutationFn: async (patch: ProfilePatch) => unwrap(await api.PATCH("/v1/me/profile", { body: patch as Schemas["ProfilePatch"] })),
     onSuccess: (profile) => {
       qc.setQueryData(["profile"], profile);
       // The goal moves the ring of the Início: its cached month must not be shown as current.

@@ -1,7 +1,7 @@
 import type { Schemas } from "../../api/client";
+import type { ProfilePatch } from "../profile/useProfile";
 
 export type Profile = Schemas["ProfileOut"];
-type ProfilePatch = Schemas["ProfilePatch"];
 export type Goal = Profile["goals"][number];
 
 /** The three values the API knows. «Todas as anteriores» is only a shortcut in the screen. */

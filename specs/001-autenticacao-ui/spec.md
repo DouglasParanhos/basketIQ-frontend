@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-15
 
-**Status**: Implemented
+**Status**: Implemented. Alterada em 2026-11-04 pela spec 016 (passkeys): FR-001.
 
 **Input**: Especificação Funcional RF-01, §4.1, §8; Plano de Testes F-01..F-03a. Backend: `../basketIQ-backend/specs/001-autenticacao`.
 
@@ -62,7 +62,7 @@ levada ao login com uma explicação.
 
 ### Functional Requirements
 
-- **FR-001**: A UI MUST oferecer exclusivamente "Entrar com Google" (navegação completa para `/v1/auth/login`; o fluxo OAuth é do backend).
+- **FR-001**: A UI MUST oferecer "Entrar com Google" (navegação completa para `/v1/auth/login`; o fluxo OAuth é do backend) e, só num telemóvel que o permita, "Entrar com passkey" (spec 016). Nenhum outro método.
 - **FR-002**: A UI MUST explicar os erros `cancelled`, `login_failed`, `provider_unavailable`, `provider_error`, `invalid_request` e `session_expired`.
 - **FR-003**: Rotas protegidas MUST redirecionar para `/login` sem sessão e para `/privacidade` sem consentimento da versão atual.
 - **FR-004**: O cliente MUST renovar a sessão uma vez por 401 e, se falhar, enviar a pessoa para o login.

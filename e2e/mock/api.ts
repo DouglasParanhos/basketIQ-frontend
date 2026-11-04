@@ -1,4 +1,5 @@
 import type { Page, Route } from "@playwright/test";
+import { noWebAuthn } from "../webauthn";
 
 /** In-memory fake of the BasketIQ API for UI tests (no backend). */
 export interface FakeState {
@@ -38,6 +39,8 @@ export interface FakeState {
   overviewDelayMs?: number;
   /** GET /v1/analytics/overview answers 500. */
   overviewFail?: boolean;
+  /** Keep WebAuthn in the page (the test adds a virtual authenticator). Off when absent (spec 016). */
+  passkeys?: boolean;
   /** The months GET /v1/analytics/overview was asked for, in order. */
   overviewRequests: string[];
 }
@@ -189,8 +192,8 @@ const MERCHANTS = [
   { id: "EL_CORTE_INGLES", name: "El Corte Inglés" },
 ];
 
-const emptyProfile = { household_size: null, merchants: [], goals: [], monthly_goal_cents: null, onboarding_completed_at: null };
-const doneProfile = { household_size: 2, merchants: ["LIDL"], goals: ["finances"], monthly_goal_cents: 30000, onboarding_completed_at: "2026-10-02T10:00:00Z" };
+const emptyProfile = { household_size: null, merchants: [], goals: [], monthly_goal_cents: null, onboarding_completed_at: null, passkey_offer_dismissed_at: null };
+const doneProfile = { household_size: 2, merchants: ["LIDL"], goals: ["finances"], monthly_goal_cents: 30000, onboarding_completed_at: "2026-10-02T10:00:00Z", passkey_offer_dismissed_at: null };
 
 const me = (s: FakeState) => ({
   id: "u1",
@@ -198,8 +201,8 @@ const me = (s: FakeState) => ({
   display_name: "Maria Silva",
   role: s.admin ? "admin" : "user",
   privacy_accepted_at: s.consented ? "2026-10-01T10:00:00Z" : null,
-  privacy_version: s.consented ? "2026-10-15" : null,
-  current_privacy_version: "2026-10-15",
+  privacy_version: s.consented ? "2026-11-04" : null,
+  current_privacy_version: "2026-11-04",
   created_at: "2026-10-01T10:00:00Z",
 });
 
@@ -329,6 +332,8 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     overviewRequests: [],
     ...overrides,
   };
+  // Every run sees the same page, whatever the host: the passkey screens opt in (passkeys.spec.ts).
+  if (!state.passkeys) await noWebAuthn(page);
   let purchasesWithFiles = Math.ceil((state.storedFiles ?? 0) / 3);
   let profile: Record<string, unknown> = state.migrated
     ? { ...emptyProfile, onboarding_completed_at: "2026-10-31T00:00:00Z" }
@@ -359,6 +364,7 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     }
     if (!state.signedIn && !path.startsWith("/v1/auth/")) return unauth(route);
     if (path === "/v1/auth/refresh") return unauth(route);
+    if (path === "/v1/auth/passkey/options") return json(route, { challenge: "Y2hhbGxlbmdl", rpId: "localhost", userVerification: "required", timeout: 60000 });
     if (path === "/v1/me" && method === "GET") return json(route, me(state));
     if (path === "/v1/me/privacy-consent") {
       state.consented = true;
@@ -374,6 +380,17 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
       const { onboarding_completed: _done, ...values } = body;
       profile = { ...profile, ...values, onboarding_completed_at: profile.onboarding_completed_at ?? "2026-10-30T12:00:00Z" };
       return json(route, profile);
+    }
+    if (path === "/v1/me/passkeys" && method === "GET") return json(route, []);
+    if (path === "/v1/me/passkeys/options") {
+      return json(route, {
+        challenge: "Y2hhbGxlbmdl",
+        rp: { id: "localhost", name: state.appName },
+        user: { id: "dTE", name: "maria@example.test", displayName: "Maria" },
+        pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+        authenticatorSelection: { residentKey: "required", userVerification: "required" },
+        attestation: "none",
+      });
     }
     if (path === "/v1/merchants") return json(route, MERCHANTS);
     if (path === "/v1/receipts/stored-files" && method === "GET") return json(route, { files: state.storedFiles ?? 0 });
