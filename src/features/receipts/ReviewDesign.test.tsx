@@ -222,6 +222,88 @@ describe("Rever talão (approved design)", () => {
   });
 });
 
+describe("Rever talão: sair com alterações por guardar", () => {
+  const back = () => screen.getByRole("link", { name: "Voltar às compras" });
+  const closeTab = () => {
+    const event = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  };
+
+  it("asks before leaving with edits, and «Continuar a editar» keeps the screen and the edit", async () => {
+    const user = userEvent.setup();
+    open();
+    await correctTotal(user, "1,90");
+    await user.click(back());
+    expect(await screen.findByText("Sair sem guardar as alterações?")).toBeVisible();
+    expect(screen.queryByText("lista")).toBeNull();
+    expect(screen.queryByText(/Preço alterado de/)).toBeNull(); // the undo bar gives way to the question
+    await user.click(screen.getByRole("button", { name: "Continuar a editar" }));
+    expect(screen.queryByText("Sair sem guardar as alterações?")).toBeNull();
+    expect(screen.getByLabelText("Total da linha (€)")).toHaveValue("1,90");
+  });
+
+  it("«Sair sem guardar» leaves, and nothing is sent", async () => {
+    let patches = 0;
+    server.use(
+      http.patch(`${API}/v1/receipts/r1`, () => {
+        patches += 1;
+        return HttpResponse.json(receipt());
+      }),
+    );
+    const user = userEvent.setup();
+    open();
+    await correctTotal(user, "1,90");
+    await user.click(back());
+    await user.click(await screen.findByRole("button", { name: "Sair sem guardar" }));
+    expect(await screen.findByText("lista")).toBeInTheDocument();
+    expect(patches).toBe(0);
+  });
+
+  it("leaves without asking when nothing was edited", async () => {
+    const user = userEvent.setup();
+    open();
+    await user.click(await screen.findByRole("link", { name: "Voltar às compras" }));
+    expect(await screen.findByText("lista")).toBeInTheDocument();
+  });
+
+  it("closing the tab with edits asks the browser to confirm; without edits it does not", async () => {
+    const user = userEvent.setup();
+    open();
+    await screen.findByText("Reveja antes de confirmar");
+    expect(closeTab()).toBe(false);
+    await correctTotal(user, "1,90");
+    expect(closeTab()).toBe(true);
+  });
+
+  it("deleting the purchase after editing goes to the list without asking again", async () => {
+    server.use(http.delete(`${API}/v1/receipts/r1`, () => new HttpResponse(null, { status: 204 })));
+    const user = userEvent.setup();
+    open();
+    await correctTotal(user, "1,90");
+    await user.click(screen.getByRole("button", { name: "Eliminar talão" }));
+    await user.click(screen.getByRole("button", { name: "Eliminar compra" }));
+    expect(await screen.findByText("lista")).toBeInTheDocument();
+  });
+
+  it("confirming the purchase after editing saves it first and does not ask", async () => {
+    let patched = false;
+    server.use(
+      http.patch(`${API}/v1/receipts/r1`, () => {
+        patched = true;
+        return HttpResponse.json(receipt({ version: 4 }));
+      }),
+      http.post(`${API}/v1/receipts/r1/confirm`, () => HttpResponse.json(receipt({ version: 5, status: "CONFIRMED", review_reasons: [] }))),
+    );
+    const user = userEvent.setup();
+    open();
+    await correctTotal(user, "1,90");
+    await user.click(screen.getByRole("button", { name: "Confirmar talão" }));
+    await waitFor(() => expect(patched).toBe(true));
+    expect(screen.queryByText("Sair sem guardar as alterações?")).toBeNull();
+  });
+});
+
 describe("revertField", () => {
   const line = toDraft(receipt().lines[0]!);
 

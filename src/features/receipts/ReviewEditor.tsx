@@ -1,13 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Pencil, Plus, Scissors, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useBlocker, useNavigate } from "react-router";
 import { ApiError, api, unwrap, type Merchant, type Schemas } from "../../api/client";
 import { Button, Field, Notice, Select } from "../../components/ui";
 import { centsToInput, formatCents, formatQuantity, parseEurToCents } from "../../lib/format";
 import { MERCHANT_CHOICES } from "../../lib/merchants";
 import { invalidateReceiptData } from "./cache";
 import { DeleteReceiptNotice } from "./DeleteReceipt";
+import { FootQuestion } from "./FootQuestion";
 import {
   emptyLine,
   lineNet,
@@ -75,6 +76,16 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
   const [dirty, setDirty] = useState(false);
   const [undo, setUndo] = useState<PriceUndo | null>(null);
   const [deleting, setDeleting] = useState(false);
+  // The screen's own ways out (saved, deleted) navigate with `state.discard`: they are not stopped.
+  const blocker = useBlocker(({ nextLocation }) => dirty && !nextLocation.state?.discard);
+  const leavingAsked = blocker.state === "blocked";
+  // Closing the tab or reloading is not a navigation of the router: the browser asks.
+  useEffect(() => {
+    if (!dirty) return;
+    const ask = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", ask);
+    return () => window.removeEventListener("beforeunload", ask);
+  }, [dirty]);
   const askToDelete = useRef<HTMLButtonElement>(null);
   const wasDeleting = useRef(false);
   // Back from the question (Cancelar), the focus returns to the button that asked it.
@@ -132,7 +143,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
   async function saveAndLeave() {
     try {
       if (dirty) await save.mutateAsync();
-      navigate("/compras");
+      navigate("/compras", { state: { discard: true } });
     } catch {
       // The message is shown by the error notice below.
     }
@@ -336,7 +347,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
 
       <div className="sticky bottom-20 z-10 flex flex-col gap-1.5 rounded-surface bg-ground/95 py-3 backdrop-blur md:bottom-0">
         <div role="status" className="absolute inset-x-0 bottom-full mb-2">
-          {priceUndo && !deleting && (
+          {priceUndo && !deleting && !leavingAsked && (
             <div className="flex items-center justify-between gap-2 rounded-2xl bg-ink py-1.5 pl-4 pr-1.5 text-[13px] text-ground">
               <span>
                 Preço alterado de {priceUndo.from} para {priceUndo.to}
@@ -347,8 +358,10 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
             </div>
           )}
         </div>
-        {deleting ? (
-          // In the foot, in place of the actions: above it, a sticky foot would cover the question.
+        {leavingAsked ? (
+          // The questions of the foot take the place of the actions: above it, a sticky foot would cover them.
+          <LeaveNotice onLeave={() => blocker.proceed()} onStay={() => blocker.reset()} />
+        ) : deleting ? (
           <DeleteReceiptNotice receiptId={receipt.id} onCancel={() => setDeleting(false)} />
         ) : (
           <>
@@ -380,6 +393,30 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
         )}
       </div>
     </div>
+  );
+}
+
+/** The question when the person tries to leave with edits that were not saved. */
+function LeaveNotice({ onLeave, onStay }: { onLeave: () => void; onStay: () => void }) {
+  return (
+    <FootQuestion>
+      <Notice
+        tone="warning"
+        title="Sair sem guardar as alterações?"
+        action={
+          <>
+            <Button variant="danger" onClick={onLeave}>
+              Sair sem guardar
+            </Button>
+            <Button variant="quiet" onClick={onStay}>
+              Continuar a editar
+            </Button>
+          </>
+        }
+      >
+        As alterações feitas neste talão perdem-se se sair agora.
+      </Notice>
+    </FootQuestion>
   );
 }
 

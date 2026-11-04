@@ -1072,6 +1072,17 @@ test.describe("review: the foot with the three actions and the undo of a price",
     await expect(page.getByText("Preço alterado de 1,70 para 1,90")).toBeVisible();
   }
 
+  /** The questions of the foot are taller than the actions: nothing (the navigation bar) may cover their buttons, which the click must reach. */
+  async function expectReachable(page: Page, names: string[]) {
+    for (const name of names) {
+      const reachable = await page.getByRole("button", { name, exact: true }).evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return el.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2));
+      });
+      expect(reachable, name).toBe(true);
+    }
+  }
+
   for (const scheme of ["light", "dark"] as const) {
     for (const width of [320, 390]) {
       test(`the bar «Desfazer» does not cover the actions and has no axe violations (${scheme}, ${width}px)`, async ({ page }) => {
@@ -1079,16 +1090,12 @@ test.describe("review: the foot with the three actions and the undo of a price",
         await page.setViewportSize({ width, height: 568 });
         await correctedPrice(page);
         const buttons = ["Confirmar talão", "Guardar e rever depois", "Eliminar talão"].map((name) => page.getByRole("button", { name, exact: true }));
+        await expectReachable(page, ["Confirmar talão", "Guardar e rever depois", "Eliminar talão"]);
         const bar = page.getByText("Preço alterado de 1,70 para 1,90").locator("..");
         const barBox = (await bar.boundingBox())!;
         for (const button of buttons) {
           await expect(button).toBeVisible();
           const box = (await button.boundingBox())!;
-          const hit = await button.evaluate((el) => {
-            const r = el.getBoundingClientRect();
-            return el.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2));
-          });
-          expect(hit).toBe(true);
           expect(barBox.y + barBox.height).toBeLessThanOrEqual(box.y);
           expect(box.height).toBeGreaterThanOrEqual(button === buttons[0] ? 56 : 44);
         }
@@ -1107,8 +1114,26 @@ test.describe("review: the foot with the three actions and the undo of a price",
       await page.getByRole("button", { name: "Eliminar talão" }).click();
       await expect(page.getByText("Eliminar esta compra?")).toBeVisible();
       await expect(page.getByRole("button", { name: "Eliminar compra" })).toBeVisible();
+      await expectReachable(page, ["Eliminar compra", "Cancelar"]);
       await noHorizontalScroll(page);
       await noA11yViolations(page);
+    });
+
+    test(`leaving with unsaved edits asks first and keeps the edit, without axe violations (${scheme})`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.setViewportSize({ width: 320, height: 568 });
+      await fakeApi(page);
+      await page.goto("/compras/r1");
+      await page.getByRole("button", { name: /LEITE MEIO GORDO/ }).click();
+      await page.getByLabel("Total da linha (€)").fill("1,90");
+      await page.getByRole("link", { name: "Voltar às compras" }).click();
+      await expect(page.getByText("Sair sem guardar as alterações?")).toBeVisible();
+      await expect(page).toHaveURL(/\/compras\/r1$/);
+      await expectReachable(page, ["Sair sem guardar", "Continuar a editar"]);
+      await noHorizontalScroll(page);
+      await noA11yViolations(page);
+      await page.getByRole("button", { name: "Continuar a editar" }).click();
+      await expect(page.getByLabel("Total da linha (€)")).toHaveValue("1,90");
     });
   }
 });
