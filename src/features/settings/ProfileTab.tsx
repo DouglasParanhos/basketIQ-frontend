@@ -88,7 +88,7 @@ function ReadBlocks({ saved, names, onEdit }: { saved: Profile; names: Schemas["
   const merchantChips = saved.merchants.map((id) => ({ id, name: names?.find((m) => m.id === id)?.name ?? merchantName(id) }));
   const goals = GOAL_OPTIONS.filter(({ goal }) => saved.goals.includes(goal)).map(({ title }) => title);
   const people = saved.household_size === null ? null : `${saved.household_size} ${saved.household_size === 1 ? "pessoa" : "pessoas"}`;
-  const big = (text: string) => <p className="mt-1 text-2xl font-extrabold">{text}</p>;
+  const big = (text: string) => <p className="mt-1 font-display text-2xl font-semibold">{text}</p>;
   const chips = (items: string[]) => (
     <ul className="mt-2 flex flex-wrap gap-2">
       {items.map((item) => (

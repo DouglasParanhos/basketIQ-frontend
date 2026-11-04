@@ -44,8 +44,8 @@ interno ao vitest, e não é coberto por estes valores. Está comentado em `vite
 | 6 Início | feito | `9d5ba36` |
 | 7 Talões | feito (Compras completo; Resumo e Produtos só nos pontos do canvas que o código já cobria) | `2d58c0d` |
 | 8 Rever talão | **parcial**: só o aspeto, a estrutura do canvas não foi adotada | `aaecb5d` |
-| 9 Adicionar | feito (câmara do Douglas intocada) | (ver `git log`) |
-| 10 Definições | não feito | |
+| 9 Adicionar | feito (câmara do Douglas intocada) | `21c4f09` |
+| 10 Definições | feito, **sem** a meta acima de € 800 e sem «Descarregar os meus dados» (backend) | (ver `git log`) |
 
 ### Passo 4: Login e Política
 
@@ -162,6 +162,15 @@ pela mudança global dos avisos (passo 8).
 (o canvas desenha um ecrã de câmara com «Captura automática» e várias partes; o da câmara existente fica como está, sem
 alterações de aspeto nesta noite).
 
+### Passo 10: Definições
+
+O ecrã já tinha o desenho (separadores, cartão da conta, cartões de leitura com «Editar», mercados em pílula com o nome completo
+desde o passo 2, botões destrutivos em `alert` = `#B3261E`). Aplicado: os valores («2 pessoas», «€ 400») e o contador do editor em
+Fraunces; a inicial do avatar em Fraunces.
+
+**Não mostrado (backend):** «Precisa de mais de € 800? Escreva o valor» (o backend rejeita metas acima de € 800; ver a tabela) e
+«Descarregar os meus dados» (não há endpoint, B-03). Nada que falhe ao clicar.
+
 ## Decisões a rever
 
 1. **Colunas de talões do login em conteúdo gerado por CSS.** O axe mediu 1,21:1 no texto decorativo a 10 % de
@@ -210,17 +219,48 @@ alterações de aspeto nesta noite).
 | Login por e-mail | decidido (D6): fica para depois |
 | Início: cartão «O que mudou de preço» (só no exemplo) | endpoint com o mesmo produto, mesmo mercado, as duas últimas compras, ≥ 15 % e ≥ 0,20 € (B-04) |
 | Início: «Por pessoa no mês» | funciona com o perfil que já existe; se o backend passar a devolver o valor por pessoa, deixa de ser divisão no cliente |
+| Definições: «Descarregar os meus dados» | endpoint de exportação dos dados da conta (B-03) |
 | Onboarding e Definições: ligação «Precisa de mais de € 800? Escreva o valor» (até € 5 000) | `PATCH /v1/me/profile` rejeita `monthly_goal_cents` > 80 000 (422 `out_of_range`; `CHECK` na base de dados). Falta subir `MONTHLY_GOAL_CENTS_RANGE` (e a migração do `CHECK`) para 500 000 (B-11). Quando houver: uma constante única em `features/profile/goals.ts`, o campo numérico no passo 4 e no `ProfileEditor`, mensagem «Indique um valor entre € 801 e € 5 000.» |
+
+## Resultados dos testes (por passo)
+
+| Passo | lint, `tsc -b` | vitest | e2e:mock (com axe claro e escuro) |
+|---|---|---|---|
+| A (testes instáveis) | limpos | 439/439 | n/a |
+| 4 | limpos | 497/497 | 157/157 |
+| 5 | limpos | 504/504 | 157/157 |
+| 6 | limpos | 513/513 | 165/165 |
+| 7 | limpos | 515/515 | 165/167 na 1.ª corrida; os 2 falhados (teste do passo 3 que contava a mesa como conteúdo) corrigidos e a passar (8/8 do grupo) |
+| 8 | limpos | 515/515 | 167/167 |
+| 9 | limpos | 521/521 | 167/167 |
+| 10 | limpos | 521/521 | 167/167 |
+
+O `/simplify` correu antes de cada commit; foi feito diretamente sobre o diff (não lancei subagentes) e aplicou-se a
+substituição do `useEffect` por `<Navigate replace>` no passo 7 e o auxiliar `anonymous()` partilhado no passo 4. O do passo 9 correu
+depois do commit (sem alterações a aplicar).
+
+## Próximo passo sugerido
+
+1. **Decidir o teto da meta** (B-11): subir `MONTHLY_GOAL_CENTS_RANGE` do backend (e a migração do `CHECK`) para € 5 000; depois a
+   ligação «Precisa de mais de € 800?» entra no passo 4 do onboarding e no `ProfileEditor` numa só constante.
+2. **Rever o passo 8** com a Liz: se a estrutura do `ReviewTalao` é para adotar, é um passo próprio (os comportamentos dos botões mudam).
+3. **Passagem final** (plano §12): axe em todos os ecrãs, `grep` por `c2691a|075B50|teal`, atualizar `specs/011-inicio/` e restantes specs
+   com os textos novos, rever a política do resumo (frase dos 30 dias, ver acima), formato do dinheiro (`22,75 €` vs `€ 22,75`).
+4. **Lista 7a/7b**: bloqueada pelo backend (B-05).
 
 ## Problemas em aberto
 
 - Corrida de testes sob carga extrema: ver «Tarefa A».
+- O `.gitignore` ignora `/Documentation/`: o relatório vive em `specs/` (versionado) e as capturas na pasta `Documentation` do projeto, fora do git.
+- Comparação lado a lado com o canvas: **não feita em nenhum passo** (o canvas só renderiza no claude.ai).
+- Passo 4, mensagem de commit: diz «The report of the night is in Documentation/»; o relatório está em `specs/NOITE_2026-11-03_relatorio.md`.
 - A política não tem rodapé nem botão de voltar quando é lida sem precisar de consentimento (a partir do login ou das
   Definições): é o comportamento anterior e o canvas não o define.
 
 ## Capturas
 
 - Passo 4 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-4/` do projeto: `login-*`, `login-erro-*`, `politica-*`, `politica-aberta-*`.
+- Passo 10: sem capturas novas (só tipografia dos valores); as capturas das Definições do passo 3 mostram o ecrã.
 - Passo 9: `Documentation/noite-2026-11-03/passo-9/`: `adicionar-*` (primeiro ecrã) e `adicionar-auchan-*` (Auchan escolhida).
 - Passo 8: `Documentation/noite-2026-11-03/passo-8/`: `rever-*`.
 - Passo 7 (390 e 320 px, claro e escuro): `Documentation/noite-2026-11-03/passo-7/`: `compras-*`, `resumo-*`, `produtos-*`.
