@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { overviewFor, overviewGreen, overviewNoGoal, overviewOrange, overviewOver, overviewRed } from "../../test/fixtures";
 import { ringView as rawRingView } from "./ringView";
 
-/** formatCents puts a no-break space before the euro sign (right in print): the tests compare with a plain space. */
+/** formatCents and formatPercent put a no-break space before «€» and «%» (right in print): the tests compare with a plain space. */
 const plain = (s: string) => s.replace(/\u00a0/g, " ");
 const ringView: typeof rawRingView = (overview, isCurrentMonth) => {
   const v = rawRingView(overview, isCurrentMonth);
-  return { ...v, text: plain(v.text) };
+  return { ...v, text: plain(v.text), percentText: plain(v.percentText), ariaLabel: plain(v.ariaLabel) };
 };
 
 const FORBIDDEN = /excedeu|perdeu|negativ|limite|−|-\d/i;

@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { formatCents } from "../lib/format";
+import { formatCents, formatWholeEuros, NBSP } from "../lib/format";
 
 /** Chart colours come from CSS tokens so light/dark use their own validated steps. */
 function useToken(name: string, fallback: string): string {
@@ -26,7 +26,7 @@ export interface Point {
 const AXIS = { fontSize: 12, fill: "var(--color-ink-soft)" };
 
 function euroTick(cents: number): string {
-  return cents >= 100_000 ? `${Math.round(cents / 100_000)} mil €` : `${Math.round(cents / 100)} €`;
+  return cents >= 100_000 ? `${Math.round(cents / 100_000)} mil${NBSP}€` : formatWholeEuros(Math.round(cents / 100));
 }
 
 function TooltipBox({ title, children }: { title: string; children: ReactNode }) {

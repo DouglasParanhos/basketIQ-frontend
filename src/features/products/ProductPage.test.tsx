@@ -50,15 +50,16 @@ describe("product detail (spec 012, US3)", () => {
     expect(document.body.textContent).not.toMatch(/descrição original de cada compra fica guardada/i);
   });
 
-  it("F-197: «Por mercado, nos seus talões» shows each store's average, last price and purchases, in the order of the API, with no label and no window", async () => {
+  it("F-197: «Preço médio que pagou, por mercado» shows each store's average, last price and purchases, in the order of the API, with no label and no window", async () => {
     open();
-    const block = (await screen.findByRole("heading", { name: "Por mercado, nos seus talões" })).closest("section")!;
+    const block = (await screen.findByRole("heading", { name: "Preço médio que pagou, por mercado" })).closest("section")!;
     const rows = within(block).getAllByRole("listitem");
     expect(rows.map((r) => plain(r.textContent))).toEqual([
       "Lidl4,99 € · último 4,99 €1 compra",
       "Mercadona5,79 € · último 5,79 €1 compra",
       "Pingo Doce5,69 € · último 5,49 €2 compras",
     ]);
+    expect(within(block).getByText("Nos seus talões")).toBeInTheDocument();
     expect(block.textContent).not.toMatch(/mais barato|90 dias|ranking|melhor/i);
   });
 

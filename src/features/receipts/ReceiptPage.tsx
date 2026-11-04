@@ -10,6 +10,7 @@ import { EDITABLE, IN_PROGRESS } from "../../lib/status";
 import { invalidateReceiptData } from "./cache";
 import { DeleteReceiptNotice } from "./DeleteReceipt";
 import { ReviewEditor } from "./ReviewEditor";
+import { useOriginalViewer } from "./useOriginalViewer";
 
 type Receipt = Schemas["ReceiptOut"];
 
@@ -40,12 +41,22 @@ export function ReceiptPage() {
         <Link to="/compras" aria-label="Voltar às compras" className="grid size-11 place-items-center rounded-full hover:bg-brand-soft">
           <ArrowLeft aria-hidden className="size-5" />
         </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate font-display text-2xl font-semibold">{r.merchant_name || (r.merchant && r.merchant !== "UNKNOWN") ? merchantName(r.merchant, r.merchant_name) : "Nova compra"}</h1>
-          {r.store_label && <p className="truncate text-sm font-semibold text-ink-soft">{r.store_label}</p>}
-          <p className="text-sm text-ink-soft">{r.purchase_at ? formatDateTime(r.purchase_at) : `Enviada ${formatDateTime(r.created_at)}`}</p>
-        </div>
-        <StatusBadge status={r.status} />
+        {inReview(r) ? (
+          // The store and the date are in the summary card below; the warning says what is left to check.
+          <>
+            <h1 className="min-w-0 flex-1 truncate text-center font-display text-xl font-semibold">Rever talão</h1>
+            <span aria-hidden className="size-11 shrink-0" />
+          </>
+        ) : (
+          <>
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate font-display text-2xl font-semibold">{r.merchant_name || (r.merchant && r.merchant !== "UNKNOWN") ? merchantName(r.merchant, r.merchant_name) : "Nova compra"}</h1>
+              {r.store_label && <p className="truncate text-sm font-semibold text-ink-soft">{r.store_label}</p>}
+              <p className="text-sm text-ink-soft">{r.purchase_at ? formatDateTime(r.purchase_at) : `Enviada ${formatDateTime(r.created_at)}`}</p>
+            </div>
+            <StatusBadge status={r.status} />
+          </>
+        )}
       </header>
       <div className="flex flex-col gap-4">
         <Body receipt={r} />
@@ -294,11 +305,7 @@ function ConfirmedReceipt({ receipt: r }: { receipt: Receipt }) {
 function ManageOriginal({ receipt: r }: { receipt: Receipt }) {
   const qc = useQueryClient();
   const [confirming, setConfirming] = useState<"receipt" | "original" | null>(null);
-  const view = useMutation({
-    mutationFn: async (photo: number) =>
-      unwrap(await api.GET("/v1/receipts/{receipt_id}/original", { params: { path: { receipt_id: r.id }, query: { photo } } })),
-    onSuccess: (o) => window.open(o.url, "_blank", "noopener,noreferrer"),
-  });
+  const view = useOriginalViewer(r.id);
   const removeOriginal = useMutation({
     mutationFn: async () => unwrap(await api.DELETE("/v1/receipts/{receipt_id}/original", { params: { path: { receipt_id: r.id } } })),
     onSuccess: (updated) => {
@@ -325,11 +332,13 @@ function ManageOriginal({ receipt: r }: { receipt: Receipt }) {
       <div className="flex flex-wrap gap-2">
         {r.original_available && (
           <>
-            {Array.from({ length: r.photo_count }, (_, i) => (
-              <Button key={i} variant="secondary" busy={view.isPending && view.variables === i + 1} onClick={() => view.mutate(i + 1)}>
-                <ExternalLink aria-hidden className="size-4" /> {r.photo_count > 1 ? `Ver foto ${i + 1}` : "Ver original"}
-              </Button>
-            ))}
+            {/* Under review the original opens from «Ver talão original», beside the products. */}
+            {!inReview(r) &&
+              Array.from({ length: r.photo_count }, (_, i) => (
+                <Button key={i} variant="secondary" busy={view.isPending && view.variables === i + 1} onClick={() => view.mutate(i + 1)}>
+                  <ExternalLink aria-hidden className="size-4" /> {r.photo_count > 1 ? `Ver foto ${i + 1}` : "Ver original"}
+                </Button>
+              ))}
             <Button variant="quiet" onClick={() => setConfirming("original")}>
               Apagar só o ficheiro
             </Button>

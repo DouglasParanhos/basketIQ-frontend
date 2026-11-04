@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { Schemas } from "../../api/client";
 import { LinkButton, SMALL_CAPS } from "../../components/ui";
-import { formatCents } from "../../lib/format";
+import { formatCents, NO_AMOUNT } from "../../lib/format";
 import { DEFINE_GOAL_PATH } from "./GoalRing";
 
 const DASHED = "rounded-surface border-[1.5px] border-dashed border-line";
@@ -49,7 +49,7 @@ export function HomeEmpty({ overview, people, stepper }: { overview: Schemas["Ov
         <div className="grid grid-cols-2 gap-3 max-[359px]:grid-cols-1">
           <section aria-label="Média mensal" className={`${DASHED} flex flex-col gap-1.5 p-4`}>
             <p className={SMALL_CAPS}>Média mensal</p>
-            <p aria-hidden className={`${GHOST_FIGURE} text-3xl`}>— €</p>
+            <p aria-hidden className={`${GHOST_FIGURE} text-3xl`}>{NO_AMOUNT}</p>
             <p className="text-xs leading-snug text-ink-soft">Aparece com {overview.average_min_months} meses de histórico</p>
             <p className="text-xs font-semibold text-ink-soft">
               {overview.average_months}/{overview.average_min_months} meses
@@ -68,7 +68,7 @@ export function HomeEmpty({ overview, people, stepper }: { overview: Schemas["Ov
             <p className={SMALL_CAPS}>Por pessoa no mês</p>
             <p className="text-xs text-ink-soft">{people === null ? "Indique quantas pessoas vivem em casa" : `${people} ${people === 1 ? "pessoa" : "pessoas"} em casa`}</p>
           </div>
-          <p aria-hidden className={`${GHOST_FIGURE} text-[1.625rem]`}>— €</p>
+          <p aria-hidden className={`${GHOST_FIGURE} text-[1.625rem]`}>{NO_AMOUNT}</p>
         </section>
 
         <section aria-label="Onde gasta mais" className={`${DASHED} flex flex-col gap-1.5 p-4`}>

@@ -5,6 +5,8 @@ description: "Tarefas da spec 011: Início"
 
 # Tasks: Início
 
+> **Atualizado a 04/11/2026.** O desenho aprovado a 03/11 mudou as cores do anel (verde, dourado e dourado; vermelho só acima de 100 %), o texto acima da meta («Acima da meta · X € além da meta»), o rótulo do anel («Gasto no mês») e trocou o token laranja `--color-warn` (D-P3) pelo ouro `#b8860b`. As palavras «Tranquilo / Quase lá / Reta final» mantêm-se (o canvas `HomeG` tem-nas) e vêm da banda da API. Onde o texto abaixo diverge, vale esta nota; o histórico das decisões não se apaga.
+
 **Input**: `/specs/011-inicio/` — [spec.md](./spec.md), [plan.md](./plan.md), [research.md](./research.md), [data-model.md](./data-model.md), [contracts/](./contracts/), [quickstart.md](./quickstart.md)
 
 **Estado (2026-10-31): implementada e verificada** (T001 passou: `OverviewOut` publicado e tipos gerados; lint e tipos limpos, Vitest e `e2e:mock` verdes; capturas em `Documentation/capturas-inicio/`); só a jornada `stack` (T028, manual) não foi corrida. Antes: BLOQUEADA até a **T001** passar. A T001 verifica que o backend publicou `overview` no OpenAPI, que os tipos gerados batem com o contrato escrito do backend (`contracts/overview-api.md`) e que `status` das últimas compras vem como enum (C10). Se falhar, parar e escrever `Documentation/PENDENTE_…md`; não se inventam tipos nem campos (R1).

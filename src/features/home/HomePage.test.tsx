@@ -5,6 +5,7 @@ import { currentMonth, shiftMonth } from "../../lib/month";
 import { overviewEmpty, overviewFewData, overviewGreen, overviewNoGoal, overviewZeroMonth } from "../../test/fixtures";
 import { renderRoutes } from "../../test/render";
 import { serveOverview } from "../../test/server";
+import { nb } from "../../test/text";
 import { HomeRoute } from "./HomeRoute";
 
 const routes = [
@@ -21,7 +22,7 @@ describe("Início: states and composition (spec 011, US3)", () => {
     serveOverview(overviewGreen);
     home();
     expect(await screen.findByRole("heading", { level: 1, name: "Início" })).toBeInTheDocument();
-    await screen.findByRole("img", { name: "Anel verde, 38 % da meta usada" });
+    await screen.findByRole("img", { name: nb("Anel verde, 38 % da meta usada") });
     const names = screen.getAllByRole("region").map((r) => r.getAttribute("aria-label") ?? within(r).getByRole("heading").textContent);
     expect(names).toEqual(["Meta pessoal do mês", "Média mensal", "Compras no mês", "Por pessoa no mês", "Gasto por semana", "Onde gasta mais", "Últimas compras"]);
   });
@@ -44,7 +45,7 @@ describe("Início: states and composition (spec 011, US3)", () => {
   it("F-185: with few months of history each card says what it lacks", async () => {
     serveOverview(overviewFewData);
     home();
-    await screen.findByRole("img", { name: "Anel verde, 38 % da meta usada" });
+    await screen.findByRole("img", { name: nb("Anel verde, 38 % da meta usada") });
     expect(body()).toContain("— €");
     expect(body()).toContain("Aparece com 2 meses de histórico");
     expect(body()).toContain("0/2 meses");
@@ -53,7 +54,7 @@ describe("Início: states and composition (spec 011, US3)", () => {
   it("F-185: a month without purchases in an account that has some shows zeros and the ring with the goal, not the empty state", async () => {
     serveOverview(overviewZeroMonth);
     home();
-    await screen.findByRole("img", { name: "Anel verde, 0 % da meta usada" });
+    await screen.findByRole("img", { name: nb("Anel verde, 0 % da meta usada") });
     expect(body()).toContain("0,00 €");
     expect(body()).not.toContain("A aguardar o seu primeiro talão");
   });
@@ -73,7 +74,7 @@ describe("Início: states and composition (spec 011, US3)", () => {
     expect(body()).not.toMatch(/\d,\d\d €/);
     serveOverview(overviewGreen);
     await userEvent.setup().click(screen.getByRole("button", { name: "Tentar de novo" }));
-    await screen.findByRole("img", { name: "Anel verde, 38 % da meta usada" });
+    await screen.findByRole("img", { name: nb("Anel verde, 38 % da meta usada") });
     expect(months.length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText("Não foi possível carregar o Início.")).not.toBeInTheDocument();
   });
@@ -126,7 +127,7 @@ describe("Início: navigating between months (spec 011, US6)", () => {
   it("F-188: a future month typed by hand is asked for and shows what comes back", async () => {
     const months = serveOverview((month) => ({ ...overviewZeroMonth, month }));
     home("/?mes=2999-01");
-    await screen.findByRole("img", { name: /0 % da meta atual usada/ });
+    await screen.findByRole("img", { name: /0\s%\sda meta atual usada/ });
     expect(months).toEqual(["2999-01"]);
   });
 

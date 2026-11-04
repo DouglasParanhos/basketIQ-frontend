@@ -30,7 +30,7 @@ export function ReceiptRow({ receipt: r }: { receipt: Schemas["ReceiptSummaryOut
   const items = r.line_count > 0 ? `${r.line_count} ${r.line_count === 1 ? "item" : "itens"}` : null;
   return (
     <li>
-      <Link to={`/compras/${r.id}`} className="flex min-h-16 items-center gap-3 border-t border-dashed border-muted-bar py-2.5">
+      <Link to={`/compras/${r.id}`} className="flex min-h-16 items-center gap-3 py-2.5">
         <span className="relative shrink-0">
           <MarketTile code={r.merchant} size={40} fontSize={18} />
           {state !== "confirmed" && <Badge state={state} />}

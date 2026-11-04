@@ -97,7 +97,8 @@ export function LoginPage() {
 
       {/* Only the name and the slogan are read; the slot, the logo, the lines and the total are decoration. */}
       <div className="ticket-paper relative">
-        <div aria-hidden className="relative z-[2] h-4 rounded-lg bg-ink shadow-[0_3px_0_rgb(27_27_26/0.15)]" />
+        {/* In the dark scheme the black slot would vanish on the dark ground: a light outline brings it back. */}
+        <div aria-hidden className="relative z-[2] h-4 rounded-lg bg-ink shadow-[0_3px_0_rgb(27_27_26/0.15)] dark:ring-1 dark:ring-ink-soft" />
         <div className="ticket-shake relative z-[1] mx-5 -mt-1">
           <div className="ticket-reveal torn bg-paper px-[18px] pb-[30px] pt-6 text-ink shadow-[0_1px_0_#e4ded3] [--tear:8px]">
             <div className="flex flex-col items-center gap-1.5">

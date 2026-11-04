@@ -212,10 +212,11 @@ describe("review (RF-07, F-11..F-15)", () => {
 
   it("F-12: low-confidence values are highlighted with text, not colour alone", async () => {
     renderRoutes(routes, "/compras/r1");
-    const banana = await screen.findByRole("button", { name: /banana/i });
+    const banana = (await screen.findByText("BANANA")).closest("li")!;
     expect(within(banana).getByText(/verificar quantidade/i)).toBeInTheDocument();
     expect(within(banana).getByText(/verificar preço unitário/i)).toBeInTheDocument();
     expect(screen.getByText(/reveja antes de confirmar/i)).toBeInTheDocument();
+    expect(screen.getByText("Há 2 valores que lemos com pouca confiança, marcados a amarelo.")).toBeInTheDocument();
   });
 
   it("F-202: image quality warnings come with the action «Tire outra foto», as a status with text and icon, and never block the review", async () => {
@@ -309,11 +310,12 @@ describe("review (RF-07, F-11..F-15)", () => {
     const user = userEvent.setup();
     renderRoutes(routes, "/compras/r1");
     await user.click(await screen.findByRole("button", { name: /leite meio gordo/i }));
+    await user.click(screen.getByRole("button", { name: "Mais opções" }));
     await user.click(screen.getByRole("button", { name: /remover linha/i }));
     await user.click(screen.getByRole("button", { name: /adicionar linha/i }));
     await user.type(screen.getByLabelText("Descrição"), "PAO");
-    await user.type(screen.getByLabelText("Total da linha (€)"), "0,40");
-    expect(screen.getByText("Soma das linhas").nextSibling).toHaveTextContent("1,63");
+    await user.type(screen.getByLabelText("Preço total (€)"), "0,40");
+    expect(document.body.textContent?.replace(/\s/g, " ")).toContain("A soma das linhas (1,63 €) não coincide com o total do talão (2,93 €).");
     await user.click(screen.getByRole("button", { name: /^guardar e rever depois$/i }));
     await waitFor(() => expect(lines).toHaveLength(2));
     expect(lines[0]).toEqual({ id: "l2" });
@@ -398,7 +400,7 @@ describe("dashboard (RF-09, RF-11)", () => {
   it("shows totals, variation, an accessible table and empty periods", async () => {
     renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
     expect(await screen.findByText("455,00 €")).toBeInTheDocument();
-    expect(screen.getByText(/\+12,5 % face a/)).toBeInTheDocument();
+    expect(screen.getByText(/^12,5 % acima de /)).toBeInTheDocument();
     expect(screen.getByText("Ver como tabela")).toBeInTheDocument();
     expect(screen.getByRole("table", { name: /gasto por período/i })).toBeInTheDocument();
   });

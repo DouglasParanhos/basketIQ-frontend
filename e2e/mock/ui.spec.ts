@@ -163,6 +163,19 @@ test.describe("login and privacy policy: the approved design", () => {
         }
       });
 
+      if (width === 390)
+        test(`the slot of the ticket is outlined in the dark scheme only (${scheme})`, async ({ page }) => {
+          await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
+          await page.setViewportSize({ width, height: 800 });
+          await fakeApi(page, { signedIn: false });
+          await page.goto("/login");
+          await expect(page.getByRole("link", { name: "Entrar com Google" })).toBeVisible();
+          const outline = await page.locator(".ticket-paper > div[aria-hidden]").first().evaluate((el) => getComputedStyle(el).boxShadow);
+          // The ring is a box-shadow of 1px in the soft ink of the scheme (#a9bbb0 in the dark one).
+          if (scheme === "dark") expect(outline).toContain("rgb(169, 187, 176) 0px 0px 0px 1px");
+          else expect(outline).not.toContain("0px 0px 0px 1px");
+        });
+
       test(`privacy policy has no axe violations, closed and with every section open (${scheme}, ${width}px)`, async ({ page }) => {
         await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
         await page.setViewportSize({ width, height: 800 });
@@ -296,9 +309,9 @@ test.describe("flows with a fake API", () => {
   test("F-12: low confidence shown with words and a marker, not colour alone", async ({ page }) => {
     await fakeApi(page);
     await page.goto("/compras/r1");
-    const banana = page.getByRole("button", { name: /BANANA/ });
+    const banana = page.getByRole("listitem").filter({ hasText: "BANANA" });
     await expect(banana.getByText("Verificar quantidade")).toBeVisible();
-    await expect(page.getByText(/Diferença de/)).toBeVisible();
+    await expect(page.getByText(/A soma das linhas \(.*não coincide com o total do talão/)).toBeVisible();
   });
 
   test("session loss sends the person to sign-in", async ({ page }) => {
@@ -906,7 +919,9 @@ test.describe("talões (spec 012)", () => {
     // The torn edge is a mask (with the -webkit- prefix of Safari).
     expect(await sheet.evaluate((el) => getComputedStyle(el).maskImage || getComputedStyle(el).webkitMaskImage)).not.toBe("none");
     const row = sheet.getByRole("link").first();
-    await expect(row).toHaveCSS("border-top-style", "dashed");
+    // The dashed line is between neighbours: under the label and under every row but the last.
+    await expect(sheet.getByRole("listitem").first()).toHaveCSS("border-bottom-style", "dashed");
+    await expect(sheet.getByRole("listitem").last()).toHaveCSS("border-bottom-width", "0px");
     expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(64);
     await row.click();
     await expect(page).toHaveURL(/\/compras\/[^/?]+$/);
@@ -1008,7 +1023,7 @@ test.describe("talões (spec 012)", () => {
     await chicken.click();
     await expect(page.getByRole("heading", { level: 1, name: "Peito de frango" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Preço médio por kg" })).toContainText("Média ponderada pelas quantidades que comprou");
-    await expect(page.getByRole("heading", { name: "Por mercado, nos seus talões" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Preço médio que pagou, por mercado" })).toBeVisible();
     await expect(page.locator("main")).not.toContainText(/mais barato/i);
   });
 
@@ -1066,10 +1081,21 @@ test.describe("review: the foot with the three actions and the undo of a price",
     await fakeApi(page);
     await page.goto("/compras/r1");
     await page.getByRole("button", { name: /LEITE MEIO GORDO/ }).click();
-    const total = page.getByLabel("Total da linha (€)");
+    const total = page.getByLabel("Preço total (€)");
     await total.fill("1,90");
     await total.blur();
     await expect(page.getByText("Preço alterado de 1,70 para 1,90")).toBeVisible();
+  }
+
+  /** The questions of the foot are taller than the actions: nothing (the navigation bar) may cover their buttons, which the click must reach. */
+  async function expectReachable(page: Page, names: string[]) {
+    for (const name of names) {
+      const reachable = await page.getByRole("button", { name, exact: true }).evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return el.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2));
+      });
+      expect(reachable, name).toBe(true);
+    }
   }
 
   for (const scheme of ["light", "dark"] as const) {
@@ -1079,16 +1105,12 @@ test.describe("review: the foot with the three actions and the undo of a price",
         await page.setViewportSize({ width, height: 568 });
         await correctedPrice(page);
         const buttons = ["Confirmar talão", "Guardar e rever depois", "Eliminar talão"].map((name) => page.getByRole("button", { name, exact: true }));
+        await expectReachable(page, ["Confirmar talão", "Guardar e rever depois", "Eliminar talão"]);
         const bar = page.getByText("Preço alterado de 1,70 para 1,90").locator("..");
         const barBox = (await bar.boundingBox())!;
         for (const button of buttons) {
           await expect(button).toBeVisible();
           const box = (await button.boundingBox())!;
-          const hit = await button.evaluate((el) => {
-            const r = el.getBoundingClientRect();
-            return el.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2));
-          });
-          expect(hit).toBe(true);
           expect(barBox.y + barBox.height).toBeLessThanOrEqual(box.y);
           expect(box.height).toBeGreaterThanOrEqual(button === buttons[0] ? 56 : 44);
         }
@@ -1107,8 +1129,40 @@ test.describe("review: the foot with the three actions and the undo of a price",
       await page.getByRole("button", { name: "Eliminar talão" }).click();
       await expect(page.getByText("Eliminar esta compra?")).toBeVisible();
       await expect(page.getByRole("button", { name: "Eliminar compra" })).toBeVisible();
+      await expectReachable(page, ["Eliminar compra", "Cancelar"]);
       await noHorizontalScroll(page);
       await noA11yViolations(page);
+    });
+
+    test(`the card and the panel of a line, with the date and «Mais opções» open, have no axe violations (${scheme}, 320px)`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.setViewportSize({ width: 320, height: 568 });
+      await fakeApi(page);
+      await page.goto("/compras/r1");
+      await page.getByRole("button", { name: "Editar data e hora" }).click();
+      await page.getByRole("button", { name: "Editar total da nota" }).click();
+      await page.getByRole("button", { name: /Editar LEITE MEIO GORDO/ }).click();
+      await page.getByRole("button", { name: "Mais opções" }).click();
+      await expect(page.getByLabel("Preço unitário (€)")).toBeVisible();
+      await noHorizontalScroll(page);
+      await noA11yViolations(page);
+    });
+
+    test(`leaving with unsaved edits asks first and keeps the edit, without axe violations (${scheme})`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.setViewportSize({ width: 320, height: 568 });
+      await fakeApi(page);
+      await page.goto("/compras/r1");
+      await page.getByRole("button", { name: /LEITE MEIO GORDO/ }).click();
+      await page.getByLabel("Preço total (€)").fill("1,90");
+      await page.getByRole("link", { name: "Voltar às compras" }).click();
+      await expect(page.getByText("Sair sem guardar as alterações?")).toBeVisible();
+      await expect(page).toHaveURL(/\/compras\/r1$/);
+      await expectReachable(page, ["Sair sem guardar", "Continuar a editar"]);
+      await noHorizontalScroll(page);
+      await noA11yViolations(page);
+      await page.getByRole("button", { name: "Continuar a editar" }).click();
+      await expect(page.getByLabel("Preço total (€)")).toHaveValue("1,90");
     });
   }
 });

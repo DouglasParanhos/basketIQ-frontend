@@ -69,6 +69,28 @@ describe("accessibility of the onboarding (spec 010, US5)", () => {
     expect(bar).toBeDisabled();
   });
 
+  it("F-113: touching the bar without moving it answers the minimum, so «Avançar» can be used for exactly € 50", async () => {
+    const { user } = await openOnboarding();
+    await advance(user, 3);
+    const bar = screen.getByRole("slider", { name: "Meta pessoal mensal, em euros" });
+    expect(screen.getByRole("button", { name: "Concluir" })).toHaveAttribute("aria-disabled", "true");
+    await user.click(bar);
+    expect(bar).toHaveAttribute("aria-valuetext", "50 euros");
+    expect(screen.getByRole("button", { name: "Concluir" })).not.toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("F-113: with the keyboard, going down from the minimum (an arrow or Home) answers € 50 without moving the bar", async () => {
+    const { user } = await openOnboarding();
+    await advance(user, 3);
+    const bar = screen.getByRole("slider", { name: "Meta pessoal mensal, em euros" });
+    bar.focus();
+    await user.keyboard("{ArrowRight}"); // going up is a change of the browser's own: no answer from this handler
+    expect(bar).toHaveAttribute("aria-valuetext", "ainda sem valor");
+    await user.keyboard("{ArrowLeft}");
+    expect(bar).toHaveAttribute("aria-valuetext", "50 euros");
+    expect(screen.getByRole("button", { name: "Concluir" })).not.toHaveAttribute("aria-disabled", "true");
+  });
+
   it("F-117: no text of the Brazilian prototype, of «orçamento» or of savings reaches any step", async () => {
     const { user } = await openOnboarding();
     const texts: string[] = [];

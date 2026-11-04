@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { Link } from "react-router";
 import { FullScreen } from "../../components/FullScreen";
 import { Button, Notice, ROUND_NEUTRAL } from "../../components/ui";
-import { formatCents, formatDate } from "../../lib/format";
+import { formatCents, formatDate, formatPercent } from "../../lib/format";
 import { merchantName } from "../../lib/merchants";
 import { stillText } from "../capture/hints";
 import { MAX_PHOTOS } from "../../lib/upload";
@@ -189,7 +189,7 @@ export function PartsScreen(props: {
             <div>
               <div className="mb-1 flex justify-between text-sm">
                 <span>{parts.length > 1 ? `A enviar a foto ${upload.photo + 1} de ${parts.length}` : "A enviar"}</span>
-                <span>{Math.round(upload.progress * 100)} %</span>
+                <span>{formatPercent(Math.round(upload.progress * 100))}</span>
               </div>
               <progress className="h-2 w-full accent-brand" max={1} value={upload.progress} aria-label="Progresso do envio" />
             </div>

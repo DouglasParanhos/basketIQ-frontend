@@ -5,7 +5,7 @@ import type { Schemas } from "../../api/client";
 import { DataTable } from "../../components/charts";
 import { MarketSegment, MarketTile } from "../../components/MarketBadge";
 import { SMALL_CAPS, StatusBadge } from "../../components/ui";
-import { formatCents } from "../../lib/format";
+import { formatCents, formatPercent } from "../../lib/format";
 import { formatDayMonth, shortMonth } from "../../lib/month";
 
 type Overview = Schemas["OverviewOut"];
@@ -107,7 +107,7 @@ function Merchants({ merchants }: { merchants: Overview["by_merchant"] }) {
                 <MarketTile code={m.merchant} size={20} fontSize={11} />
                 <span className="min-w-0 flex-1 truncate font-medium">{m.name}</span>
                 <span className="amount text-ink-soft">{formatCents(m.spent_cents)}</span>
-                <span className="w-10 text-right font-bold">{m.share_pct} %</span>
+                <span className="w-10 text-right font-bold">{formatPercent(m.share_pct)}</span>
               </li>
             ))}
           </ul>
