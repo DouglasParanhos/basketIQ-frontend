@@ -10,7 +10,7 @@ ficheiros `Documentation/design-ux-v2/*.dc.html` (atualizados hoje; relidos do d
 
 ## Ponto de partida
 
-- `git fetch origin`: a `origin/main` tem **0** commits que o HEAD não tenha.
+- `git fetch origin`: a `origin/main` tem **0** commits que o HEAD não tenha (verificado no início e outra vez no fim, antes do PR).
 - **A exceção ao «ramo a partir da main» deixou de ser necessária.** O prompt previa criar o ramo a partir do `5ca901c`
   porque o PR #6 estava em rascunho. O PR #6 foi fundido na `main` às 21:07 UTC (a `main` é `ec0a375`, com a árvore
   idêntica à do `5ca901c`: 0 ficheiros de diferença). O ramo foi por isso criado a partir da `main` atualizada, como manda
@@ -45,7 +45,7 @@ interno ao vitest, e não é coberto por estes valores. Está comentado em `vite
 | 7 Talões | feito (Compras completo; Resumo e Produtos só nos pontos do canvas que o código já cobria) | `2d58c0d` |
 | 8 Rever talão | **parcial**: só o aspeto, a estrutura do canvas não foi adotada | `aaecb5d` |
 | 9 Adicionar | feito (câmara do Douglas intocada) | `21c4f09` |
-| 10 Definições | feito, **sem** a meta acima de € 800 e sem «Descarregar os meus dados» (backend) | (ver `git log`) |
+| 10 Definições | feito, **sem** a meta acima de € 800 e sem «Descarregar os meus dados» (backend) | `5b8cedd` |
 
 ### Passo 4: Login e Política
 
