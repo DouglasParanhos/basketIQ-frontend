@@ -163,6 +163,19 @@ test.describe("login and privacy policy: the approved design", () => {
         }
       });
 
+      if (width === 390)
+        test(`the slot of the ticket is outlined in the dark scheme only (${scheme})`, async ({ page }) => {
+          await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
+          await page.setViewportSize({ width, height: 800 });
+          await fakeApi(page, { signedIn: false });
+          await page.goto("/login");
+          await expect(page.getByRole("link", { name: "Entrar com Google" })).toBeVisible();
+          const outline = await page.locator(".ticket-paper > div[aria-hidden]").first().evaluate((el) => getComputedStyle(el).boxShadow);
+          // The ring is a box-shadow of 1px in the soft ink of the scheme (#a9bbb0 in the dark one).
+          if (scheme === "dark") expect(outline).toContain("rgb(169, 187, 176) 0px 0px 0px 1px");
+          else expect(outline).not.toContain("0px 0px 0px 1px");
+        });
+
       test(`privacy policy has no axe violations, closed and with every section open (${scheme}, ${width}px)`, async ({ page }) => {
         await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
         await page.setViewportSize({ width, height: 800 });
