@@ -48,7 +48,7 @@ describe("the cache of the Início and of the totals by month after a purchase c
     server.use(http.post(`${API}/v1/receipts/r1/confirm`, () => HttpResponse.json(receipt({ status: "CONFIRMED", confirmed_by: "USER", confirmed_at: "2026-09-15T13:00:00Z" }))));
     const { client } = renderRoutes(detail, "/compras/r1");
     const spy = vi.spyOn(client, "invalidateQueries");
-    await userEvent.setup().click(await screen.findByRole("button", { name: /^confirmar$/i }));
+    await userEvent.setup().click(await screen.findByRole("button", { name: /^confirmar talão$/i }));
     await vi.waitFor(() => expect(spy).toHaveBeenCalledWith({ queryKey: ["overview"] }));
     expect(spy).toHaveBeenCalledWith({ queryKey: ["months"] });
   });

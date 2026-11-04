@@ -1,16 +1,19 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Check, Pencil, Plus, Scissors, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { AlertTriangle, Pencil, Plus, Scissors, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 import { ApiError, api, unwrap, type Merchant, type Schemas } from "../../api/client";
 import { Button, Field, Notice, Select } from "../../components/ui";
 import { centsToInput, formatCents, formatQuantity, parseEurToCents } from "../../lib/format";
 import { MERCHANT_CHOICES } from "../../lib/merchants";
 import { invalidateReceiptData } from "./cache";
+import { DeleteReceiptNotice } from "./DeleteReceipt";
 import {
   emptyLine,
   lineNet,
   lisbonIso,
   lisbonParts,
+  revertField,
   setField,
   splitLine,
   toDraft,
@@ -18,6 +21,7 @@ import {
   validateLine,
   type DraftLine,
   type LineField,
+  type PriceField,
 } from "./draft";
 
 type Receipt = Schemas["ReceiptOut"];
@@ -48,8 +52,18 @@ function Check_({ what }: { what: string }) {
   );
 }
 
+/** The last price that was corrected, to offer «Desfazer»: the values are as the field shows them. */
+interface PriceUndo {
+  key: string;
+  field: PriceField;
+  from: string;
+  to: string;
+  wasTouched: boolean;
+}
+
 export function ReviewEditor({ receipt }: { receipt: Receipt }) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [lines, setLines] = useState<DraftLine[]>(() => receipt.lines.map(toDraft));
   const [open, setOpen] = useState<string | null>(null);
   const [merchant, setMerchant] = useState(receipt.merchant ?? "UNKNOWN");
@@ -59,6 +73,15 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
   const [time, setTime] = useState(initial.time);
   const [printedText, setPrintedText] = useState(centsToInput(receipt.totals.printed_total_cents));
   const [dirty, setDirty] = useState(false);
+  const [undo, setUndo] = useState<PriceUndo | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const askToDelete = useRef<HTMLButtonElement>(null);
+  const wasDeleting = useRef(false);
+  // Back from the question (Cancelar), the focus returns to the button that asked it.
+  useEffect(() => {
+    if (wasDeleting.current && !deleting) askToDelete.current?.focus();
+    wasDeleting.current = deleting;
+  }, [deleting]);
 
   const errors = useMemo(() => Object.fromEntries(lines.map((l) => [l.key, validateLine(l)])), [lines]);
   const hasLineErrors = Object.values(errors).some((e) => Object.keys(e).length > 0);
@@ -105,6 +128,22 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
     onSuccess: refresh,
   });
 
+  /** «Guardar e rever depois»: what was edited is saved and the person goes back to the list; a failure stays here, with its message. */
+  async function saveAndLeave() {
+    try {
+      if (dirty) await save.mutateAsync();
+      navigate("/compras");
+    } catch {
+      // The message is shown by the error notice below.
+    }
+  }
+
+  function undoPrice() {
+    if (!undo) return;
+    update(undo.key, (l) => revertField(l, undo.field, undo.from, undo.wasTouched));
+    setUndo(null);
+  }
+
   function update(key: string, change: (l: DraftLine) => DraftLine | DraftLine[] | null) {
     setDirty(true);
     setLines((all) =>
@@ -116,6 +155,8 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
     );
   }
 
+  // The line may be gone (removed or split) by the time the bar is read.
+  const priceUndo = undo && lines.some((l) => l.key === undo.key) ? undo : null;
   const conflict = [save.error, confirm.error].find((e) => e instanceof ApiError && e.code === "version_conflict");
   const blocking = receipt.review_reasons.filter((r) =>
     ["date_missing", "quantity_pending", "line_total_missing", "no_lines"].includes(r.code ?? ""),
@@ -230,6 +271,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
                     onChange={(field, value) => update(line.key, (l) => setField(l, field, value))}
                     onSplit={() => update(line.key, (l) => splitLine(l))}
                     onRemove={() => update(line.key, () => null)}
+                    onPriceChange={(field, from, to, wasTouched) => setUndo({ key: line.key, field, from, to, wasTouched })}
                   />
                 )}
               </li>
@@ -292,22 +334,50 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
         <p className="text-sm text-ink-soft">Para confirmar falta: {blocking.map((b) => b.message?.toLowerCase()).join(" ")}</p>
       )}
 
-      <div className="sticky bottom-20 z-10 flex flex-col gap-2 rounded-surface bg-ground/95 py-3 backdrop-blur md:bottom-0">
-        <p className="text-center text-xs text-ink-soft">Ao confirmar, os valores entram nos seus gastos.</p>
-        <div className="flex gap-3">
-          <Button variant="secondary" size="lg" className="flex-1 rounded-[28px]" busy={save.isPending} disabled={!dirty || hasErrors} onClick={() => save.mutate()}>
-            Guardar
-          </Button>
-          <Button
-            size="lg"
-            className="flex-1 rounded-[28px] font-extrabold"
-            busy={confirm.isPending}
-            disabled={hasErrors || (!dirty && !receipt.can_confirm)}
-            onClick={() => confirm.mutate()}
-          >
-            <Check aria-hidden className="size-5" /> Confirmar
-          </Button>
+      <div className="sticky bottom-20 z-10 flex flex-col gap-1.5 rounded-surface bg-ground/95 py-3 backdrop-blur md:bottom-0">
+        <div role="status" className="absolute inset-x-0 bottom-full mb-2">
+          {priceUndo && !deleting && (
+            <div className="flex items-center justify-between gap-2 rounded-2xl bg-ink py-1.5 pl-4 pr-1.5 text-[13px] text-ground">
+              <span>
+                Preço alterado de {priceUndo.from} para {priceUndo.to}
+              </span>
+              <button type="button" onClick={undoPrice} className="min-h-11 shrink-0 px-3.5 font-extrabold text-[#FFE08A] dark:text-ground dark:underline">
+                Desfazer
+              </button>
+            </div>
+          )}
         </div>
+        {deleting ? (
+          // In the foot, in place of the actions: above it, a sticky foot would cover the question.
+          <DeleteReceiptNotice receiptId={receipt.id} onCancel={() => setDeleting(false)} />
+        ) : (
+          <>
+            <p className="text-center text-xs text-ink-soft">Ao confirmar, os valores entram nos seus gastos.</p>
+            <Button
+              size="lg"
+              className="rounded-[28px] font-extrabold"
+              busy={confirm.isPending}
+              disabled={hasErrors || (!dirty && !receipt.can_confirm)}
+              onClick={() => confirm.mutate()}
+            >
+              Confirmar talão
+            </Button>
+            <div className="flex flex-wrap justify-between">
+              <button
+                type="button"
+                className="min-h-11 px-2 text-sm font-bold text-ink disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={hasErrors || save.isPending}
+                aria-busy={save.isPending}
+                onClick={() => void saveAndLeave()}
+              >
+                Guardar e rever depois
+              </button>
+              <button ref={askToDelete} type="button" className="min-h-11 px-2 text-sm font-extrabold text-alert" onClick={() => setDeleting(true)}>
+                Eliminar talão
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -320,6 +390,7 @@ function LineForm({
   onChange,
   onSplit,
   onRemove,
+  onPriceChange,
 }: {
   id: string;
   line: DraftLine;
@@ -327,7 +398,23 @@ function LineForm({
   onChange: (field: LineField, value: string) => void;
   onSplit: () => void;
   onRemove: () => void;
+  onPriceChange: (field: PriceField, from: string, to: string, wasTouched: boolean) => void;
 }) {
+  // A price counts as corrected when the person leaves the field with another valid value than the one it had on entering.
+  const focused = useRef<{ field: PriceField; value: string; wasTouched: boolean } | null>(null);
+  const price = (field: PriceField) => ({
+    onFocus: () => {
+      focused.current = { field, value: line[field], wasTouched: line.touched.includes(field) };
+    },
+    onBlur: () => {
+      const before = focused.current;
+      focused.current = null;
+      if (before?.field !== field) return;
+      const from = parseEurToCents(before.value);
+      const to = parseEurToCents(line[field]);
+      if (from !== null && to !== null && from !== to) onPriceChange(field, centsToInput(from), centsToInput(to), before.wasTouched);
+    },
+  });
   return (
     <div id={id} className="mt-3 flex flex-col gap-3 rounded-control bg-ground p-3 font-sans text-sm">
       {line.source ? (
@@ -352,8 +439,8 @@ function LineForm({
           <option value="l">l</option>
           <option value="ml">ml</option>
         </Select>
-        <Field label="Preço unitário (€)" inputMode="decimal" value={line.unit_price} error={errors.unit_price} onChange={(e) => onChange("unit_price", e.target.value)} />
-        <Field label="Total da linha (€)" inputMode="decimal" value={line.line_total} error={errors.line_total} onChange={(e) => onChange("line_total", e.target.value)} />
+        <Field label="Preço unitário (€)" inputMode="decimal" value={line.unit_price} error={errors.unit_price} onChange={(e) => onChange("unit_price", e.target.value)} {...price("unit_price")} />
+        <Field label="Total da linha (€)" inputMode="decimal" value={line.line_total} error={errors.line_total} onChange={(e) => onChange("line_total", e.target.value)} {...price("line_total")} />
         <Field label="Desconto (€)" inputMode="decimal" value={line.discount} error={errors.discount} onChange={(e) => onChange("discount", e.target.value)} />
       </div>
       <div className="flex flex-wrap gap-2">

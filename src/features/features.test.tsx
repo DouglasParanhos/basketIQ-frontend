@@ -205,7 +205,10 @@ describe("add receipt (RF-02..RF-04)", () => {
 });
 
 describe("review (RF-07, F-11..F-15)", () => {
-  const routes = [{ path: "/compras/:id", element: <ReceiptPage /> }];
+  const routes = [
+    { path: "/compras/:id", element: <ReceiptPage /> },
+    { path: "/compras", element: <p>lista</p> },
+  ];
 
   it("F-12: low-confidence values are highlighted with text, not colour alone", async () => {
     renderRoutes(routes, "/compras/r1");
@@ -259,10 +262,10 @@ describe("review (RF-07, F-11..F-15)", () => {
     const qty = screen.getByLabelText("Quantidade");
     await user.clear(qty);
     await user.type(qty, "0,900");
-    await user.click(screen.getByRole("button", { name: /^guardar$/i }));
+    await user.click(screen.getByRole("button", { name: /^guardar e rever depois$/i }));
     await waitFor(() => expect(patch).not.toBeNull());
     expect(patch).toEqual({ version: 3, lines: [{ id: "l1" }, { id: "l2", quantity: "0.900" }] });
-    expect(await screen.findAllByText(/corrigido manualmente/i)).not.toHaveLength(0);
+    expect(await screen.findByText("lista")).toBeInTheDocument(); // «rever depois»: back to the list
   });
 
   it("F-10: a store without a parser is named in the review, and can be confirmed", async () => {
@@ -286,10 +289,10 @@ describe("review (RF-07, F-11..F-15)", () => {
     renderRoutes(routes, "/compras/r1");
     const name = await screen.findByLabelText("Nome da loja");
     expect(name).toHaveValue("FRUTARIA DO ZE");
-    expect(screen.getByRole("button", { name: /^confirmar$/i })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^confirmar talão$/i })).toBeEnabled();
     await user.clear(name);
     await user.type(name, "Frutaria do Zé");
-    await user.click(screen.getByRole("button", { name: /^guardar$/i }));
+    await user.click(screen.getByRole("button", { name: /^guardar e rever depois$/i }));
     await waitFor(() => expect(patch).not.toBeNull());
     expect(patch).toMatchObject({ merchant_name: "Frutaria do Zé" });
     expect(patch).not.toHaveProperty("merchant");
@@ -311,7 +314,7 @@ describe("review (RF-07, F-11..F-15)", () => {
     await user.type(screen.getByLabelText("Descrição"), "PAO");
     await user.type(screen.getByLabelText("Total da linha (€)"), "0,40");
     expect(screen.getByText("Soma das linhas").nextSibling).toHaveTextContent("1,63");
-    await user.click(screen.getByRole("button", { name: /^guardar$/i }));
+    await user.click(screen.getByRole("button", { name: /^guardar e rever depois$/i }));
     await waitFor(() => expect(lines).toHaveLength(2));
     expect(lines[0]).toEqual({ id: "l2" });
     expect(lines[1]).toMatchObject({ raw_description: "PAO", line_total_cents: 40, quantity: "1", unit: "un" });
@@ -327,7 +330,7 @@ describe("review (RF-07, F-11..F-15)", () => {
     );
     const user = userEvent.setup();
     renderRoutes(routes, "/compras/r1");
-    await user.click(await screen.findByRole("button", { name: /^confirmar$/i }));
+    await user.click(await screen.findByRole("button", { name: /^confirmar talão$/i }));
     expect(await screen.findByText(/confirmada por si/i)).toBeInTheDocument();
     expect(confirmed).toEqual({ version: 3 });
     expect(screen.getByRole("link", { name: /início/i })).toHaveAttribute("href", "/");
@@ -351,7 +354,7 @@ describe("review (RF-07, F-11..F-15)", () => {
     renderRoutes(routes, "/compras/r1");
     expect(await screen.findByText(/o pdf está corrompido/i)).toBeInTheDocument();
     expect(screen.getByText(/escolha um pdf, jpeg/i)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /^confirmar$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^confirmar talão$/i })).not.toBeInTheDocument();
   });
 
   it("shows processing steps while the receipt is being read", async () => {

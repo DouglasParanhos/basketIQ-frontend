@@ -62,9 +62,12 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   const keep = page.getByRole("button", { name: "Manter as duas" });
   if (await keep.isVisible()) await keep.click();
   await page.getByLabel("Total da nota").fill("18,17");
-  await page.getByRole("button", { name: "Guardar", exact: true }).click();
+  const reviewUrl = page.url();
+  await page.getByRole("button", { name: "Guardar e rever depois", exact: true }).click();
+  await expect(page).toHaveURL(/\/compras$/); // «rever depois» goes back to the list; the purchase is still there to confirm
+  await page.goto(reviewUrl);
   await expect(page.getByText("Reveja antes de confirmar")).toBeHidden({ timeout: 15_000 });
-  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
+  await page.getByRole("button", { name: "Confirmar talão", exact: true }).click();
   await expect(page.getByText("Confirmada por si", { exact: false })).toBeVisible();
 
   // F-05 / F-27: a photo goes through local OCR (PaddleOCR in the worker). Until the description check exists every
@@ -73,7 +76,7 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   await expect(page.getByText("Reveja antes de confirmar")).toBeVisible({ timeout: 120_000 });
   await expect(page.getByText(/lida a partir de uma imagem/)).toBeVisible();
   await expect(page.getByText(/IOGURTE NATURAL/)).toBeVisible();
-  await page.getByRole("button", { name: "Confirmar", exact: true }).click();
+  await page.getByRole("button", { name: "Confirmar talão", exact: true }).click();
   await expect(page.getByText("Confirmada por si", { exact: false })).toBeVisible();
 
   // F-18 / F-19: September 2026 dashboard, then filtered by Lidl.
