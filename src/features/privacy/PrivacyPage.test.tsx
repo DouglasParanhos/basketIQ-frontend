@@ -31,7 +31,7 @@ function pending(user: typeof me = { ...me, privacy_accepted_at: null, privacy_v
 }
 
 describe("Política de privacidade (approved design)", () => {
-  it("has the title, the summary with two ticks and the five sections of the full policy, all closed", async () => {
+  it("has the title, the summary with three ticks and the five sections of the full policy, all closed", async () => {
     pending();
     renderRoutes(routes, "/privacidade");
     expect(await screen.findByRole("heading", { level: 1, name: "Política de privacidade" })).toBeInTheDocument();
@@ -39,16 +39,17 @@ describe("Política de privacidade (approved design)", () => {
     expect(within(summary).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
       "Guardamos o seu nome, o e-mail e os dados dos seus talões.",
       "Usamos só para lhe mostrar as suas compras. Não vendemos nem partilhamos.",
+      "Os ficheiros originais são apagados 30 dias depois de confirmar o talão. Pode apagar tudo quando quiser.",
     ]);
     const titles = ["Que dados guardamos", "Para que servem", "Onde são processados os talões", "Durante quanto tempo", "Os seus direitos"];
     for (const title of titles) expect(screen.getByRole("button", { name: title })).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("does not say the originals go «ao fim de 30 dias»: that is only true after the receipt is confirmed", async () => {
+  it("counts the 30 days from the confirmation of the receipt, not «ao fim de 30 dias»", async () => {
     pending();
     renderRoutes(routes, "/privacidade");
     await screen.findByRole("heading", { level: 1, name: "Política de privacidade" });
-    expect(within(screen.getByRole("region", { name: "EM RESUMO" })).queryByText(/30 dias/)).toBeNull();
+    expect(within(screen.getByRole("region", { name: "EM RESUMO" })).queryByText(/ao fim de 30 dias/)).toBeNull();
     await userEvent.setup().click(screen.getByRole("button", { name: "Durante quanto tempo" }));
     expect(screen.getByText(/30 dias depois de confirmar a compra/)).toBeVisible();
   });

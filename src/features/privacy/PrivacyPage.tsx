@@ -6,10 +6,12 @@ import { api, unwrap } from "../../api/client";
 import { Button, Notice } from "../../components/ui";
 import { useLogout, useMe } from "../auth/session";
 
-// The three-point summary of the design says a third thing («Os ficheiros originais são apagados ao fim de 30 dias»),
-// left out on purpose: the backend erases an original 30 days after the receipt is confirmed, and one that is never
-// confirmed keeps it, so «ao fim de 30 dias» is not true for every receipt. The first two were checked against the backend.
-const SUMMARY = ["Guardamos o seu nome, o e-mail e os dados dos seus talões.", "Usamos só para lhe mostrar as suas compras. Não vendemos nem partilhamos."];
+// The third line says «depois de confirmar o talão», not «ao fim de 30 dias» as in the canvas: the backend only schedules the erasure in `mark_confirmed`.
+const SUMMARY = [
+  "Guardamos o seu nome, o e-mail e os dados dos seus talões.",
+  "Usamos só para lhe mostrar as suas compras. Não vendemos nem partilhamos.",
+  "Os ficheiros originais são apagados 30 dias depois de confirmar o talão. Pode apagar tudo quando quiser.",
+];
 
 // The full policy: the text that was already here (the owner writes the final text), under the titles of the design.
 const SECTIONS: { title: string; body: string }[] = [
