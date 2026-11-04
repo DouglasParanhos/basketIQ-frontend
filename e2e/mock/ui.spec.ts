@@ -296,9 +296,9 @@ test.describe("flows with a fake API", () => {
   test("F-12: low confidence shown with words and a marker, not colour alone", async ({ page }) => {
     await fakeApi(page);
     await page.goto("/compras/r1");
-    const banana = page.getByRole("button", { name: /BANANA/ });
+    const banana = page.getByRole("listitem").filter({ hasText: "BANANA" });
     await expect(banana.getByText("Verificar quantidade")).toBeVisible();
-    await expect(page.getByText(/Diferença de/)).toBeVisible();
+    await expect(page.getByText(/A soma das linhas \(.*não coincide com o total do talão/)).toBeVisible();
   });
 
   test("session loss sends the person to sign-in", async ({ page }) => {
@@ -1068,7 +1068,7 @@ test.describe("review: the foot with the three actions and the undo of a price",
     await fakeApi(page);
     await page.goto("/compras/r1");
     await page.getByRole("button", { name: /LEITE MEIO GORDO/ }).click();
-    const total = page.getByLabel("Total da linha (€)");
+    const total = page.getByLabel("Preço total (€)");
     await total.fill("1,90");
     await total.blur();
     await expect(page.getByText("Preço alterado de 1,70 para 1,90")).toBeVisible();
@@ -1121,13 +1121,27 @@ test.describe("review: the foot with the three actions and the undo of a price",
       await noA11yViolations(page);
     });
 
+    test(`the card and the panel of a line, with the date and «Mais opções» open, have no axe violations (${scheme}, 320px)`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.setViewportSize({ width: 320, height: 568 });
+      await fakeApi(page);
+      await page.goto("/compras/r1");
+      await page.getByRole("button", { name: "Editar data e hora" }).click();
+      await page.getByRole("button", { name: "Editar total da nota" }).click();
+      await page.getByRole("button", { name: /Editar LEITE MEIO GORDO/ }).click();
+      await page.getByRole("button", { name: "Mais opções" }).click();
+      await expect(page.getByLabel("Preço unitário (€)")).toBeVisible();
+      await noHorizontalScroll(page);
+      await noA11yViolations(page);
+    });
+
     test(`leaving with unsaved edits asks first and keeps the edit, without axe violations (${scheme})`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme });
       await page.setViewportSize({ width: 320, height: 568 });
       await fakeApi(page);
       await page.goto("/compras/r1");
       await page.getByRole("button", { name: /LEITE MEIO GORDO/ }).click();
-      await page.getByLabel("Total da linha (€)").fill("1,90");
+      await page.getByLabel("Preço total (€)").fill("1,90");
       await page.getByRole("link", { name: "Voltar às compras" }).click();
       await expect(page.getByText("Sair sem guardar as alterações?")).toBeVisible();
       await expect(page).toHaveURL(/\/compras\/r1$/);
@@ -1135,7 +1149,7 @@ test.describe("review: the foot with the three actions and the undo of a price",
       await noHorizontalScroll(page);
       await noA11yViolations(page);
       await page.getByRole("button", { name: "Continuar a editar" }).click();
-      await expect(page.getByLabel("Total da linha (€)")).toHaveValue("1,90");
+      await expect(page.getByLabel("Preço total (€)")).toHaveValue("1,90");
     });
   }
 });

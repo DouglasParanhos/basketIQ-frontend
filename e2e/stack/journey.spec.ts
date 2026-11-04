@@ -57,11 +57,12 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   // F-15b / F-12 / F-13: totals do not reconcile → review; fix the total and confirm.
   await upload(page, doc("pingo_doce_mismatch"));
   await expect(page.getByText("Reveja antes de confirmar")).toBeVisible({ timeout: 60_000 });
-  await expect(page.getByText("A soma das linhas não coincide com o total da nota.")).toBeVisible();
+  await expect(page.getByText(/A soma das linhas \(.*não coincide com o total do talão/)).toBeVisible();
   // It is the same purchase as the first one (same shop, minute and lines): keep both on purpose.
   const keep = page.getByRole("button", { name: "Manter as duas" });
   if (await keep.isVisible()) await keep.click();
-  await page.getByLabel("Total da nota").fill("18,17");
+  await page.getByRole("button", { name: "Editar total da nota" }).click();
+  await page.getByRole("textbox", { name: "Total da nota" }).fill("18,17");
   const reviewUrl = page.url();
   await page.getByRole("button", { name: "Guardar e rever depois", exact: true }).click();
   await expect(page).toHaveURL(/\/compras$/); // «rever depois» goes back to the list; the purchase is still there to confirm

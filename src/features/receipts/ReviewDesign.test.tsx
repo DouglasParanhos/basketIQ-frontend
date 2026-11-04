@@ -20,11 +20,13 @@ const open = () =>
 /** The foot of the review: the sentence above the three actions. */
 const foot = () => screen.getByText("Ao confirmar, os valores entram nos seus gastos.").parentElement as HTMLElement;
 
-/** Opens the line «LEITE MEIO GORDO» (85 cents each, 1,70 in all) and types a new total, then leaves the field. */
+/** Opens the line «LEITE MEIO GORDO» (85 cents each, 1,70 in all) with its pencil and types a new total, then leaves the field. */
 async function correctTotal(user: ReturnType<typeof userEvent.setup>, value: string) {
-  const row = await screen.findByRole("button", { name: /leite meio gordo/i });
-  if (row.getAttribute("aria-expanded") !== "true") await user.click(row);
-  const total = screen.getByLabelText("Total da linha (€)");
+  const pencil = () => screen.queryByRole("button", { name: /editar leite meio gordo/i });
+  // The pencil is there until the panel is open (a second correction finds it open already).
+  await waitFor(() => expect(pencil() ?? screen.queryByLabelText("Preço total (€)")).not.toBeNull());
+  if (pencil()) await user.click(pencil()!);
+  const total = screen.getByLabelText("Preço total (€)");
   await user.clear(total);
   await user.type(total, value);
   await user.tab();
@@ -188,11 +190,29 @@ describe("Rever talão (approved design)", () => {
       open();
       await correctTotal(user, "1,90");
       await user.click(screen.getByRole("button", { name: "Desfazer" }));
-      expect(screen.getByLabelText("Total da linha (€)")).toHaveValue("1,70");
+      expect(screen.getByLabelText("Preço total (€)")).toHaveValue("1,70");
       expect(screen.queryByText(/Preço alterado de/)).toBeNull();
+      await user.selectOptions(screen.getByLabelText("Mercado"), "LIDL"); // something else to save, so a PATCH goes out
       await user.click(screen.getByRole("button", { name: "Guardar e rever depois" }));
       await waitFor(() => expect(patch).not.toBeNull());
       expect(patch!.lines[0]).toEqual({ id: "l1" });
+    });
+
+    it("«Desfazer» takes the purchase back to how it was read: leaving asks nothing and nothing is sent", async () => {
+      let patches = 0;
+      server.use(
+        http.patch(`${API}/v1/receipts/r1`, () => {
+          patches += 1;
+          return HttpResponse.json(receipt({ version: 4 }));
+        }),
+      );
+      const user = userEvent.setup();
+      open();
+      await correctTotal(user, "1,90");
+      await user.click(screen.getByRole("button", { name: "Desfazer" }));
+      await user.click(screen.getByRole("link", { name: "Voltar às compras" }));
+      expect(await screen.findByText("lista")).toBeInTheDocument();
+      expect(patches).toBe(0);
     });
 
     it("does not appear when the price is the same, or is not a valid value", async () => {
@@ -208,6 +228,7 @@ describe("Rever talão (approved design)", () => {
       const user = userEvent.setup();
       open();
       await correctTotal(user, "1,90");
+      await user.click(screen.getByRole("button", { name: "Mais opções" }));
       await user.click(screen.getByRole("button", { name: /remover linha/i }));
       expect(screen.queryByText(/Preço alterado de/)).toBeNull();
     });
@@ -240,7 +261,7 @@ describe("Rever talão: sair com alterações por guardar", () => {
     expect(screen.queryByText(/Preço alterado de/)).toBeNull(); // the undo bar gives way to the question
     await user.click(screen.getByRole("button", { name: "Continuar a editar" }));
     expect(screen.queryByText("Sair sem guardar as alterações?")).toBeNull();
-    expect(screen.getByLabelText("Total da linha (€)")).toHaveValue("1,90");
+    expect(screen.getByLabelText("Preço total (€)")).toHaveValue("1,90");
   });
 
   it("«Sair sem guardar» leaves, and nothing is sent", async () => {
