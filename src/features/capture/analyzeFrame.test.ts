@@ -130,4 +130,9 @@ describe("stabilizer", () => {
     );
     expect(shown).toEqual(["too_far", "too_far", "too_far", "too_far", "too_far", "too_close", "too_close", "too_close", "too_close", "ok"]);
   });
+
+  it("an «ok» from the first frame also holds before it is shown, since it takes the photo", () => {
+    const next = stabilizer();
+    expect(["ok", "ok", "ok", "ok"].map((h) => next(h as Parameters<typeof next>[0]))).toEqual([null, null, null, "ok"]);
+  });
 });

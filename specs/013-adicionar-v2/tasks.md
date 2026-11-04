@@ -92,6 +92,8 @@ description: "Tarefas da spec 013: Adicionar v2 (talão comprido, várias partes
 
 > **2026-11-01:** a US4 passou a «Câmara própria com orientação ao vivo» e a US5 a «Verificação de cada foto antes do envio» (spec). Implementadas em `src/features/capture/`, `AddPage.tsx`, `PartCard.tsx` e `photos.ts`; testes `F-203`/`F-204` em `AddPage.parts.test.tsx`, `src/features/capture/*.test.ts(x)` e `e2e/mock/camera.spec.ts`. O spike (T023) deixa de ser preciso.
 
+- [X] T032 [US4] (2026-11-03; `F-203`) Captura automática na câmara própria (US4.3, US4.9, FR-017): em `src/features/capture/CameraCapture.tsx` o «ok» estabilizado chama o disparo do obturador, uma vez por abertura (em `hints.ts` o `stabilizer` passa a exigir os 4 frames também a um «ok» no primeiro frame); numa parte seguinte só depois de a imagem deixar de estar «ok»; o obturador fica. Texto do `ok`: «Talão detetado · segure firme». Testes a falhar primeiro em `CameraCapture.test.tsx` e `e2e/mock/camera.spec.ts`
+
 ## Phase 7: User Story 5 — Spike da câmara própria (P3) — ADIADA
 
 **Não implementar** até a Liz o pedir. É um documento, não código.

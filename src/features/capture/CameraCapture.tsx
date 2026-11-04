@@ -1,5 +1,5 @@
 import { Camera, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { Button } from "../../components/ui";
 import { nextPartText, type Part } from "../upload/photos";
 import { canvasToJpeg } from "../upload/renderEdit";
@@ -8,9 +8,9 @@ import { useCameraStream, useFrameGuidance } from "./useCamera";
 
 const ANNOUNCE_EVERY_MS = 2500; // a screen reader hears a change of advice at most this often
 
-/** The in-app camera, for one photo: live advice on framing, distance, background, light and focus. The
- * shutter always works: the advice never blocks a photo. After it the parts screen takes over, where
- * «Adicionar outra parte» opens the camera again for the next part (spec 013, US2). `before` are the parts
+/** The in-app camera, for one photo: live advice on framing, distance, background, light and focus. When the
+ * advice turns «ok» the photo is taken by itself (see `armed`). The shutter always works: the advice never
+ * blocks a photo. After it the parts screen takes over, where «Adicionar outra parte» opens the camera again for the next part (spec 013, US2). `before` are the parts
  * before the one being taken: the last one is shown as the lines already taken. */
 export function CameraCapture({
   before,
@@ -67,6 +67,22 @@ export function CameraCapture({
         setShooting(false);
       });
   }
+
+  // Whether an «ok» takes the photo by itself: once per opening, and for a next part only after other advice
+  // (the person moved), since on opening the camera still sees the part just taken.
+  const armed = useRef(!part);
+  const shootByItself = useEffectEvent(shoot);
+  useEffect(() => {
+    if (hint !== "ok") {
+      if (hint) armed.current = true;
+      return;
+    }
+    if (armed.current) {
+      armed.current = false;
+      shootByItself();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- an effect event is never a dependency (plugin 5 predates them)
+  }, [hint]);
 
   const good = hint === "ok";
   return (
