@@ -35,6 +35,11 @@ tinha passado): a correção não está medida sob carga.
 O `Timeout calling "fetch"` do worker (processo principal do vitest sem responder sob carga extrema) é outro limite,
 interno ao vitest, e não é coberto por estes valores. Está comentado em `vitest.config.ts`.
 
+## Pull request
+
+#7, em rascunho, `feat/design-ux-v2` → `main`: https://github.com/DouglasParanhos/basketIQ-frontend/pull/7
+(não marcado como pronto, sem revisores, sem labels; o PR #5 do Douglas e o #6 não foram tocados; o #6 já estava fundido na `main`).
+
 ## Estado dos passos
 
 | Passo | Estado | Commit |
