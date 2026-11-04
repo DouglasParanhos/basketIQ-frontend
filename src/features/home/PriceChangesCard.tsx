@@ -2,7 +2,7 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { useId } from "react";
 import { MarketTile } from "../../components/MarketBadge";
 import { merchantName } from "../../lib/merchants";
-import { formatCents } from "../../lib/format";
+import { formatCents, formatPercent } from "../../lib/format";
 import type { PriceChange } from "./exampleData";
 
 /**
@@ -42,7 +42,7 @@ export function PriceChangesCard({ changes }: { changes: PriceChange[] }) {
           );
         })}
       </ul>
-      <p className="text-[0.6875rem] leading-snug text-ink-soft">Só mostramos mudanças de 15 % ou mais e de 0,20 € ou mais.</p>
+      <p className="text-[0.6875rem] leading-snug text-ink-soft">Só mostramos mudanças de {formatPercent(15)} ou mais e de {formatCents(20)} ou mais.</p>
     </section>
   );
 }

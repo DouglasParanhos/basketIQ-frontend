@@ -3,7 +3,7 @@ import type { Dispatch } from "react";
 import { ChoiceCard, Tick } from "../../components/Choice";
 import { MarketTile } from "../../components/MarketBadge";
 import { Button, Notice, Spinner } from "../../components/ui";
-import { formatWholeEuros } from "../../lib/format";
+import { formatWholeEuros, NO_AMOUNT } from "../../lib/format";
 import { GOAL_OPTIONS } from "../profile/goals";
 import { useMerchants } from "../profile/useProfile";
 import {
@@ -122,7 +122,7 @@ export function GoalAmountStep({ state, dispatch }: { state: OnboardingState; di
   return (
     <div className="mt-8 flex flex-col items-center text-center">
       <p data-testid="goal-value" className={`font-display text-[clamp(3rem,20vw,5rem)] font-semibold leading-none ${unknown || euros === null ? "text-ink-soft" : ""}`}>
-        {unknown ? "Ainda não sei" : euros === null ? "— €" : formatWholeEuros(euros)}
+        {unknown ? "Ainda não sei" : euros === null ? NO_AMOUNT : formatWholeEuros(euros)}
       </p>
       <p className="mt-1 text-ink-soft">{unknown ? "Pode definir a sua meta pessoal mais tarde, nas Definições." : "por mês"}</p>
       <div className={`mt-10 w-full ${unknown ? "opacity-[.35]" : ""}`}>

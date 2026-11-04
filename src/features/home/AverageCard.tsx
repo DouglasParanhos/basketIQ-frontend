@@ -1,6 +1,6 @@
 import type { Schemas } from "../../api/client";
 import { SMALL_CAPS } from "../../components/ui";
-import { formatCents } from "../../lib/format";
+import { formatCents, formatPercent, NO_AMOUNT } from "../../lib/format";
 
 type Overview = Schemas["OverviewOut"];
 export interface AverageView {
@@ -15,15 +15,15 @@ export interface AverageView {
 /** The tone and the words come from `average_trend` (the backend applies the ±5 % threshold); the client only shows the absolute value. */
 export function averageView(o: Overview): AverageView {
   if (o.monthly_average_cents === null) {
-    return { empty: true, value: "— €", text: `Aparece com ${o.average_min_months} meses de histórico`, progress: `${o.average_months}/${o.average_min_months} meses` };
+    return { empty: true, value: NO_AMOUNT, text: `Aparece com ${o.average_min_months} meses de histórico`, progress: `${o.average_months}/${o.average_min_months} meses` };
   }
   const value = formatCents(o.monthly_average_cents);
   if (o.average_trend === null || o.recent_vs_average_pct === null) {
     return { empty: false, value, text: "A tendência aparece com mais um mês completo de compras.", progress: null };
   }
   const size = Math.abs(o.recent_vs_average_pct);
-  if (o.average_trend === "below") return { empty: false, value, text: `Últimos 2 meses: ${size} % abaixo da média`, progress: null };
-  if (o.average_trend === "above") return { empty: false, value, text: `Últimos 2 meses: ${size} % acima da média`, progress: null };
+  if (o.average_trend === "below") return { empty: false, value, text: `Últimos 2 meses: ${formatPercent(size)} abaixo da média`, progress: null };
+  if (o.average_trend === "above") return { empty: false, value, text: `Últimos 2 meses: ${formatPercent(size)} acima da média`, progress: null };
   return { empty: false, value, text: "Últimos 2 meses: na média", progress: null };
 }
 

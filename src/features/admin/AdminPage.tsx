@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api, unwrap, type JobStatus, type Merchant, type Schemas } from "../../api/client";
 import { Button, Field, Notice, PageHeader, Select, Spinner, Surface } from "../../components/ui";
-import { formatCents, formatDateTime } from "../../lib/format";
+import { formatCents, formatDateTime, formatPercent } from "../../lib/format";
 import { merchantName } from "../../lib/merchants";
 import { lisbonToday } from "../../lib/period";
 
@@ -45,7 +45,7 @@ export default function AdminPage() {
 }
 
 function pct(v: unknown): string {
-  return typeof v === "number" ? `${v.toLocaleString("pt-PT")} %` : "—";
+  return typeof v === "number" ? formatPercent(v) : "—";
 }
 
 function Metrics() {

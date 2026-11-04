@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { overviewEmpty, overviewGreen, profile } from "../../test/fixtures";
 import { renderRoutes } from "../../test/render";
 import { serveOverview, serveProfile, server } from "../../test/server";
+import { nb } from "../../test/text";
 import { HomeRoute } from "./HomeRoute";
 
 const routes = [
@@ -51,7 +52,7 @@ describe("Início com dados de exemplo (invented figures, only in the client)", 
 
   it("shows the cards of the design with Continente and Auchan side by side, and a price change that the real Início does not have", async () => {
     home("/?exemplo=1");
-    await screen.findByRole("img", { name: "Anel dourado, 62 % da meta usada" });
+    await screen.findByRole("img", { name: nb("Anel dourado, 62 % da meta usada") });
     const regions = screen.getAllByRole("region").map((r) => r.getAttribute("aria-label") ?? within(r).getByRole("heading").textContent);
     expect(regions).toEqual(["Meta pessoal do mês", "Média mensal", "Compras no mês", "Por pessoa no mês", "Gasto por semana", "Onde gasta mais", "O que mudou de preço", "Últimas compras"]);
     const stores = within(screen.getByRole("region", { name: "Onde gasta mais" }));

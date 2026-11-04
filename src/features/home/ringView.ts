@@ -1,5 +1,5 @@
 import type { Schemas } from "../../api/client";
-import { formatCents } from "../../lib/format";
+import { formatCents, formatPercent } from "../../lib/format";
 
 type Overview = Schemas["OverviewOut"];
 
@@ -38,11 +38,11 @@ export function ringView(overview: Overview, isCurrentMonth: boolean): RingView 
   const balance = overview.goal_cents - overview.spent_cents;
   const above = balance < 0;
   const filled = Math.round((Math.min(overview.goal_pct, 100) / 100) * PERIMETER);
-  const goal = `${overview.goal_pct} % da meta${isCurrentMonth ? "" : " atual"}`;
+  const goal = `${formatPercent(overview.goal_pct)} da meta${isCurrentMonth ? "" : " atual"}`;
   return {
     tone: above ? "alert" : tone,
     text: above ? `Acima da meta · ${formatCents(-balance)} além da meta` : `${label} · saldo da meta: ${formatCents(balance)}`,
-    percentText: `${overview.goal_pct} %`,
+    percentText: formatPercent(overview.goal_pct),
     dash: `${filled} ${PERIMETER}`,
     ariaLabel: above ? `Anel completo e vermelho, meta ultrapassada, ${goal}` : `Anel ${colour}, ${goal} usada`,
     goalNote,

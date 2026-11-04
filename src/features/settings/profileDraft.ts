@@ -1,5 +1,5 @@
 import type { Schemas } from "../../api/client";
-import { centsToInput, parseEurToCents } from "../../lib/format";
+import { centsToInput, formatWholeEuros, parseEurToCents } from "../../lib/format";
 import { GOAL_OPTIONS } from "../profile/goals";
 import { GOAL_MAX_EUROS, GOAL_MIN_EUROS, PEOPLE_MAX, PEOPLE_MIN, type Goal } from "../onboarding/state";
 
@@ -15,7 +15,7 @@ export interface ProfileDraft {
   goalText: string;
 }
 
-const GOAL_RANGE_MESSAGE = `A meta tem de estar entre ${GOAL_MIN_EUROS} € e ${GOAL_MAX_EUROS} €.`;
+const GOAL_RANGE_MESSAGE = `A meta tem de estar entre ${formatWholeEuros(GOAL_MIN_EUROS)} e ${formatWholeEuros(GOAL_MAX_EUROS)}.`;
 
 export function initialDraft(saved: Profile): ProfileDraft {
   return {

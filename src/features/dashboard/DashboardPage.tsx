@@ -4,7 +4,7 @@ import { Link, useSearchParams } from "react-router";
 import { api, unwrap, type Merchant, type Schemas } from "../../api/client";
 import { DataTable, SpendBars, type Point } from "../../components/charts";
 import { LinkButton, Notice, Select, Spinner } from "../../components/ui";
-import { formatCents, formatMonth, formatVariation } from "../../lib/format";
+import { formatCents, formatMonth, formatPercent, formatVariation } from "../../lib/format";
 import { MERCHANT_OPTIONS, merchantName, merchantStyle } from "../../lib/merchants";
 import { describePeriod, lisbonToday, periodFor, type Period, type PeriodKind } from "../../lib/period";
 import { PeriodPicker } from "./PeriodPicker";
@@ -244,7 +244,7 @@ function SummaryView({
                   <div className="h-2.5 rounded-full" style={{ width: `${Math.max(m.share_pct, 1)}%`, backgroundColor: merchantStyle(m.merchant).bar }} />
                 </div>
                 <span>
-                  {formatCents(m.spent_cents)} <span className="text-ink-soft">({m.share_pct.toLocaleString("pt-PT")} %)</span>
+                  {formatCents(m.spent_cents)} <span className="text-ink-soft">({formatPercent(m.share_pct)})</span>
                 </span>
               </div>
               <p className="mt-0.5 text-xs text-ink-soft">

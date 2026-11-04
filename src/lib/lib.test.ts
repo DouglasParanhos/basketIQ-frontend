@@ -1,7 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { lisbonIso, lisbonParts, splitLine, toDraft, toPatch, setField } from "../features/receipts/draft";
 import { line } from "../test/fixtures";
-import { centsToInput, formatAmount, formatQuantity, formatWholeEuros, parseEurToCents, parseQuantity } from "./format";
+import {
+  centsToInput,
+  formatAmount,
+  formatCents,
+  formatPercent,
+  formatQuantity,
+  formatVariation,
+  formatWholeEuros,
+  NBSP,
+  NO_AMOUNT,
+  parseEurToCents,
+  parseQuantity,
+} from "./format";
 import { describePeriod, periodFor, shiftPeriod } from "./period";
 import { effectiveType, validateFile } from "./upload";
 
@@ -37,6 +49,26 @@ describe("whole euros (F-113)", () => {
     expect(plain(300)).toBe("300 €");
     expect(plain(50)).toBe("50 €");
     expect(plain(800)).toBe("800 €");
+  });
+});
+
+describe("percentages and amounts: the space before «%» and «€» does not break the line", () => {
+  it("«38 %» has U+00A0 between the figure and the sign, the same as the «€» of Intl", () => {
+    expect(NBSP.charCodeAt(0)).toBe(160); // U+00A0, the one Intl puts before «€»
+    expect(formatCents(100).charCodeAt(4)).toBe(160);
+    expect(formatPercent(38)).toBe(`38${NBSP}%`);
+    expect(formatPercent(12.5)).toBe(`12,5${NBSP}%`);
+    expect(formatCents(2275)).toBe(`22,75${NBSP}€`);
+  });
+
+  it("has its own decimals and sign, as the variation of the dashboard needs", () => {
+    expect(formatVariation(7.25)).toBe(`+7,3${NBSP}%`);
+    expect(formatVariation(-3)).toBe(`-3${NBSP}%`);
+    expect(formatVariation(null)).toBeNull();
+  });
+
+  it("the figure of an unknown amount is the same «— €»", () => {
+    expect(NO_AMOUNT).toBe(`—${NBSP}€`);
   });
 });
 

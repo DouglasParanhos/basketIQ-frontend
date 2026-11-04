@@ -9,12 +9,25 @@ const dateTimeFmt = new Intl.DateTimeFormat("pt-PT", {
   timeZone: "Europe/Lisbon",
 });
 const monthFmt = new Intl.DateTimeFormat("pt-PT", { month: "long", year: "numeric", timeZone: "UTC" });
-const pct = new Intl.NumberFormat("pt-PT", { maximumFractionDigits: 1, signDisplay: "always" });
 
 export function formatCents(cents: number | null | undefined): string {
   if (cents === null || cents === undefined) return "—";
   // Display only: values are stored and computed as integer cents.
   return money.format(cents / 100);
+}
+
+/** The space between a figure and «%» or «€» is the non-breaking one that Intl puts before «€», so a line never breaks between them. */
+export const NBSP = "\u00A0";
+
+/** The figure of an amount that is not known yet ("— €"). */
+export const NO_AMOUNT = `—${NBSP}€`;
+
+const percent = new Intl.NumberFormat("pt-PT");
+const variation = new Intl.NumberFormat("pt-PT", { maximumFractionDigits: 1, signDisplay: "always" });
+
+/** A percentage in the Portuguese convention: "38 %". */
+export function formatPercent(value: number): string {
+  return `${percent.format(value)}${NBSP}%`;
 }
 
 const UNIT_BASE: Record<string, string> = { kg: "/kg", l: "/l", un: "/un." };
@@ -86,5 +99,5 @@ export function formatMonth(period: string): string {
 }
 
 export function formatVariation(value: number | null | undefined): string | null {
-  return value === null || value === undefined ? null : `${pct.format(value)} %`;
+  return value === null || value === undefined ? null : `${variation.format(value)}${NBSP}%`;
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emptyProfile, profile } from "../../test/fixtures";
+import { nb } from "../../test/text";
 import { buildPatch, countChanges, goalCents, initialDraft, stepPeople, validate, type ProfileDraft } from "./profileDraft";
 
 const KNOWN = ["CONTINENTE", "PINGO_DOCE", "LIDL", "AUCHAN", "ALDI", "MERCADONA", "EL_CORTE_INGLES"];
@@ -33,7 +34,7 @@ describe("profile draft (spec 014)", () => {
     expect(goalCents(edit({ goalText: "" }))).toBeNull();
     expect(goalCents(edit({ goalText: "abc" }))).toBeUndefined();
     const message = "A meta tem de estar entre 50 € e 800 €.";
-    for (const text of ["30", "900", "49,99", "800,01", "abc"]) expect(validate(edit({ goalText: text })).goal, text).toBe(message);
+    for (const text of ["30", "900", "49,99", "800,01", "abc"]) expect(validate(edit({ goalText: text })).goal, text).toBe(nb(message));
     for (const text of ["50", "800", "450,50", ""]) expect(validate(edit({ goalText: text })).goal, text).toBeUndefined();
   });
 
