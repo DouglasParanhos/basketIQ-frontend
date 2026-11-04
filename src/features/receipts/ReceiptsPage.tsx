@@ -102,7 +102,8 @@ export function ReceiptsPage() {
       )}
 
       {/* One sheet of paper per month, with the month on the desk above it. */}
-      {groups.map((g) => {
+      {groups.map((g, index) => {
+        const first = index === 0;
         const summary = headerSummary(g, months.data, filter.id);
         return (
           <section key={g.key} aria-labelledby={`mes-${g.key}`} className="mb-3">
@@ -116,10 +117,14 @@ export function ReceiptsPage() {
               )}
             </h3>
             <div className="torn bg-paper px-4 pb-[30px] shadow-[0_1px_0_var(--color-muted-bar)] [--tear:10px]">
-              <p aria-hidden className="font-receipt pb-2 pt-3 text-center text-[11px] font-semibold tracking-[0.1em] text-ink-soft">
-                OS SEUS TALÕES
-              </p>
-              <ul className="flex flex-col">
+              {/* The label heads the first sheet only, as in the design; the others start with the first row. */}
+              {first && (
+                <p aria-hidden className="font-receipt border-b border-dashed border-muted-bar pb-2 pt-3 text-center text-[11px] font-semibold tracking-[0.1em] text-ink-soft">
+                  OS SEUS TALÕES
+                </p>
+              )}
+              {/* The dashed line is between neighbours (the first sheet's label draws the one above its first row). */}
+              <ul className={`flex flex-col divide-y divide-dashed divide-muted-bar ${first ? "" : "pt-1"}`}>
                 {g.rows.map((r) => (
                   <ReceiptRow key={r.id} receipt={r} />
                 ))}

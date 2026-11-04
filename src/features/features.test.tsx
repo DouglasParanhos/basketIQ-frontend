@@ -398,7 +398,7 @@ describe("dashboard (RF-09, RF-11)", () => {
   it("shows totals, variation, an accessible table and empty periods", async () => {
     renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
     expect(await screen.findByText("455,00 €")).toBeInTheDocument();
-    expect(screen.getByText(/\+12,5 % face a/)).toBeInTheDocument();
+    expect(screen.getByText(/^12,5 % acima de /)).toBeInTheDocument();
     expect(screen.getByText("Ver como tabela")).toBeInTheDocument();
     expect(screen.getByRole("table", { name: /gasto por período/i })).toBeInTheDocument();
   });

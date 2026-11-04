@@ -119,6 +119,11 @@ export function MerchantsStep({ state, dispatch }: { state: OnboardingState; dis
 export function GoalAmountStep({ state, dispatch }: { state: OnboardingState; dispatch: Dispatch<Action> }) {
   const unknown = state.goalUnknown;
   const euros = state.goalEuros;
+  // The bar starts at the minimum without an answer, and a range only reports a change when its value changes: lifting
+  // the finger from it, or pressing a key that would go below it, is the answer «€ 50».
+  const answerMinimum = () => {
+    if (euros === null) dispatch({ type: "goalEuros", euros: GOAL_MIN_EUROS });
+  };
   return (
     <div className="mt-8 flex flex-col items-center text-center">
       <p data-testid="goal-value" className={`font-display text-[clamp(3rem,20vw,5rem)] font-semibold leading-none ${unknown || euros === null ? "text-ink-soft" : ""}`}>
@@ -136,6 +141,8 @@ export function GoalAmountStep({ state, dispatch }: { state: OnboardingState; di
           aria-label="Meta pessoal mensal, em euros"
           aria-valuetext={euros === null ? "ainda sem valor" : `${euros} euros`}
           onChange={(e) => dispatch({ type: "goalEuros", euros: Number(e.target.value) })}
+          onPointerUp={answerMinimum}
+          onKeyDown={(e) => ["ArrowLeft", "ArrowDown", "Home"].includes(e.key) && answerMinimum()}
           className="h-11 w-full accent-brand"
         />
         <div className="flex justify-between text-sm text-ink-soft">

@@ -81,9 +81,10 @@ export default function ProductPage() {
       </section>
 
       <section aria-labelledby="mercados" className="rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
-        <h2 id="mercados" className="mb-2 font-bold">
-          Por mercado, nos seus talões
+        <h2 id="mercados" className="font-bold">
+          Preço médio que pagou, por mercado
         </h2>
+        <p className="mb-2 text-sm text-ink-soft">Nos seus talões</p>
         <ul className="flex flex-col">
           {a.by_merchant.map((m) => (
             <li key={m.merchant} className="flex items-center justify-between gap-3 border-t border-line py-2 text-sm">

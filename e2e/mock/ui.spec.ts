@@ -906,7 +906,9 @@ test.describe("talões (spec 012)", () => {
     // The torn edge is a mask (with the -webkit- prefix of Safari).
     expect(await sheet.evaluate((el) => getComputedStyle(el).maskImage || getComputedStyle(el).webkitMaskImage)).not.toBe("none");
     const row = sheet.getByRole("link").first();
-    await expect(row).toHaveCSS("border-top-style", "dashed");
+    // The dashed line is between neighbours: under the label and under every row but the last.
+    await expect(sheet.getByRole("listitem").first()).toHaveCSS("border-bottom-style", "dashed");
+    await expect(sheet.getByRole("listitem").last()).toHaveCSS("border-bottom-width", "0px");
     expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(64);
     await row.click();
     await expect(page).toHaveURL(/\/compras\/[^/?]+$/);
@@ -1008,7 +1010,7 @@ test.describe("talões (spec 012)", () => {
     await chicken.click();
     await expect(page.getByRole("heading", { level: 1, name: "Peito de frango" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Preço médio por kg" })).toContainText("Média ponderada pelas quantidades que comprou");
-    await expect(page.getByRole("heading", { name: "Por mercado, nos seus talões" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Preço médio que pagou, por mercado" })).toBeVisible();
     await expect(page.locator("main")).not.toContainText(/mais barato/i);
   });
 

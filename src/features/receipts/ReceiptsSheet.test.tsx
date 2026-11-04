@@ -39,8 +39,8 @@ describe("Compras on a desk, on sheets of paper (approved design)", () => {
     expect(sheet.contains(month)).toBe(false);
     const rows = within(sheet as HTMLElement).getAllByRole("link");
     expect(rows).toHaveLength(2);
+    expect(sheet.querySelector("ul")!.className).toContain("divide-dashed"); // the dashed line is between rows
     for (const row of rows) {
-      expect(row.className).toContain("border-dashed");
       expect(row.querySelector("svg")).not.toBeNull(); // the chevron
       expect(row.getAttribute("href")).toMatch(/^\/compras\/.+/);
     }
@@ -48,12 +48,14 @@ describe("Compras on a desk, on sheets of paper (approved design)", () => {
     expect(screen.getByRole("heading", { level: 3, name: /Setembro 2026/ }).closest("section")!.querySelector(".torn")).not.toBeNull();
   });
 
-  it("«OS SEUS TALÕES» is only a decoration on the sheet", async () => {
-    serveReceipts([october]);
-    open("/compras");
-    await screen.findByRole("heading", { level: 3, name: /Outubro 2026/ });
-    const label = screen.getByText("OS SEUS TALÕES");
+  it("«OS SEUS TALÕES» is only a decoration, and heads the first sheet only", async () => {
+    serveReceipts([[...october, september]]);
+    open("/compras?ano=2026");
+    const first = await screen.findByRole("heading", { level: 3, name: /Outubro 2026/ });
+    await screen.findByRole("heading", { level: 3, name: /Setembro 2026/ });
+    const label = screen.getByText("OS SEUS TALÕES"); // getByText throws if there is more than one
     expect(label.getAttribute("aria-hidden")).toBe("true");
+    expect(first.closest("section")!.contains(label)).toBe(true);
   });
 
   it("the switch «Ver como papel de talão» is gone: the list is the paper", async () => {

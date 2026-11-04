@@ -4,7 +4,7 @@ import { Link, useSearchParams } from "react-router";
 import { api, unwrap, type Merchant, type Schemas } from "../../api/client";
 import { DataTable, SpendBars, type Point } from "../../components/charts";
 import { LinkButton, Notice, Select, Spinner } from "../../components/ui";
-import { formatCents, formatMonth, formatPercent, formatVariation } from "../../lib/format";
+import { formatCents, formatMonth, formatPercent, formatVariationAgainst } from "../../lib/format";
 import { MERCHANT_OPTIONS, merchantName, merchantStyle } from "../../lib/merchants";
 import { describePeriod, lisbonToday, periodFor, type Period, type PeriodKind } from "../../lib/period";
 import { PeriodPicker } from "./PeriodPicker";
@@ -180,8 +180,8 @@ function SummaryView({
   onProduct: (id: string, name: string) => void;
   stale: boolean;
 }) {
-  const variation = formatVariation(s.cards.variation_pct.total_spent);
   const previousLabel = describePeriod({ kind: period.kind, from: s.cards.previous_period.from, to: s.cards.previous_period.to });
+  const variation = formatVariationAgainst(s.cards.variation_pct.total_spent, previousLabel);
   if (s.empty) {
     return (
       <Notice tone="info" title="Sem compras neste período" action={<LinkButton to="/adicionar" variant="secondary">Adicionar nota</LinkButton>}>
@@ -198,7 +198,7 @@ function SummaryView({
         </h2>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <p className="amount font-display text-[2.375rem] font-semibold leading-none">{formatCents(s.cards.total_spent_cents)}</p>
-          {variation && <span className="rounded-full bg-brand-soft px-3 py-1 text-[13px] font-bold text-brand-deep">{variation} face a {previousLabel}</span>}
+          {variation && <span className="rounded-full bg-brand-soft px-3 py-1 text-[13px] font-bold text-brand-deep">{variation}</span>}
         </div>
         <p className="mt-2 text-sm text-ink-soft first-letter:uppercase">
           {variation ? `${previousLabel}: ${formatCents(s.cards.previous_period.total_spent_cents)}` : `Sem compras em ${previousLabel} para comparar.`}

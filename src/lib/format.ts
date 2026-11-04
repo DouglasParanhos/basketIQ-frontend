@@ -23,7 +23,6 @@ export const NBSP = "\u00A0";
 export const NO_AMOUNT = `—${NBSP}€`;
 
 const percent = new Intl.NumberFormat("pt-PT");
-const variation = new Intl.NumberFormat("pt-PT", { maximumFractionDigits: 1, signDisplay: "always" });
 
 /** A percentage in the Portuguese convention: "38 %". */
 export function formatPercent(value: number): string {
@@ -98,6 +97,10 @@ export function formatMonth(period: string): string {
   return monthFmt.format(new Date(Date.UTC(y ?? 2000, (m ?? 1) - 1, 1)));
 }
 
-export function formatVariation(value: number | null | undefined): string | null {
-  return value === null || value === undefined ? null : `${variation.format(value)}${NBSP}%`;
+/** «23 % abaixo de setembro»: the direction is in words, never only a sign. Null when there is nothing to compare. */
+export function formatVariationAgainst(value: number | null | undefined, label: string): string | null {
+  if (value === null || value === undefined) return null;
+  const size = Math.round(Math.abs(value) * 10) / 10;
+  if (size === 0) return `igual a ${label}`;
+  return `${formatPercent(size)} ${value > 0 ? "acima" : "abaixo"} de ${label}`;
 }

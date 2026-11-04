@@ -7,7 +7,7 @@ import {
   formatCents,
   formatPercent,
   formatQuantity,
-  formatVariation,
+  formatVariationAgainst,
   formatWholeEuros,
   NBSP,
   NO_AMOUNT,
@@ -61,10 +61,12 @@ describe("percentages and amounts: the space before «%» and «€» does not b
     expect(formatCents(2275)).toBe(`22,75${NBSP}€`);
   });
 
-  it("has its own decimals and sign, as the variation of the dashboard needs", () => {
-    expect(formatVariation(7.25)).toBe(`+7,3${NBSP}%`);
-    expect(formatVariation(-3)).toBe(`-3${NBSP}%`);
-    expect(formatVariation(null)).toBeNull();
+  it("a variation says the direction in words, with one decimal at most", () => {
+    expect(formatVariationAgainst(-23, "setembro de 2026")).toBe(`23${NBSP}% abaixo de setembro de 2026`);
+    expect(formatVariationAgainst(7.25, "setembro")).toBe(`7,3${NBSP}% acima de setembro`);
+    expect(formatVariationAgainst(0, "setembro")).toBe("igual a setembro");
+    expect(formatVariationAgainst(-0.04, "setembro")).toBe("igual a setembro"); // rounds to zero: no «0 % abaixo»
+    expect(formatVariationAgainst(null, "setembro")).toBeNull();
   });
 
   it("the figure of an unknown amount is the same «— €»", () => {
