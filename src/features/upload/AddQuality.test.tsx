@@ -7,7 +7,7 @@ import { API, errorBody, server } from "../../test/server";
 import { jpg, serveUpload, stubPreviewUrls } from "../../test/upload";
 import { AddPage } from "./AddPage";
 
-vi.mock("./ImageEditor", async () => ({ ImageEditor: (await import("../../test/upload")).FakeImageEditor }));
+vi.mock("./QuadEditor", async () => ({ QuadEditor: (await import("../../test/upload")).FakeQuadEditor }));
 vi.mock("./renderEdit", () => ({ renderEdit: vi.fn(async () => new Blob(["x"])) }));
 
 stubPreviewUrls();

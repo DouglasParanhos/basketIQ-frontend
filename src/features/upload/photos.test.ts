@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { Quad } from "../capture/homography";
 import { NO_EDIT } from "./edit";
 import { add, canAdd, move, nextPartText, remove, replace, setEdit, toUploadFiles, type Part } from "./photos";
 
@@ -11,10 +12,17 @@ const part = (id: string, over: Partial<Part> = {}): Part => ({
   edit: NO_EDIT,
   warnings: [],
   whole: false,
+  quad: null,
   ...over,
 });
 const pdfPart = (id: string): Part => part(id, { file: new File(["%PDF"], `${id}.pdf`, { type: "application/pdf" }), type: "application/pdf", previewUrl: null });
 const ids = (parts: Part[]) => parts.map((p) => p.id);
+const MOVED: Quad = [
+  [0.1, 0.1],
+  [0.9, 0.1],
+  [0.9, 0.9],
+  [0.1, 0.9],
+];
 
 describe("parts of one receipt (spec 013)", () => {
   it("F-201: an empty list accepts a photo and a PDF", () => {
@@ -52,7 +60,7 @@ describe("parts of one receipt (spec 013)", () => {
   });
 
   it("F-201: setEdit replaces only the edit of that part", () => {
-    const edited = { ...NO_EDIT, zoom: 2 };
+    const edited = { ...NO_EDIT, corners: MOVED };
     const list = setEdit([part("a"), part("b")], "b", edited);
     expect(list[0]!.edit).toBe(NO_EDIT);
     expect(list[1]!.edit).toBe(edited);
@@ -76,8 +84,8 @@ describe("parts of one receipt (spec 013)", () => {
 
   it("F-201: an edited part without a preview (HEIC that did not convert) goes as the original; a render name becomes .jpg", async () => {
     const render = vi.fn(async () => new Blob(["x"]));
-    const noPreview = part("n", { file: new File(["n"], "n.heic", { type: "image/heic" }), type: "image/heic", previewUrl: null, edit: { ...NO_EDIT, zoom: 2 } });
-    const edited = part("e", { file: new File(["e"], "recibo.png", { type: "image/png" }), type: "image/png", edit: { ...NO_EDIT, zoom: 2 } });
+    const noPreview = part("n", { file: new File(["n"], "n.heic", { type: "image/heic" }), type: "image/heic", previewUrl: null, edit: { ...NO_EDIT, corners: MOVED } });
+    const edited = part("e", { file: new File(["e"], "recibo.png", { type: "image/png" }), type: "image/png", edit: { ...NO_EDIT, corners: MOVED } });
     const files = await toUploadFiles([noPreview, edited], render);
     expect(files[0]!.blob).toBe(noPreview.file);
     expect(files[1]!.filename).toBe("recibo.jpg");

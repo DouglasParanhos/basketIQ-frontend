@@ -8,11 +8,11 @@ import { jpg, pdf, serveUpload, stubPreviewUrls } from "../../test/upload";
 import { analyzeStill } from "../capture/analyzeStill";
 import { AddPage } from "./AddPage";
 
-vi.mock("./ImageEditor", async () => ({ ImageEditor: (await import("../../test/upload")).FakeImageEditor }));
+vi.mock("./QuadEditor", async () => ({ QuadEditor: (await import("../../test/upload")).FakeQuadEditor }));
 vi.mock("./renderEdit", () => ({ renderEdit: vi.fn(async (_url: string, edit: { rotation: number }) => new Blob([`editado:${edit.rotation}`])) }));
 vi.mock("heic2any", () => ({ default: vi.fn(async () => new Blob(["jpeg"])) }));
 // jsdom cannot decode images: the post-capture check is driven by each test (empty: nothing to say).
-vi.mock("../capture/analyzeStill", () => ({ analyzeStill: vi.fn(async () => ({ warnings: [], whole: false })) }));
+vi.mock("../capture/analyzeStill", () => ({ analyzeStill: vi.fn(async () => ({ warnings: [], whole: false, quad: null })) }));
 
 const { released } = stubPreviewUrls();
 
@@ -50,12 +50,12 @@ describe("Adicionar: the parts of one receipt (spec 013, US2)", () => {
     const partOf = (name: string) => screen.getByText(name).closest("li") as HTMLElement;
 
     await user.click(within(partOf("a.jpg")).getByRole("button", { name: /recortar/i }));
-    expect(screen.getByText(/rotação 0 zoom 1/)).toBeInTheDocument();
+    expect(screen.getByText(/rotação 0 cantos encontrados/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "rodar" }));
     await user.click(screen.getByRole("button", { name: "Concluir" }));
 
     await user.click(within(partOf("b.jpg")).getByRole("button", { name: /recortar/i }));
-    expect(screen.getByText(/rotação 0 zoom 1/)).toBeInTheDocument(); // another part: its own edit
+    expect(screen.getByText(/rotação 0 cantos encontrados/)).toBeInTheDocument(); // another part: its own edit
     await user.click(screen.getByRole("button", { name: "Concluir" }));
 
     await user.click(within(partOf("a.jpg")).getByRole("button", { name: /recortar/i }));
@@ -288,15 +288,31 @@ describe("Adicionar: the in-app camera and the check of each photo (spec 013, US
   });
 
   it("F-203: a photo that holds the whole receipt does not ask for the next part (another can still be added)", async () => {
-    vi.mocked(analyzeStill).mockResolvedValueOnce({ warnings: [], whole: true });
+    vi.mocked(analyzeStill).mockResolvedValueOnce({ warnings: [], whole: true, quad: null });
     await withParts(jpg("a.jpg"));
     expect(await screen.findByText("O talão parece completo nesta foto: pode enviar.")).toBeInTheDocument();
     expect(screen.queryByText(/Parte 2 · comece onde/)).not.toBeInTheDocument();
     expect(button("Adicionar outra parte")).toBeEnabled();
   });
 
+  it("F-228: a part with the receipt found shows it straightened; one without shows the photo", async () => {
+    const quad = [
+      [0.2, 0.1],
+      [0.8, 0.1],
+      [0.8, 0.9],
+      [0.2, 0.9],
+    ] as const;
+    vi.mocked(analyzeStill).mockResolvedValueOnce({ warnings: [], whole: false, quad });
+    await withParts(jpg("a.jpg"), jpg("b.jpg"));
+    const preview = (name: string) => screen.getByText(name).closest("li")!;
+    await waitFor(() => expect(preview("a.jpg").querySelector("canvas[data-flat]")).toBeInTheDocument());
+    expect(preview("a.jpg").querySelector("img")).toBeNull();
+    expect(preview("b.jpg").querySelector("canvas[data-flat]")).toBeNull();
+    expect(preview("b.jpg").querySelector("img")).toHaveAttribute("src", "blob:parte-2");
+  });
+
   it("F-204: a part the backend would warn about says so, never blocks, and is taken again in its place", async () => {
-    vi.mocked(analyzeStill).mockResolvedValueOnce({ warnings: ["too_far", "blurry"], whole: false });
+    vi.mocked(analyzeStill).mockResolvedValueOnce({ warnings: ["too_far", "blurry"], whole: false, quad: null });
     const { user } = await withParts(jpg("a.jpg"));
     await pick("input-image", jpg("b.jpg"));
     await screen.findByText("b.jpg");

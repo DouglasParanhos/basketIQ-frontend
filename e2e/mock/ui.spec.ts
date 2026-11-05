@@ -699,25 +699,34 @@ test.describe("adicionar (spec 013)", () => {
     expect(state.uploads).toMatchObject({ inits: 1, photos: 1, stored: 2, processed: 1, names: ["b.png", "a.png"] });
   });
 
-  test("F-201 (A5): the edit of a part is kept when switching parts, with the real editor, and the edited part is what is sent", async ({ page }) => {
+  test("F-201 (A5), F-229: a corner dragged in the real editor is kept when switching parts, and the edited part is what is sent", async ({ page }) => {
     const state = await fakeApi(page);
     await noCamera(page);
     await page.goto("/adicionar");
     await choose(page, "Escolher imagem", png("a.png"));
     await choose(page, "Adicionar outra parte", png("b.png"));
-    const zoom = page.getByRole("slider", { name: /zoom/i });
+    const reset = page.getByRole("button", { name: "Repor cantos" });
 
     await page.getByRole("button", { name: "Recortar a parte 1" }).click();
-    await zoom.fill("2");
-    await page.getByRole("button", { name: "Rodar para a direita" }).click();
+    await expect(reset).toBeDisabled(); // nothing moved yet
+    const corner = (await page.getByRole("button", { name: "Canto superior esquerdo" }).boundingBox())!;
+    const [x, y] = [corner.x + corner.width / 2, corner.y + corner.height / 2];
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + 30, y + 40, { steps: 5 });
+    await expect(page.locator("canvas[aria-hidden]")).toBeVisible(); // the loupe while dragging
+    await page.mouse.up();
+    await expect(page.locator("canvas[aria-hidden]")).toBeHidden();
+    await expect(reset).toBeEnabled();
+    await noA11yViolations(page);
     await page.getByRole("button", { name: "Concluir" }).click();
 
     await page.getByRole("button", { name: "Recortar a parte 2" }).click();
-    await expect(zoom).toHaveValue("1"); // another part has its own edit
+    await expect(reset).toBeDisabled(); // another part has its own edit
     await page.getByRole("button", { name: "Concluir" }).click();
 
     await page.getByRole("button", { name: "Recortar a parte 1" }).click();
-    await expect(zoom).toHaveValue("2"); // back to the first: the edit is still there
+    await expect(reset).toBeEnabled(); // back to the first: the edit is still there
     await page.getByRole("button", { name: "Concluir" }).click();
 
     await page.getByRole("button", { name: "Enviar talão · 2 fotos" }).click();

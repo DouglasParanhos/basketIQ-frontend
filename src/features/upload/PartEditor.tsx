@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Button } from "../../components/ui";
 import type { Edit } from "./edit";
-import { ImageEditor } from "./ImageEditor";
+import { QuadEditor } from "./QuadEditor";
 import type { Part } from "./photos";
 
 /** The editor of one part, in place of the list. The title takes the focus; «Concluir» goes back to the list with the edit kept. */
@@ -13,7 +13,7 @@ export function PartEditor({ part, index, onChange, onDone }: { part: Part; inde
       <h2 ref={title} tabIndex={-1} className="text-lg font-bold">
         Recortar a parte {index + 1}
       </h2>
-      {part.previewUrl && <ImageEditor src={part.previewUrl} value={part.edit} onChange={onChange} />}
+      {part.previewUrl && <QuadEditor src={part.previewUrl} value={part.edit} found={part.quad} onChange={onChange} />}
       <Button type="button" onClick={onDone}>
         Concluir
       </Button>

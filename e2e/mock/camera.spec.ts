@@ -29,6 +29,48 @@ test.describe("in-app camera (spec 013 US4)", () => {
     await expect(page.getByRole("button", { name: /fotografar de novo/i })).toBeHidden(); // the backend would not warn about it
   });
 
+  test("F-226: the outline follows the receipt the camera sees", async ({ page }) => {
+    const dialog = await openCamera(page, "far"); // a receipt, but too far: the photo is not taken by itself
+    await expect(advice(dialog)).toHaveText("Aproxime a câmara do talão");
+    const outline = dialog.locator("svg polygon");
+    await expect(outline).toBeVisible();
+    // The paper of the scene is at x 390..690, y 610..1310 of a 1080 × 1920 frame.
+    const corners = (await outline.getAttribute("points"))!.split(" ").map((p) => p.split(",").map(Number));
+    const expected = [
+      [390 / 1080, 610 / 1920],
+      [690 / 1080, 610 / 1920],
+      [690 / 1080, 1310 / 1920],
+      [390 / 1080, 1310 / 1920],
+    ];
+    corners.forEach(([x, y], i) => {
+      expect(Math.abs(x! - expected[i]![0]!)).toBeLessThan(0.01);
+      expect(Math.abs(y! - expected[i]![1]!)).toBeLessThan(0.01);
+    });
+  });
+
+  test("F-227: taking the photo cuts the receipt out before the camera closes", async ({ page }) => {
+    const dialog = await openCamera(page, "framed");
+    await expect(dialog.locator("canvas[data-cut]")).toBeVisible();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByText("parte-1.jpg")).toBeVisible();
+  });
+
+  test("F-227: with reduced motion the photo is taken without the cut", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    let cuts = 0;
+    await page.exposeFunction("sawCut", () => void cuts++);
+    await page.addInitScript(() =>
+      new MutationObserver(() => document.querySelector("canvas[data-cut]") && (window as unknown as { sawCut: () => void }).sawCut()).observe(document, {
+        childList: true,
+        subtree: true,
+      }),
+    );
+    const dialog = await openCamera(page, "framed");
+    await expect(dialog).toBeHidden();
+    await expect(page.getByText("parte-1.jpg")).toBeVisible();
+    expect(cuts).toBe(0);
+  });
+
   const ADVICE = {
     far: "Aproxime a câmara do talão",
     lightDesk: "Pouse o talão num fundo escuro: assim vemos onde acaba",

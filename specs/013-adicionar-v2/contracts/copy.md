@@ -41,6 +41,8 @@ Fonte: `Documentation/design-ux-v2/AdicionarV2.dc.html` com a tabela «protótip
 
 ## Editor de uma parte
 
+*Substituído pela spec 017 (2026-11-05): ver `../../017-camara-recorte/contracts/copy.md`.*
+
 | Onde | Texto |
 |---|---|
 | Título (`h2`) | Recortar a parte 2 |

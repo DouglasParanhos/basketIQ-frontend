@@ -7,6 +7,7 @@
  * the share of the brightest column, and the rows of those columns that are 20 % bright. The print is what
  * is clearly darker than the paper inside it.
  */
+import type { Quad } from "./homography";
 
 const MIN_PAPER_WIDTH = 600; // backend quality.MIN_PAPER_WIDTH: pixels the receipt must span in the photo
 export const ANALYSIS_SIDE = 1200; // backend quality: the blur check looks at a thumbnail of this size
@@ -15,8 +16,8 @@ const PAPER_DARK_MAX = 120; // live: paper (the bright part) no brighter than th
 const BLUR_VARIANCE_MIN = 60; // backend quality.BLUR_VARIANCE_MIN (Laplacian variance on the thumbnail)
 const PAPER_MIN_FILL = 0.5; // backend preprocess.PAPER_MIN_FILL
 const PAPER_MIN_ROW_FILL = 0.2; // backend preprocess.PAPER_MIN_ROW_FILL
-const PAPER_MIN_AREA = 0.02; // backend preprocess.PAPER_MIN_AREA
-const PAPER_MAX_AREA = 0.95; // backend preprocess.PAPER_MAX_AREA
+export const PAPER_MIN_AREA = 0.02; // backend preprocess.PAPER_MIN_AREA
+export const PAPER_MAX_AREA = 0.95; // backend preprocess.PAPER_MAX_AREA
 const INK_SHARE = 0.6; // print is darker than this share of the paper's mean grey
 const INK_MIN_COLUMN = 0.01; // a column with less print than this share of the paper height has none
 const EDGE_MARGIN = 0.015; // of the frame: paper this close to an edge touches it
@@ -49,7 +50,7 @@ export function toGray(rgba: Uint8ClampedArray, out?: Uint8Array): Uint8Array {
 }
 
 /** Otsu's threshold (backend `_otsu_threshold`), with the mean grey of the frame and of its bright part. */
-function levels(gray: Uint8Array): { threshold: number; mean: number; brightMean: number } {
+export function levels(gray: Uint8Array): { threshold: number; mean: number; brightMean: number } {
   const counts = new Float64Array(256);
   for (let i = 0; i < gray.length; i++) counts[gray[i]!]!++;
   let total = 0;
@@ -97,14 +98,14 @@ function laplacianVariance(gray: Uint8Array, w: number, h: number): number {
   return n ? squares / n - (sum / n) ** 2 : 0;
 }
 
-interface Box {
+export interface Box {
   left: number;
   top: number;
   right: number;
   bottom: number;
 }
 
-function paperBox(gray: Uint8Array, w: number, h: number, threshold: number): Box | null {
+export function paperBox(gray: Uint8Array, w: number, h: number, threshold: number): Box | null {
   const colFill = new Float64Array(w);
   let best = 0;
   for (let y = 0; y < h; y++) {
@@ -206,7 +207,7 @@ export function analyzeFrame(gray: Uint8Array, w: number, h: number, options: An
   return ordered(found);
 }
 
-export interface StillCheck {
+export interface PaperCheck {
   /** What the backend would warn about the photo (`too_dark`, `too_far`, `blurry`); empty when nothing. */
   warnings: Hint[];
   /** The whole receipt is in the photo: a plausible paper with print that touches none of the edges, so no
@@ -214,11 +215,17 @@ export interface StillCheck {
   whole: boolean;
 }
 
-export const NO_CHECK: StillCheck = { warnings: [], whole: false };
+/** A photo's check (`analyzeStill`): the paper check and the receipt's corners in the photo, as shares of it
+ * (see `paperQuad`); null without a receipt. */
+export interface StillCheck extends PaperCheck {
+  quad: Quad | null;
+}
+
+export const NO_CHECK: StillCheck = { warnings: [], whole: false, quad: null };
 
 /** The check of a photo already taken (or a screenshot, a scan) `w` × `h`: only what the backend measures,
  * and whether it holds the whole receipt. `minPaperFrac` as in AnalyzeOptions. */
-export function checkStill(gray: Uint8Array, w: number, h: number, minPaperFrac: number): StillCheck {
+export function checkStill(gray: Uint8Array, w: number, h: number, minPaperFrac: number): PaperCheck {
   const m = measure(gray, w, h);
   const found = new Set<Hint>();
   if (m.mean < DARK_MEAN_MAX) found.add("too_dark");
