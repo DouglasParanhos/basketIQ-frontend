@@ -5,11 +5,11 @@ import { Button, Notice } from "../../components/ui";
 import { invalidateReceiptData } from "./cache";
 import { FootQuestion } from "./FootQuestion";
 
-/** The confirmation of «Eliminar»: the same for the button at the foot of the review and for the one of «Ficheiro e dados». */
-export function DeleteReceiptNotice({ receiptId, onCancel }: { receiptId: string; onCancel: () => void }) {
+/** Delete the purchase and its file, then go to `to`. The edits of the review, if any, go with the purchase. */
+export function useDeleteReceipt(receiptId: string, to: string) {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const remove = useMutation({
+  return useMutation({
     mutationFn: async () => {
       const res = await api.DELETE("/v1/receipts/{receipt_id}", { params: { path: { receipt_id: receiptId } } });
       if (!res.response.ok) unwrap(res);
@@ -17,9 +17,14 @@ export function DeleteReceiptNotice({ receiptId, onCancel }: { receiptId: string
     onSuccess: () => {
       void invalidateReceiptData(qc);
       void qc.invalidateQueries({ queryKey: ["summary"] });
-      navigate("/compras", { replace: true, state: { discard: true } }); // the edits of the review, if any, go with the purchase
+      navigate(to, { replace: true, state: { discard: true } });
     },
   });
+}
+
+/** The confirmation of «Eliminar»: the same for the button at the foot of the review and for the one of «Ficheiro e dados». */
+export function DeleteReceiptNotice({ receiptId, onCancel }: { receiptId: string; onCancel: () => void }) {
+  const remove = useDeleteReceipt(receiptId, "/compras");
 
   return (
     <FootQuestion>

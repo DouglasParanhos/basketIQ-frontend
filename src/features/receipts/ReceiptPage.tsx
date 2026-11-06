@@ -8,7 +8,7 @@ import { formatAmount, formatCents, formatDate, formatDateTime, formatQuantity }
 import { MERCHANT_OPTIONS, merchantName } from "../../lib/merchants";
 import { EDITABLE, IN_PROGRESS } from "../../lib/status";
 import { invalidateReceiptData } from "./cache";
-import { DeleteReceiptNotice } from "./DeleteReceipt";
+import { DeleteReceiptNotice, useDeleteReceipt } from "./DeleteReceipt";
 import { ReviewEditor } from "./ReviewEditor";
 import { useOriginalViewer } from "./useOriginalViewer";
 
@@ -69,9 +69,14 @@ export function ReceiptPage() {
 /** Under review the editor is what shows, with «Eliminar talão» at its foot. */
 const inReview = (r: Receipt) => !IN_PROGRESS.has(r.status) && !r.error && EDITABLE.has(r.status);
 
+/** A photo whose products were not read well (F-230): another photo is asked for first. The reason goes once the edits fix the reading. */
+const asksForAnotherPhoto = (r: Receipt) => EDITABLE.has(r.status) && r.review_reasons.some((x) => x.code === "illegible");
+
 function Body({ receipt: r }: { receipt: Receipt }) {
+  const [fixByHand, setFixByHand] = useState(false);
   if (IN_PROGRESS.has(r.status)) return <Processing receipt={r} />;
   if (r.error) return <Failure receipt={r} />;
+  if (asksForAnotherPhoto(r) && !fixByHand) return <AnotherPhoto receipt={r} onFixByHand={() => setFixByHand(true)} />;
   return (
     <>
       {r.quality_warnings.length > 0 && (
@@ -134,6 +139,30 @@ function Processing({ receipt: r }: { receipt: Receipt }) {
         Normalmente demora menos de um minuto. Pode sair deste ecrã: a compra aparece na lista quando estiver pronta.
       </p>
     </section>
+  );
+}
+
+/** «Tirar outra foto» drops this reading (the receipt is still in hand) and opens the camera again. */
+function AnotherPhoto({ receipt: r, onFixByHand }: { receipt: Receipt; onFixByHand: () => void }) {
+  const retake = useDeleteReceipt(r.id, "/adicionar");
+  return (
+    <Notice
+      tone="warning"
+      title="Não conseguimos ler bem este talão"
+      action={
+        <>
+          <Button busy={retake.isPending} onClick={() => retake.mutate()}>
+            Tirar outra foto
+          </Button>
+          <Button variant="quiet" disabled={retake.isPending} onClick={onFixByHand}>
+            Corrigir à mão
+          </Button>
+        </>
+      }
+    >
+      Faltam produtos ou o total. Fotografe-o de novo: o talão inteiro, bem iluminado e sobre um fundo escuro.
+      {retake.error && <p className="mt-2">{retake.error.message}</p>}
+    </Notice>
   );
 }
 

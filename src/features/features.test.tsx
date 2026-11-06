@@ -278,6 +278,31 @@ describe("review (RF-07, F-11..F-15)", () => {
     expect(screen.getByRole("button", { name: /banana/i })).toBeInTheDocument(); // the review is still there
   });
 
+  it("F-231: a photo read badly asks for another one first: «Tirar outra foto» drops it, «Corrigir à mão» opens the review", async () => {
+    let deleted = false;
+    const illegible = { code: "illegible", message: "Não conseguimos ler bem os produtos deste talão.", field: null, line_index: null, details: {} };
+    server.use(
+      http.get(`${API}/v1/receipts/r1`, () => HttpResponse.json(receipt({ review_reasons: [illegible] }))),
+      http.delete(`${API}/v1/receipts/r1`, () => {
+        deleted = true;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const user = userEvent.setup();
+    const view = renderRoutes([...routes, { path: "/adicionar", element: <p>adicionar</p> }], "/compras/r1");
+    expect(await screen.findByText("Não conseguimos ler bem este talão")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /banana/i })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Corrigir à mão" }));
+    expect(await screen.findByRole("button", { name: /banana/i })).toBeInTheDocument();
+    expect(screen.getByText(illegible.message)).toBeInTheDocument(); // listed until the edits fix the reading
+    view.unmount();
+
+    renderRoutes([...routes, { path: "/adicionar", element: <p>adicionar</p> }], "/compras/r1");
+    await user.click(await screen.findByRole("button", { name: "Tirar outra foto" }));
+    expect(await screen.findByText("adicionar")).toBeInTheDocument();
+    expect(deleted).toBe(true);
+  });
+
   it("F-202: without warnings no quality message appears", async () => {
     renderRoutes(routes, "/compras/r1");
     await screen.findByRole("button", { name: /banana/i });
