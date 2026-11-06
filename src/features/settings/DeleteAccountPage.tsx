@@ -11,6 +11,7 @@ const LOST = [
   "Os ficheiros originais guardados",
   "O seu perfil, a meta e as preferências",
   "O acesso com esta conta Google",
+  "As passkeys registadas",
 ];
 
 /** Eliminar conta, on a screen of its own: what disappears, a box to tick and the final button. Same request as before. */

@@ -14,7 +14,7 @@ const renderLogin = async (search = "") => {
 const hiddenFromScreenReaders = (el: HTMLElement) => el.closest('[aria-hidden="true"]') !== null;
 
 describe("login: the ticket of the approved design", () => {
-  it("offers Google only: no e-mail button, no field and no «ou» separator", async () => {
+  it("without passkey support it offers Google only: no e-mail button, no field and no «ou» separator", async () => {
     await renderLogin();
     expect(screen.getByRole("link", { name: "Entrar com Google" })).toHaveAttribute("href", "/v1/auth/login");
     expect(screen.queryAllByRole("button")).toHaveLength(0);

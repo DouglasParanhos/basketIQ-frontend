@@ -2,8 +2,9 @@ import { Link } from "react-router";
 import { Button, LinkButton, SMALL_CAPS, Surface } from "../../components/ui";
 import { formatDate } from "../../lib/format";
 import { useLogout, useMe } from "../auth/session";
+import { PasskeysCard } from "./PasskeysCard";
 
-/** Conta: how the person signed in, «Terminar sessão», the operator panel (operators only) and «Eliminar conta…». */
+/** Conta: how the person signed in, «Terminar sessão», the passkeys, the operator panel (operators only) and «Eliminar conta…». */
 export function AccountTab() {
   const { data: me } = useMe();
   const logout = useLogout();
@@ -19,6 +20,8 @@ export function AccountTab() {
           Terminar sessão
         </Button>
       </Surface>
+
+      <PasskeysCard />
 
       {me.role === "admin" && (
         <Surface>

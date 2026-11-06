@@ -5,25 +5,14 @@
 import { expect, test, type Page } from "@playwright/test";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { signInWithGoogle } from "./signIn";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SYNTHETIC = process.env.BASKETIQ_SYNTHETIC_DIR ?? path.resolve(HERE, "../../../basketIQ-backend/tests/golden/synthetic");
 const doc = (name: string, file = "document.pdf") => path.join(SYNTHETIC, name, file);
 
 async function signIn(page: Page, subject: string) {
-  await page.goto("/login");
-  await page.getByRole("link", { name: "Entrar com Google" }).click();
-  // Local mock OIDC server (Google in staging/production).
-  await page.getByPlaceholder("Enter any user/subject").fill(subject);
-  await page.getByRole("button", { name: "Sign-in" }).click();
-  await expect(page).toHaveURL(/\/privacidade$/);
-  await page.getByRole("button", { name: "Li a política e continuar" }).click();
-  // A new account goes through the onboarding (spec 010) before anything else: skip the four steps.
-  await expect(page).toHaveURL(/\/boas-vindas$/);
-  for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Saltar" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Tudo pronto" })).toBeVisible();
-  await page.getByRole("link", { name: "Ver o início" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
+  await signInWithGoogle(page, subject);
   // The empty-account message now lives in the Resumo, under Talões (spec 009).
   await page.goto("/compras/resumo");
   await expect(page.getByRole("heading", { name: "Comece pela primeira nota" })).toBeVisible();

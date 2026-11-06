@@ -11,7 +11,7 @@ import { ReceiptPage } from "./receipts/ReceiptPage";
 import { AddPage } from "./upload/AddPage";
 
 describe("login (RF-01)", () => {
-  it("F-03a: offers Google as the only sign-in method", async () => {
+  it("F-03a: no password and no other method: Google, plus the passkey only on a phone that can use one (spec 016)", async () => {
     anonymous();
     renderRoutes([{ path: "/login", element: <LoginPage /> }], "/login");
     const link = await screen.findByRole("link", { name: /entrar com google/i });

@@ -10,6 +10,7 @@ export const server = setupServer(
   http.get(`${API}/v1/config`, () => HttpResponse.json({ app_name: "Super Mercado" })),
   http.get(`${API}/v1/me`, () => HttpResponse.json(me)),
   http.get(`${API}/v1/me/profile`, () => HttpResponse.json(profile)),
+  http.get(`${API}/v1/me/passkeys`, () => HttpResponse.json([])),
   http.get(`${API}/v1/merchants`, () => HttpResponse.json(merchants)),
   http.get(`${API}/v1/receipts/stored-files`, () => HttpResponse.json({ files: 9 })),
   http.delete(`${API}/v1/receipts/stored-files`, () => HttpResponse.json({ files_deleted: 9, receipts: 3, remaining: 0 })),
@@ -76,8 +77,9 @@ export function servePatch() {
     http.patch(`${API}/v1/me/profile`, async ({ request }) => {
       const body = (await request.json()) as Record<string, unknown>;
       bodies.push(body);
-      const { onboarding_completed: _done, ...values } = body;
-      return HttpResponse.json({ ...emptyProfile(), ...values, onboarding_completed_at: "2026-10-30T12:00:00Z" });
+      const { onboarding_completed: _done, passkey_offer_dismissed: dismissed, ...values } = body;
+      const dismissedAt = dismissed ? { passkey_offer_dismissed_at: "2026-11-04T12:00:00Z" } : {};
+      return HttpResponse.json({ ...emptyProfile(), ...values, onboarding_completed_at: "2026-10-30T12:00:00Z", ...dismissedAt });
     }),
   );
   return bodies;
