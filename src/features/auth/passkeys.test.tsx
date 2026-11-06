@@ -18,7 +18,7 @@ vi.mock("@simplewebauthn/browser", () => ({
 }));
 const browser = vi.mocked(webauthn);
 
-const LOGIN_OPTIONS = { challenge: "c-login", rpId: "localhost", userVerification: "required" };
+const LOGIN_OPTIONS = { challenge: "c-login", rpId: "localhost", userVerification: "required", allowCredentials: [{ id: "k1", type: "public-key", transports: ["internal"] }], hints: ["client-device"] };
 const REGISTER_OPTIONS = { challenge: "c-register", rp: { id: "localhost", name: "Super Mercado" }, user: { id: "dTE", name: "maria", displayName: "Maria" }, pubKeyCredParams: [] };
 const ASSERTION = { id: "k1", rawId: "k1", type: "public-key", response: { clientDataJSON: "a", authenticatorData: "b", signature: "c", userHandle: "dTE" }, clientExtensionResults: {} };
 const CREDENTIAL = { id: "k2", rawId: "k2", type: "public-key", response: { clientDataJSON: "a", attestationObject: "b", transports: ["internal"] }, clientExtensionResults: {} };
@@ -85,6 +85,18 @@ describe("login with a passkey (spec 016)", () => {
     await waitFor(() => expect(browser.platformAuthenticatorIsAvailable).toHaveBeenCalled());
     expect(screen.queryByRole("button", { name: /Entrar com passkey/ })).not.toBeInTheDocument();
     expect(seen).toEqual([]);
+  });
+
+  it("F-223: a phone that holds no passkey of the app (empty allowCredentials) gets no «Entrar com passkey», so no QR code", async () => {
+    const seen = serveSignIn();
+    server.use(http.post(`${API}/v1/auth/passkey/options`, () => {
+      seen.push("options");
+      return HttpResponse.json({ ...LOGIN_OPTIONS, allowCredentials: [] });
+    }));
+    openLogin();
+    await waitFor(() => expect(seen).toEqual(["options"]));
+    await screen.findByRole("link", { name: /Entrar com Google/ });
+    expect(screen.queryByRole("button", { name: /Entrar com passkey/ })).not.toBeInTheDocument();
   });
 
   it.each([

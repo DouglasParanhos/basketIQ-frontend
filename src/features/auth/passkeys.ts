@@ -65,12 +65,16 @@ function useCeremony<Options, Result>(
       if (!isCancelled(error) && !isRateLimited(error)) void qc.invalidateQueries({ queryKey });
     },
   });
-  return { ready: options.isSuccess, mutation };
+  return { ready: options.isSuccess, options: options.data, mutation };
 }
 
 // The generated bodies and answers are `{ [key: string]: unknown }`: the WebAuthn JSON interfaces need a cast or a spread.
 
-/** Sign in with a passkey. On success the session cookies are set and `me` is fetched again. */
+/**
+ * Sign in with a passkey. On success the session cookies are set and `me` is fetched again. The options allow only the
+ * passkeys made on this phone (the server remembers them in a cookie), so the phone goes straight to its lock: never a QR
+ * code or another device. Without any, `allowCredentials` is empty and there is nothing to offer.
+ */
 export function usePasskeySignIn() {
   const qc = useQueryClient();
   return useCeremony(

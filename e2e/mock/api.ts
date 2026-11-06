@@ -364,7 +364,7 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
     }
     if (!state.signedIn && !path.startsWith("/v1/auth/")) return unauth(route);
     if (path === "/v1/auth/refresh") return unauth(route);
-    if (path === "/v1/auth/passkey/options") return json(route, { challenge: "Y2hhbGxlbmdl", rpId: "localhost", userVerification: "required", timeout: 60000 });
+    if (path === "/v1/auth/passkey/options") return json(route, { challenge: "Y2hhbGxlbmdl", rpId: "localhost", userVerification: "required", timeout: 60000, allowCredentials: [{ id: "azE", type: "public-key", transports: ["internal"] }], hints: ["client-device"] });
     if (path === "/v1/me" && method === "GET") return json(route, me(state));
     if (path === "/v1/me/privacy-consent") {
       state.consented = true;
@@ -388,7 +388,8 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
         rp: { id: "localhost", name: state.appName },
         user: { id: "dTE", name: "maria@example.test", displayName: "Maria" },
         pubKeyCredParams: [{ type: "public-key", alg: -7 }],
-        authenticatorSelection: { residentKey: "required", userVerification: "required" },
+        authenticatorSelection: { authenticatorAttachment: "platform", residentKey: "required", userVerification: "required" },
+        hints: ["client-device"],
         attestation: "none",
       });
     }

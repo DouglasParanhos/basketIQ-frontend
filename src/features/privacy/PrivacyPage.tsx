@@ -17,7 +17,7 @@ const SUMMARY = [
 const SECTIONS: { title: string; body: string }[] = [
   {
     title: "Que dados guardamos",
-    body: "Da sua conta Google: identificador, nome e e-mail. Das notas: o ficheiro original e os dados extraídos (supermercado, data, produtos, quantidades, preços, descontos e totais). Se ativar a entrada com passkey: a chave pública e as datas de criação e de último uso. A digital, o rosto e o PIN nunca saem do telemóvel.",
+    body: "Da sua conta Google: identificador, nome e e-mail. Das notas: o ficheiro original e os dados extraídos (supermercado, data, produtos, quantidades, preços, descontos e totais). Se ativar a entrada com passkey: a chave pública e as datas de criação e de último uso; no telemóvel fica um cookie com o identificador da passkey, para a oferecer ao entrar. A digital, o rosto e o PIN nunca saem do telemóvel.",
   },
   { title: "Para que servem", body: "Apenas para lhe mostrar as suas compras e análises. Não partilhamos nem vendemos dados." },
   {

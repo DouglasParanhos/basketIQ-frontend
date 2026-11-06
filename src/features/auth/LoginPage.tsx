@@ -79,15 +79,15 @@ function ReceiptColumn({ lines, side }: { lines: string[]; side: "left" | "right
   );
 }
 
-/** «Entrar com passkey»: only on a phone that can use one. The tap opens the phone's lock at once (see passkeys.ts). */
+/** «Entrar com passkey»: only on a phone that holds one. The tap opens the phone's lock at once (see passkeys.ts). */
 function PasskeyButton({ onError }: { onError: (message: string) => void }) {
-  const { ready, mutation: signIn } = usePasskeySignIn();
+  const { options, mutation: signIn } = usePasskeySignIn();
+  if (!options?.allowCredentials?.length) return null;
   return (
     <Button
       variant="outline"
       size="lg"
       className="gap-3 py-2"
-      disabled={!ready}
       busy={signIn.isPending}
       onClick={() => signIn.mutate(undefined, { onError: (e) => onError(signInError(e) ?? ERRORS.cancelled!) })}
     >
