@@ -219,6 +219,43 @@ describe("review (RF-07, F-11..F-15)", () => {
     expect(screen.getByText("Há 2 valores que lemos com pouca confiança, marcados a amarelo.")).toBeInTheDocument();
   });
 
+  it("F-12: a line no rule understood asks once, «Verificar esta linha», not for each of its empty values", async () => {
+    const unread = line({
+      id: "l3",
+      line_number: 3,
+      raw_description: "0,482 kg x 6,19 EEUURR/kg",
+      product: null,
+      quantity: null,
+      unit: null,
+      unit_price_cents: null,
+      line_total_cents: 619,
+      field_confidence: { description: 0.3, quantity: 0, unit_price: 0, line_total: 0.3 },
+      flags: ["unresolved", "quantity_pending", "low_confidence:description", "low_confidence:quantity", "low_confidence:unit_price", "low_confidence:line_total"],
+      review_status: "NEEDS_REVIEW",
+      unresolved: true,
+    });
+    server.use(http.get(`${API}/v1/receipts/r1`, () => HttpResponse.json(receipt({ lines: [line(), unread] }))));
+    renderRoutes(routes, "/compras/r1");
+    const row = (await screen.findByText("0,482 kg x 6,19 EEUURR/kg")).closest("li")!;
+    expect(within(row).getAllByText(/^verificar/i).map((m) => m.textContent?.trim())).toEqual(["Verificar esta linha"]);
+    expect(within(row).queryByText("?")).toBeNull();
+  });
+
+  it("F-12: each doubtful value is named once, in Portuguese («unidade», not «unit»)", async () => {
+    const cake = line({
+      id: "l3",
+      line_number: 3,
+      raw_description: "QUEQUE",
+      quantity: "4.000",
+      flags: ["quantity_pending", "low_confidence:quantity", "low_confidence:unit"],
+      review_status: "NEEDS_REVIEW",
+    });
+    server.use(http.get(`${API}/v1/receipts/r1`, () => HttpResponse.json(receipt({ lines: [line(), cake] }))));
+    renderRoutes(routes, "/compras/r1");
+    const row = (await screen.findByText("QUEQUE")).closest("li")!;
+    expect(within(row).getAllByText(/^verificar/i).map((m) => m.textContent?.trim())).toEqual(["Verificar quantidade", "Verificar unidade"]);
+  });
+
   it("F-202: image quality warnings come with the action «Tire outra foto», as a status with text and icon, and never block the review", async () => {
     server.use(
       http.get(`${API}/v1/receipts/r1`, () =>
