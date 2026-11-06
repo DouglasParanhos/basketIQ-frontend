@@ -9,7 +9,7 @@ export const pdf = (name = "fatura.pdf") => new File(["%PDF-1.4"], name, { type:
 
 /**
  * jsdom has no `URL.createObjectURL`, so today the preview of a photo fails and the editor never mounts in the tests.
- * Call this in a test file (never in setup.ts, which would mount the cropper in every other test): it gives each
+ * Call this in a test file (never in setup.ts, which would mount the editor in every other test): it gives each
  * preview a `blob:parte-N` URL and records the ones released. Each test file has its own jsdom, so nothing leaks to the others.
  */
 export function stubPreviewUrls() {
@@ -24,18 +24,31 @@ export function stubPreviewUrls() {
   return { released };
 }
 
-/** A stand-in for `./ImageEditor` (`vi.mock`): shows the value it receives and has buttons that produce edits. */
-export function FakeImageEditor({ value, onChange }: { src: string; value: Edit; onChange: (edit: Edit) => void }) {
+/** A stand-in for `./QuadEditor` (`vi.mock`): shows the value it receives and has buttons that produce edits. */
+export function FakeQuadEditor({ value, onChange }: { src: string; value: Edit; onChange: (edit: Edit) => void }) {
   return (
     <div data-testid="fake-editor">
       <p>
-        rotação {value.rotation} zoom {value.zoom}
+        rotação {value.rotation} cantos {value.corners ? "mexidos" : "encontrados"}
       </p>
-      <button type="button" onClick={() => onChange({ ...value, rotation: 90, area: { x: 0, y: 0, width: 10, height: 20 } })}>
+      <button type="button" onClick={() => onChange({ ...value, rotation: 90 })}>
         rodar
       </button>
-      <button type="button" onClick={() => onChange({ ...value, zoom: 2 })}>
-        ampliar
+      <button
+        type="button"
+        onClick={() =>
+          onChange({
+            ...value,
+            corners: [
+              [0.1, 0.1],
+              [0.9, 0.1],
+              [0.9, 0.9],
+              [0.1, 0.9],
+            ],
+          })
+        }
+      >
+        mexer nos cantos
       </button>
       <button type="button" onClick={() => onChange(NO_EDIT)}>
         repor

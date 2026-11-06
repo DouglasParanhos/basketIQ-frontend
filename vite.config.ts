@@ -48,7 +48,6 @@ export default defineConfig({
           react: ["react", "react-dom", "react-router"],
           data: ["@tanstack/react-query", "openapi-fetch"],
           charts: ["recharts"],
-          cropper: ["react-easy-crop"],
         },
       },
     },

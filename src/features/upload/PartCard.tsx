@@ -1,8 +1,9 @@
 import { ArrowDown, ArrowUp, Crop, FileText, Trash2 } from "lucide-react";
 import { Button, ROUND_DANGER, ROUND_NEUTRAL } from "../../components/ui";
+import { FlatPreview } from "./FlatPreview";
 import type { Part } from "./photos";
 
-/** One part of the receipt: its preview, its number and its actions (crop, delete, move). */
+/** One part of the receipt: its preview (the receipt straightened when its corners are known), its number and its actions (crop, delete, move). */
 export function PartCard({
   part,
   index,
@@ -21,11 +22,16 @@ export function PartCard({
   onMove: (by: -1 | 1) => void;
 }) {
   const n = index + 1;
+  const flat = part.edit.corners ?? part.quad; // the receipt straightened, as it will be read
   return (
     <li className="flex flex-col gap-2">
       <div className="grid h-[250px] place-items-center overflow-hidden rounded-[18px] bg-ink">
         {part.previewUrl ? (
-          <img src={part.previewUrl} alt="" className="size-full object-contain" />
+          flat ? (
+            <FlatPreview src={part.previewUrl} quad={flat} />
+          ) : (
+            <img src={part.previewUrl} alt="" className="size-full object-contain" />
+          )
         ) : (
           <span className="flex flex-col items-center gap-1 px-3 text-center text-sm text-white/80">
             <FileText aria-hidden className="size-8" />

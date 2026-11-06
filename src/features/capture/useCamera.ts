@@ -1,12 +1,15 @@
 import { useEffect, useState, type RefObject } from "react";
 import { analyzeFrame, minPaperFrac, type Hint } from "./analyzeFrame";
-import { GrayFrame } from "./frame";
+import { GrayFrame, quadFinder } from "./frame";
+import { lerpQuad, type Quad } from "./homography";
 import { stabilizer } from "./hints";
 
 export type CameraState = "starting" | "live" | "denied" | "unsupported";
 
 const ANALYSIS_INTERVAL_MS = 250;
 const LIVE_MARGIN = 1.1; // live guidance asks for a little more than the backend's minimum paper width
+const QUAD_STEADY = 2; // analyses in a row that must find the corners before they are drawn
+const QUAD_EASE = 0.5; // share of the way the drawn corners move to the new ones at each analysis
 
 /** The browser can give the in-app camera: a secure page with the camera API. */
 export function cameraSupported(): boolean {
@@ -60,22 +63,38 @@ export function useCameraStream(video: RefObject<HTMLVideoElement | null>): Came
   return state;
 }
 
-/** What to tell the person about the live picture, a few times a second, steadied over frames. */
-export function useFrameGuidance(video: RefObject<HTMLVideoElement | null>, live: boolean, part: boolean): Hint | null {
-  const [hint, setHint] = useState<Hint | null>(null);
+export interface Guidance {
+  hint: Hint | null;
+  /** The receipt's corners (shares of the picture) to draw over it; null while there is none. */
+  quad: Quad | null;
+}
+
+/** What to tell the person about the live picture, a few times a second, steadied over frames, and where the
+ * receipt is: its corners show after QUAD_STEADY analyses in a row find them, and move smoothly. */
+export function useFrameGuidance(video: RefObject<HTMLVideoElement | null>, live: boolean, part: boolean): Guidance {
+  const [guidance, setGuidance] = useState<Guidance>({ hint: null, quad: null });
   useEffect(() => {
     if (!live) return;
     const frames = new GrayFrame();
+    const findQuad = quadFinder();
     const steady = stabilizer();
+    let found = 0; // analyses in a row with corners
+    let shown: Quad | null = null;
     const timer = window.setInterval(() => {
       const v = video.current;
       if (!v || v.readyState < 2 || !v.videoWidth) return;
       const frame = frames.read(v, v.videoWidth, v.videoHeight);
       if (!frame) return;
       const options = { part, minPaperFrac: minPaperFrac(v.videoWidth, LIVE_MARGIN) };
-      setHint(steady(analyzeFrame(frame.gray, frame.w, frame.h, options)[0] ?? "ok"));
+      const hints = analyzeFrame(frame.gray, frame.w, frame.h, options);
+      const quad = hints.includes("no_receipt") ? null : findQuad(v, v.videoWidth, v.videoHeight);
+      found = quad ? found + 1 : 0;
+      shown = !quad || found < QUAD_STEADY ? null : shown ? lerpQuad(shown, quad, QUAD_EASE) : quad;
+      const hint = steady(hints[0] ?? "ok");
+      const next = shown;
+      setGuidance((last) => (last.hint === hint && last.quad === next ? last : { hint, quad: next })); // unchanged: no render
     }, ANALYSIS_INTERVAL_MS);
     return () => window.clearInterval(timer);
   }, [video, live, part]);
-  return hint;
+  return guidance;
 }

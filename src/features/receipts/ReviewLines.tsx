@@ -7,13 +7,16 @@ import type { DraftLine, LineErrors, LineField, PriceField } from "./draft";
 /** The lines that show before «Ver os outros N produtos»: the rest only hides when nothing in it asks for attention. */
 const SHOWN = 5;
 
-const FIELD_LABEL: Record<string, string> = {
+const FIELD_LABEL = {
   description: "descrição",
   quantity: "quantidade",
+  unit: "unidade",
   unit_price: "preço unitário",
   line_total: "total",
   discount: "desconto",
-};
+} as const;
+/** The values asked for under a line («Verificar …»), in this order; the description is asked for next to the name. */
+const CHECK_ORDER = ["quantity", "unit", "unit_price", "discount", "line_total"] as const;
 
 /** The values of a line that were read with little confidence and that the person has not touched yet. */
 export function flaggedFields(line: DraftLine): string[] {
@@ -102,33 +105,32 @@ function LineRow({ line, onOpen }: { line: DraftLine; onOpen: () => void }) {
   const pending = src?.flags.includes("quantity_pending") && !line.touched.includes("quantity");
   const unresolved = src?.unresolved && line.touched.length === 0;
   const name = nameOf(line);
+  // A line no rule understood is checked as a whole: its values were never read, so each is not asked for apart.
+  const checks = unresolved ? ["esta linha"] : CHECK_ORDER.filter((f) => flagged.includes(f) || (f === "quantity" && pending)).map((f) => FIELD_LABEL[f]);
   return (
     <li className="flex min-h-14 items-center gap-2.5 border-t border-line py-1.5 first:border-t-0">
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="break-words text-sm font-bold">
           {name}
-          {flagged.includes("description") && <Check_ what="descrição" />}
+          {flagged.includes("description") && !unresolved && <Check_ what="descrição" />}
         </span>
-        <span className="text-xs text-ink-soft">
-          <span className={flagged.includes("quantity") || pending ? "marker" : ""}>{formatQuantity(line.quantity.replace(",", ".") || null, line.unit)}</span>
-          {line.unit_price && (
-            <>
-              {" × "}
-              <span className={flagged.includes("unit_price") ? "marker" : ""}>{line.unit_price}</span>
-            </>
-          )}
-          {line.discount && <> · desconto −{line.discount}</>}
-        </span>
-        {(flagged.length > 0 || pending || unresolved) && (
+        {!unresolved && (
+          <span className="text-xs text-ink-soft">
+            <span className={flagged.includes("quantity") || pending ? "marker" : ""}>{formatQuantity(line.quantity.replace(",", ".") || null, line.unit)}</span>
+            {line.unit_price && (
+              <>
+                {" × "}
+                <span className={flagged.includes("unit_price") ? "marker" : ""}>{line.unit_price}</span>
+              </>
+            )}
+            {line.discount && <> · desconto −{line.discount}</>}
+          </span>
+        )}
+        {checks.length > 0 && (
           <span className="mt-1">
-            {unresolved && <Check_ what="esta linha" />}
-            {pending && <Check_ what="quantidade" />}
-            {flagged
-              .filter((f) => f !== "description" && f !== "line_total")
-              .map((f) => (
-                <Check_ key={f} what={FIELD_LABEL[f] ?? f} />
-              ))}
-            {flagged.includes("line_total") && <Check_ what="total" />}
+            {checks.map((what) => (
+              <Check_ key={what} what={what} />
+            ))}
           </span>
         )}
         {line.product_name && line.product_name !== line.raw_description && <span className="text-xs text-ink-soft">Produto: {line.product_name}</span>}

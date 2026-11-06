@@ -1,15 +1,29 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Hint } from "./analyzeFrame";
 import { CameraCapture } from "./CameraCapture";
+import type { Quad } from "./homography";
 import type { CameraState } from "./useCamera";
 
-const camera = vi.hoisted(() => ({ state: "live" as CameraState, hint: "too_far" as Hint | null }));
+const RECEIPT: Quad = [
+  [0.2, 0.1],
+  [0.8, 0.12],
+  [0.78, 0.9],
+  [0.22, 0.88],
+];
+
+const camera = vi.hoisted(() => ({
+  state: "live" as CameraState,
+  hint: "too_far" as Hint | null,
+  quad: null as Quad | null, // the corners drawn live
+  shotQuad: null as Quad | null, // the corners found in the photo taken
+}));
 vi.mock("./useCamera", () => ({
   useCameraStream: () => camera.state,
-  useFrameGuidance: () => camera.hint,
+  useFrameGuidance: () => ({ hint: camera.hint, quad: camera.quad }),
 }));
+vi.mock("./frame", async (original) => ({ ...(await original<typeof import("./frame")>()), quadFinder: () => () => camera.shotQuad }));
 
 type Before = Parameters<typeof CameraCapture>[0]["before"];
 
@@ -28,6 +42,11 @@ describe("CameraCapture", () => {
   beforeEach(() => {
     camera.state = "live";
     camera.hint = "too_far";
+    camera.quad = null;
+    camera.shotQuad = null;
+    // The picture on screen: 360 × 640 inside the border.
+    vi.spyOn(Element.prototype, "clientWidth", "get").mockReturnValue(360);
+    vi.spyOn(Element.prototype, "clientHeight", "get").mockReturnValue(640);
     vi.spyOn(HTMLVideoElement.prototype, "videoWidth", "get").mockReturnValue(1080);
     vi.spyOn(HTMLVideoElement.prototype, "videoHeight", "get").mockReturnValue(1920);
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({ drawImage: vi.fn() } as never);
@@ -117,6 +136,44 @@ describe("CameraCapture", () => {
     expect(screen.getByText(/não tem acesso à câmara/i)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /usar a câmara do telemóvel/i }));
     expect(onSystemCamera).toHaveBeenCalled();
+  });
+
+  it("F-226: draws the corners of the receipt over the picture, in the colour of the advice", () => {
+    camera.quad = RECEIPT;
+    const { again } = renderCamera();
+    const outline = () => document.querySelector("svg polygon");
+    expect(outline()).toHaveAttribute("points", "0.2,0.1 0.8,0.12 0.78,0.9 0.22,0.88");
+    expect(outline()!.closest("svg")).toHaveAttribute("aria-hidden", "true");
+    expect(outline()).toHaveClass("stroke-yellow-300");
+    camera.hint = "ok";
+    again();
+    expect(outline()).toHaveClass("stroke-green-400");
+  });
+
+  it("F-226: no receipt, no outline", () => {
+    renderCamera();
+    expect(document.querySelector("svg polygon")).toBeNull();
+  });
+
+  it("F-227: with a receipt in the photo, the cut is shown before the camera closes; the whole picture is sent", async () => {
+    camera.shotQuad = RECEIPT;
+    const user = userEvent.setup();
+    const { onCapture } = renderCamera();
+    await user.click(screen.getByRole("button", { name: "Tirar a foto" }));
+    expect(document.querySelector("[data-cut]")).toBeInTheDocument();
+    expect(onCapture).not.toHaveBeenCalled();
+    await waitFor(() => expect(onCapture).toHaveBeenCalledWith(expect.objectContaining({ name: "parte-1.jpg", type: "image/jpeg" })), { timeout: 2000 });
+    expect(document.querySelector("[data-cut]")).toBeNull();
+  });
+
+  it("F-227: with reduced motion, no cut: the photo goes at once", async () => {
+    camera.shotQuad = RECEIPT;
+    vi.spyOn(window, "matchMedia").mockImplementation((query) => ({ matches: query.includes("reduce"), media: query }) as MediaQueryList);
+    const user = userEvent.setup();
+    const { onCapture } = renderCamera();
+    await user.click(screen.getByRole("button", { name: "Tirar a foto" }));
+    expect(document.querySelector("[data-cut]")).toBeNull();
+    expect(onCapture).toHaveBeenCalled();
   });
 
   it("closes with Escape", async () => {
