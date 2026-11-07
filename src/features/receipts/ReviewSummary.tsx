@@ -19,6 +19,8 @@ interface Props {
   printed: number | null;
   printedInvalid: boolean;
   onPrinted: (value: string) => void;
+  /** True while the person has a field open (the date or the total): the keyboard needs the room. */
+  onEditing: (editing: boolean) => void;
 }
 
 /** «28 out. 2026, 18:42», as in the design (the Intl date with a short month would read «28/10/2026»); null while the date is not a date. */
@@ -50,7 +52,12 @@ function Editing({ id, children }: { id: string; children: ReactNode }) {
 export function ReviewSummary(p: Props) {
   // A date that is missing is the first thing to fill in: its fields start open.
   const [open, setOpen] = useState<"date" | "total" | null>(p.date === "" ? "date" : null);
-  const toggle = (which: "date" | "total") => setOpen(open === which ? null : which);
+  // Only a field the person opens takes the foot away: the date that opens by itself must not arrive without «Confirmar talão».
+  const toggle = (which: "date" | "total") => {
+    const next = open === which ? null : which;
+    setOpen(next);
+    p.onEditing(next !== null);
+  };
   const when = whenText(p.date, p.time);
 
   return (

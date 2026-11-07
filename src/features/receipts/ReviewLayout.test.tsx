@@ -178,16 +178,16 @@ describe("Rever talão: the lines", () => {
     expect(screen.getByRole("heading", { level: 2, name: "Produtos · 2" })).toBeInTheDocument();
   });
 
-  it("«Mais opções» holds what the canvas does not show: the note, the product, the unit, the unit price, the discount, split and remove", async () => {
+  it("«Mais opções» holds what the canvas does not show: the note, the product, the unit, the unit price and the discount; split and remove are always there", async () => {
     const user = userEvent.setup();
     open();
     await user.click(await pencil(/editar leite meio gordo/i));
     expect(screen.queryByLabelText("Unidade")).toBeNull();
+    expect(screen.getByRole("button", { name: /dividir linha/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /remover linha/i })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Mais opções" }));
     expect(screen.getByText(/Na nota:/)).toBeInTheDocument();
     for (const label of ["Produto", "Unidade", "Preço unitário (€)", "Desconto (€)"]) expect(screen.getByLabelText(label)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /dividir linha/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /remover linha/i })).toBeInTheDocument();
   });
 
   it("with many lines it shows the first five and «Ver os outros N produtos», and the rest comes with a click", async () => {

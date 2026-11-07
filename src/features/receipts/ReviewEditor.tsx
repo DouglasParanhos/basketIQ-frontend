@@ -3,6 +3,7 @@ import { ImageIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useBlocker, useNavigate } from "react-router";
 import { ApiError, api, unwrap, type Merchant, type Schemas } from "../../api/client";
+import { useHideNav, useNavHidden } from "../../components/AppShell";
 import { Button, Notice } from "../../components/ui";
 import { centsToInput, formatCents, parseEurToCents } from "../../lib/format";
 import { receiptChanged } from "./cache";
@@ -53,6 +54,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
   const [printedText, setPrintedText] = useState(initialPrinted);
   const [undo, setUndo] = useState<PriceUndo | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [summaryEditing, setSummaryEditing] = useState(false);
   const original = useOriginalViewer(receipt.id);
 
   // Anything that differs from the purchase as it was read: worked out, so that «Cancelar» and «Desfazer» can bring it back to nothing.
@@ -68,6 +70,11 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
   // The screen's own ways out (saved, deleted) navigate with `state.discard`: they are not stopped.
   const blocker = useBlocker(({ nextLocation }) => dirty && !nextLocation.state?.discard);
   const leavingAsked = blocker.state === "blocked";
+  // With a field open the keyboard needs the room: the bar and the actions of the foot go away until it is closed (a question of the foot stays).
+  const editing = editingKey !== null || summaryEditing;
+  useHideNav(editing);
+  const navHidden = useNavHidden();
+  const footAway = editing && !leavingAsked && !deleting;
   // Closing the tab or reloading is not a navigation of the router: the browser asks.
   useEffect(() => {
     if (!dirty) return;
@@ -237,6 +244,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
         printed={printed}
         printedInvalid={printedInvalid}
         onPrinted={setPrintedText}
+        onEditing={setSummaryEditing}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -278,7 +286,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
         <p className="text-sm text-ink-soft">Para confirmar falta: {blocking.map((b) => b.message?.toLowerCase()).join(" ")}</p>
       )}
 
-      <div className="sticky bottom-20 z-10 flex flex-col gap-1.5 rounded-surface bg-ground/95 py-3 backdrop-blur md:bottom-0">
+      <div className={`sticky z-10 flex flex-col gap-1.5 rounded-surface ${navHidden ? "bottom-0" : "bottom-20 md:bottom-0"} ${footAway ? "" : "bg-ground/95 py-3 backdrop-blur"}`}>
         <div role="status" className="absolute inset-x-0 bottom-full mb-2">
           {priceUndo && !deleting && !leavingAsked && (
             <div className="flex items-center justify-between gap-2 rounded-2xl bg-ink py-1.5 pl-4 pr-1.5 text-[13px] text-ground">
@@ -291,7 +299,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
             </div>
           )}
         </div>
-        {leavingAsked ? (
+        {footAway ? null : leavingAsked ? (
           // The questions of the foot take the place of the actions: above it, a sticky foot would cover them.
           <LeaveNotice onLeave={() => blocker.proceed()} onStay={() => blocker.reset()} />
         ) : deleting ? (

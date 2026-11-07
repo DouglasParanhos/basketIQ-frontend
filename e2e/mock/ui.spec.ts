@@ -1113,6 +1113,7 @@ test.describe("review: the foot with the three actions and the undo of a price",
         await page.emulateMedia({ colorScheme: scheme });
         await page.setViewportSize({ width, height: 568 });
         await correctedPrice(page);
+        await page.getByRole("button", { name: "Guardar", exact: true }).click(); // the foot is away while the line is open
         const buttons = ["Confirmar talão", "Guardar e rever depois", "Eliminar talão"].map((name) => page.getByRole("button", { name, exact: true }));
         await expectReachable(page, ["Confirmar talão", "Guardar e rever depois", "Eliminar talão"]);
         const bar = page.getByText("Preço alterado de 1,70 para 1,90").locator("..");
@@ -1171,6 +1172,23 @@ test.describe("review: the foot with the three actions and the undo of a price",
       await expect(page.getByLabel("Preço unitário (€)")).toBeVisible();
       await noHorizontalScroll(page);
       await noA11yViolations(page);
+    });
+
+    test(`with a line open the bar and the foot are away, «Remover linha» is in sight, and «Guardar» brings them back (${scheme}, 320px)`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.setViewportSize({ width: 320, height: 568 });
+      await fakeApi(page);
+      await page.goto("/compras/r1");
+      await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeVisible();
+      await page.getByRole("button", { name: /Editar LEITE MEIO GORDO/ }).click();
+      await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeHidden();
+      for (const name of ["Confirmar talão", "Guardar e rever depois", "Eliminar talão"]) await expect(page.getByRole("button", { name, exact: true })).toBeHidden();
+      for (const name of ["Remover linha", "Dividir linha", "Guardar", "Cancelar"]) await expect(page.getByRole("button", { name: new RegExp(`^${name}$`) })).toBeVisible();
+      await noHorizontalScroll(page);
+      await noA11yViolations(page);
+      await page.getByRole("button", { name: "Guardar", exact: true }).click();
+      await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Confirmar talão", exact: true })).toBeVisible();
     });
 
     test(`leaving with unsaved edits asks first and keeps the edit, without axe violations (${scheme})`, async ({ page }) => {

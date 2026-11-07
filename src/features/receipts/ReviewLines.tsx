@@ -155,7 +155,7 @@ interface PanelProps {
   onPriceChange: (field: PriceField, from: string, to: string, wasTouched: boolean) => void;
 }
 
-/** The line being edited: its two figures first, the read value to check them against, and the rest under «Mais opções». */
+/** The line being edited: its two figures first, the read value to check them against, the other fields under «Mais opções», and split and remove always in sight. */
 function LinePanel({ line, errors, onField, onSave, onCancel, onSplit, onRemove, onPriceChange }: PanelProps) {
   const [more, setMore] = useState(false);
   // A price counts as corrected when the person leaves the field with another valid value than the one it had on entering.
@@ -214,16 +214,17 @@ function LinePanel({ line, errors, onField, onSave, onCancel, onSplit, onRemove,
             <Field label="Preço unitário (€)" inputMode="decimal" value={line.unit_price} error={errors.unit_price} onChange={(e) => onField("unit_price", e.target.value)} {...price("unit_price")} />
             <Field label="Desconto (€)" inputMode="decimal" value={line.discount} error={errors.discount} onChange={(e) => onField("discount", e.target.value)} />
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="secondary" onClick={onSplit}>
-              <Scissors aria-hidden className="size-4" /> Dividir linha
-            </Button>
-            <Button type="button" variant="quiet" onClick={onRemove}>
-              <Trash2 aria-hidden className="size-4" /> Remover linha
-            </Button>
-          </div>
         </div>
       )}
+
+      <div className="mt-2 flex flex-wrap gap-2">
+        <Button type="button" variant="secondary" onClick={onSplit}>
+          <Scissors aria-hidden className="size-4" /> Dividir linha
+        </Button>
+        <Button type="button" variant="quiet" onClick={onRemove}>
+          <Trash2 aria-hidden className="size-4" /> Remover linha
+        </Button>
+      </div>
 
       <div className="mt-3 flex gap-2">
         <Button type="button" className="flex-1" disabled={Object.keys(errors).length > 0} onClick={onSave}>

@@ -52,6 +52,7 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   if (await keep.isVisible()) await keep.click();
   await page.getByRole("button", { name: "Editar total da nota" }).click();
   await page.getByRole("textbox", { name: "Total da nota" }).fill("18,17");
+  await page.getByRole("button", { name: "Editar total da nota" }).click(); // closes the field: the foot is away while it is open
   const reviewUrl = page.url();
   await page.getByRole("button", { name: "Guardar e rever depois", exact: true }).click();
   await expect(page).toHaveURL(/\/compras$/); // «rever depois» goes back to the list; the purchase is still there to confirm
