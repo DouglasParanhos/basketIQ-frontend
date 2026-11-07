@@ -6,7 +6,7 @@ export function Tick({ checked, small = false, className = "" }: { checked: bool
   return (
     <span
       aria-hidden
-      className={`grid ${small ? "size-5" : "size-7"} shrink-0 place-items-center rounded-full ${checked ? "bg-brand text-white dark:text-ground" : "border-2 border-line"} ${className}`}
+      className={`grid ${small ? "size-5" : "size-7"} shrink-0 place-items-center rounded-full ${checked ? "bg-brand text-on-brand" : "border-2 border-line"} ${className}`}
     >
       {checked && <Check className="size-4" strokeWidth={3} />}
     </span>

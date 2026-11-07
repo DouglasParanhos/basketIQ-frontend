@@ -20,15 +20,16 @@ export function SourceButtons({ onPick }: { onPick: (source: Source) => void }) 
           type="button"
           onClick={() => onPick(id)}
           className={`flex min-h-[5.25rem] items-center gap-3.5 rounded-[22px] px-4 py-3.5 text-left ${
-            i === 0 ? "bg-brand text-white dark:text-ground" : "bg-paper text-ink ring-1 ring-inset ring-line"
+            i === 0 ? "bg-brand text-on-brand" : "bg-paper text-ink ring-1 ring-inset ring-line"
           }`}
         >
-          <span className={`grid size-12 shrink-0 place-items-center rounded-full ${i === 0 ? "bg-white/15 dark:bg-ground/15" : "bg-brand-soft text-brand"}`}>
+          <span className={`grid size-12 shrink-0 place-items-center rounded-full ${i === 0 ? "bg-on-brand/15" : "bg-brand-soft text-brand"}`}>
             <Icon aria-hidden className="size-6" />
           </span>
           <span className="flex flex-col">
             <span className="text-[17px] font-bold">{label}</span>
-            <span className={`text-[13px] ${i === 0 ? "text-white/80 dark:text-ground/80" : "text-ink-soft"}`}>{hint}</span>
+            {/* In the dark scheme the hint is not dimmed: 80 % of the dark text on the green is only 3.9:1. */}
+            <span className={`text-[13px] ${i === 0 ? "text-white/80 dark:text-on-brand" : "text-ink-soft"}`}>{hint}</span>
           </span>
         </button>
       ))}

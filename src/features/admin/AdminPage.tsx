@@ -28,7 +28,7 @@ export default function AdminPage() {
             aria-controls={`panel-${t.id}`}
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
-            className="min-h-11 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line aria-selected:bg-brand aria-selected:text-white aria-selected:ring-brand dark:aria-selected:text-ground"
+            className="min-h-11 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line aria-selected:bg-brand aria-selected:text-on-brand aria-selected:ring-brand"
           >
             {t.label}
           </button>

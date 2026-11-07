@@ -36,11 +36,12 @@ async function correctTotal(user: ReturnType<typeof userEvent.setup>, value: str
 const saveLine = (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: "Guardar" }));
 
 describe("Rever talão (approved design)", () => {
-  it("the warning to review is the gold of the chips, with the warning icon, and says it in words", async () => {
+  it("the warning to review is the neutral notice (no gold or brown), with the warning icon, and says it in words", async () => {
     open();
     const notice = (await screen.findByText("Reveja antes de confirmar")).closest("[role=status]") as HTMLElement;
-    expect(notice.className).toContain("bg-warn-soft");
-    expect(notice.className).toContain("text-warn-ink");
+    expect(notice.className).toContain("bg-notice");
+    expect(notice.className).not.toContain("bg-warn-soft");
+    expect(notice.className).toContain("text-ink");
     expect(notice.querySelector("svg[aria-hidden=true]")).not.toBeNull();
   });
 

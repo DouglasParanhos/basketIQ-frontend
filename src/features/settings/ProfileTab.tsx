@@ -7,6 +7,7 @@ import { formatCents } from "../../lib/format";
 import { merchantName } from "../../lib/merchants";
 import { GOAL_OPTIONS } from "../profile/goals";
 import { useMerchants, useProfile } from "../profile/useProfile";
+import { AppearanceCard } from "./AppearanceCard";
 import { ProfileEditor, type Block } from "./ProfileEditor";
 
 type Profile = Schemas["ProfileOut"];
@@ -80,6 +81,7 @@ export function ProfileTab() {
         </p>
       )}
       <ReadBlocks saved={saved} names={merchants.data} onEdit={(focus) => { setJustSaved(false); setEditing({ focus }); }} />
+      <AppearanceCard />
     </div>
   );
 }

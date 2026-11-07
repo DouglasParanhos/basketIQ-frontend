@@ -123,7 +123,7 @@ function Processing({ receipt: r }: { receipt: Receipt }) {
             <span
               aria-hidden
               className={`grid size-8 place-items-center rounded-full text-sm font-bold ${
-                i < current ? "bg-ok-soft text-ok" : i === current ? "animate-pulse bg-brand text-white dark:text-ground" : "bg-ground text-ink-soft"
+                i < current ? "bg-ok-soft text-ok" : i === current ? "animate-pulse bg-brand text-on-brand" : "bg-ground text-ink-soft"
               }`}
             >
               {i + 1}

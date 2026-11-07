@@ -34,7 +34,7 @@ export function PriceChangesCard({ changes }: { changes: PriceChange[] }) {
                   {merchantName(merchant)} · {formatCents(fromCents)} → {formatCents(toCents)}
                 </p>
               </div>
-              <span className={`flex shrink-0 items-center gap-1 rounded-xl px-2 py-1 text-xs font-extrabold ${up ? "bg-warn-soft text-warn-ink" : "bg-ok-soft text-ok"}`}>
+              <span className={`flex shrink-0 items-center gap-1 rounded-xl px-2 py-1 text-xs font-extrabold ${up ? "bg-warn-soft dark:ring-1 dark:ring-inset dark:ring-warn-line text-warn-ink" : "bg-ok-soft text-ok"}`}>
                 <Arrow aria-hidden className="size-3.5" strokeWidth={2.4} />
                 {up ? "+" : "−"} {formatCents(Math.abs(delta))}
               </span>

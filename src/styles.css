@@ -7,6 +7,9 @@
 @import "@fontsource/martian-mono/latin-400.css";
 @import "@fontsource/martian-mono/latin-600.css";
 
+/* The theme is the data-theme of <html> (light or dark), set from the person's choice in Definições or from the system (src/lib/theme.ts). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /*
   Fraunces (headings and big figures): only the latin subset (covers the Portuguese diacritics) of the
   variable file with the optical-size axis, so the workbox precache does not carry the other subsets.
@@ -25,7 +28,9 @@
   Palette of the approved design (canvas of 02/11/2026): green is the brand colour, cream the ground,
   gold the "highlighter" that marks anything needing the person's eyes (and the middle band of the goal
   ring), mint the soft tint. The marker yellow is 1.5:1 as a stroke, so strokes use the darker gold
-  (warn). The design has no dark palette: the dark values are derived. Text pairs are >= 4.5:1,
+  (warn). The design has no dark palette: the dark green is the cart's green with its lightness raised,
+  and what is gold or brown in the light scheme is a neutral surface with an amber detail in the dark one
+  (no brown or yellow backgrounds). Text pairs are >= 4.5:1,
   graphics and focus ring >= 3:1 (src/lib/contrast.test.ts measures them). The printed-receipt
   surface (.receipt-paper, .torn) is the one bold element.
 
@@ -52,6 +57,10 @@
   --color-line: #ece7de;
   --color-marker: #ffc928;
   --color-marker-ink: #5c3f00;
+  /* The underline of the highlighter: none in the light scheme. */
+  --color-marker-line: transparent;
+  /* The text on a brand-coloured button or badge. */
+  --color-on-brand: #ffffff;
   --color-ok: #1f6f4a;
   --color-ok-soft: #e6f1ea;
   --color-alert: #b3261e;
@@ -64,6 +73,13 @@
   --color-warn: #b8860b;
   --color-warn-soft: #fff1bf;
   --color-warn-ink: #5c3f00;
+  /* The warning notice: its tint, title, text, icon and hairline. The chips of the goal and of the prices keep the gold tint in the light scheme: their hairline is the tint itself. */
+  --color-notice: #f1ede3;
+  --color-warn-body: #1b1b1a;
+  --color-warn-icon: #a57800;
+  --color-warn-line: #ddd6c6;
+  /* The line being edited in the review. */
+  --color-editing: #fff8df;
 
   --radius-control: 0.75rem;
   --radius-surface: 1.25rem;
@@ -71,7 +87,7 @@
 
 @layer base {
   :root {
-    color-scheme: light dark;
+    color-scheme: light;
   }
   /* No tabular figures: they can also widen the decimal comma ("16 ,75") in proportional faces.
      Columns of amounts are right-aligned instead; the receipt view uses a monospace face. */
@@ -82,30 +98,39 @@
     font-family: var(--font-sans);
     -webkit-tap-highlight-color: transparent;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --color-ground: #121a15;
-      --color-paper: #1a261f;
-      --color-table: #0c110e;
-      --color-ink: #eaf2ec;
-      --color-ink-soft: #a9bbb0;
-      --color-line: #2c3b32;
-      --color-brand: #4cc38a;
-      --color-brand-deep: #86dcae;
-      --color-brand-soft: #1f3a2c;
-      --color-brand-pill: #26443a;
-      --color-marker: #6b5200;
-      --color-marker-ink: #ffe9a6;
-      --color-ok: #6fd3a0;
-      --color-ok-soft: #17382a;
-      --color-alert: #ffb4ab;
-      --color-alert-soft: #4a1a17;
-      --color-chart: #4cc38a;
-      --color-muted-bar: #3a4a40;
-      --color-warn: #e0b13a;
-      --color-warn-soft: #3f3000;
-      --color-warn-ink: #ffe9a6;
-    }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --color-ground: #101a16;
+    --color-paper: #1d2723;
+    --color-table: #0b1210;
+    --color-ink: #f1eee6;
+    --color-ink-soft: #c9d3cd;
+    --color-line: #2e3c36;
+    /* The cart's green (#1f6f4a) with its lightness raised. */
+    --color-brand: #5fa882;
+    --color-brand-deep: #7fc4a0;
+    --color-brand-soft: #1d3228;
+    /* #5fa882 at 20 % over the paper (the navigation bar). */
+    --color-brand-pill: #2a4136;
+    --color-on-brand: #0f2a1c;
+    /* What marks a value to check is a neutral tint with an amber detail, not a gold one. */
+    --color-marker: #26332e;
+    --color-marker-ink: #e8b84a;
+    --color-marker-line: #e8b84a;
+    --color-ok: #75be9a;
+    --color-ok-soft: #1d3228;
+    --color-alert: #ffb4ab;
+    --color-alert-soft: #4a1a17;
+    --color-chart: #5fa882;
+    --color-muted-bar: #33423b;
+    --color-warn: #e8b84a;
+    --color-warn-soft: #26332e;
+    --color-warn-ink: #f1eee6;
+    --color-notice: #26332e;
+    --color-warn-body: #c9d3cd;
+    --color-warn-icon: #e8b84a;
+    --color-warn-line: #3a4a43;
+    --color-editing: #26332e;
   }
   :focus-visible {
     outline: 3px solid var(--color-brand);
@@ -148,7 +173,7 @@
   }
   /* Highlighter mark for values the person must check. Never colour alone: always with text/icon. */
   .marker {
-    background: linear-gradient(transparent 35%, var(--color-marker) 35% 90%, transparent 90%);
+    background: linear-gradient(transparent 80%, var(--color-marker-line) 80% 92%, transparent 92%), linear-gradient(transparent 35%, var(--color-marker) 35% 90%, transparent 90%);
     color: var(--color-ink);
   }
 

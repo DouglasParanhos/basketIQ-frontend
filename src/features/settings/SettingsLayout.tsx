@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useNavHidden } from "../../components/AppShell";
+import { BrandMark } from "../../components/BrandMark";
 import { SegmentedTabs } from "../../components/SegmentedTabs";
 import { PageHeader, Spinner, Surface } from "../../components/ui";
 import { useAppName } from "../../config/appConfig";
@@ -12,6 +13,19 @@ const TABS = [
   { id: "/definicoes/privacidade", label: "Privacidade" },
   { id: "/definicoes/conta", label: "Conta" },
 ];
+
+/** The end of Definições: the brand, not a link, and the notice about the names of the stores. */
+function BrandFooter({ appName }: { appName: string }) {
+  return (
+    <footer className="flex flex-col items-center gap-1 pb-8 pt-8 text-center">
+      <BrandMark className="mb-1 h-7 w-auto" />
+      <p className="font-display text-base font-semibold">{appName}</p>
+      <p className="text-[13px] text-ink-soft">os seus talões</p>
+      <p className="text-xs text-ink-soft">v{__APP_VERSION__}</p>
+      <p className="mt-2 max-w-xs text-xs text-ink-soft">Marcas e nomes pertencem aos respetivos titulares. Sem afiliação.</p>
+    </footer>
+  );
+}
 
 /** Definições: the title, the account header and the Perfil · Privacidade · Conta tabs above the page. */
 export function SettingsLayout() {
@@ -29,7 +43,7 @@ export function SettingsLayout() {
       {!full && <PageHeader title="Definições" />}
       {!full && (
         <Surface tone="bordered" className="mb-4 flex items-center gap-3">
-          <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-full bg-brand font-display text-xl font-semibold text-white dark:text-ground">
+          <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-full bg-brand font-display text-xl font-semibold text-on-brand">
             {(me.display_name ?? me.email).trim().charAt(0).toLocaleUpperCase("pt-PT")}
           </span>
           <div className="min-w-0">
@@ -43,11 +57,7 @@ export function SettingsLayout() {
         <Suspense fallback={<Spinner />}>
           <Outlet />
         </Suspense>
-        {!full && (
-          <p className="text-center text-xs text-ink-soft">
-            {appName} {__APP_VERSION__}
-          </p>
-        )}
+        {!full && <BrandFooter appName={appName} />}
       </div>
     </>
   );

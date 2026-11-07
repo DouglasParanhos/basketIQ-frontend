@@ -35,7 +35,7 @@ describe("customer-facing name comes from the backend (CFG-02)", () => {
   it("settings footer shows the configured name", async () => {
     serveName("Mercado do Zé");
     renderRoutes([{ path: "/definicoes", element: <SettingsLayout />, children: [{ path: "perfil", element: null }] }], "/definicoes/perfil");
-    expect(await screen.findByText(/Mercado do Zé test/)).toBeInTheDocument();
+    expect(await screen.findByText("Mercado do Zé")).toBeInTheDocument();
   });
 
   it("uses the default name from the backend file value (Super Mercado)", async () => {

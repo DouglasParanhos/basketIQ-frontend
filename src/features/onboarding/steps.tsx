@@ -68,7 +68,7 @@ export function PeopleStep({ state, dispatch }: { state: OnboardingState; dispat
           aria-label="Mais uma pessoa"
           disabled={state.householdSize !== null && state.householdSize >= PEOPLE_MAX}
           onClick={() => dispatch({ type: "people", delta: 1 })}
-          className={`${round} bg-brand text-white dark:text-ground`}
+          className={`${round} bg-brand text-on-brand`}
         >
           <Plus aria-hidden className="size-6" />
         </button>

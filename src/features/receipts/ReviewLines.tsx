@@ -235,7 +235,7 @@ function LinePanel({ line, errors, onField, onSave, onCancel, onSplit, onRemove,
   const nameValue = src ? (line.touched.includes("product") ? line.product_name : line.product_name || line.raw_description) : line.raw_description;
 
   return (
-    <li ref={root} className="-mx-4 scroll-mb-4 border-t border-line bg-warn-soft/40 px-4 py-3 first:border-t-0">
+    <li ref={root} className="-mx-4 scroll-mb-4 border-t border-line bg-editing px-4 py-3 first:border-t-0">
       <div className="flex items-end gap-1">
         <Field
           label="Produto"

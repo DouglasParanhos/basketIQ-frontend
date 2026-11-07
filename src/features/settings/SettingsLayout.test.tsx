@@ -70,9 +70,23 @@ describe("settings layout (spec 014, US1)", () => {
     const { router } = renderApp("/definicoes/conta");
     await screen.findByRole("heading", { level: 1, name: "Definições" });
     expect(currentDestinations()).toEqual(["Definições"]);
-    expect(screen.getByText(/^Super Mercado /)).toBeInTheDocument();
+    expect(screen.getByText("Super Mercado")).toBeInTheDocument();
     await act(() => router.navigate("/definicoes/privacidade"));
     expect(currentDestinations()).toEqual(["Definições"]);
-    expect(screen.getByText(/^Super Mercado /)).toBeInTheDocument();
+    expect(screen.getByText("Super Mercado")).toBeInTheDocument();
+  });
+});
+
+describe("the brand footer of Definições", () => {
+  it("ends every tab with the name, the line, the version and the notice about the names, none of it a link", async () => {
+    renderApp("/definicoes/perfil");
+    const footer = (await screen.findByRole("heading", { level: 1, name: "Definições" })) && document.querySelector("footer")!;
+    expect(within(footer).getByText("Super Mercado")).toBeInTheDocument();
+    expect(within(footer).getByText("os seus talões")).toBeInTheDocument();
+    expect(within(footer).getByText(`v${__APP_VERSION__}`)).toBeInTheDocument();
+    expect(within(footer).getByText("Marcas e nomes pertencem aos respetivos titulares. Sem afiliação.")).toBeInTheDocument();
+    expect(within(footer).queryAllByRole("link")).toHaveLength(0);
+    expect(within(footer).queryAllByRole("button")).toHaveLength(0);
+    expect(footer.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
   });
 });

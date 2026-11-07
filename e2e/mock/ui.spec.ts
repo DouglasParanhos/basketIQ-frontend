@@ -171,8 +171,8 @@ test.describe("login and privacy policy: the approved design", () => {
           await page.goto("/login");
           await expect(page.getByRole("link", { name: "Entrar com Google" })).toBeVisible();
           const outline = await page.locator(".ticket-paper > div[aria-hidden]").first().evaluate((el) => getComputedStyle(el).boxShadow);
-          // The ring is a box-shadow of 1px in the soft ink of the scheme (#a9bbb0 in the dark one).
-          if (scheme === "dark") expect(outline).toContain("rgb(169, 187, 176) 0px 0px 0px 1px");
+          // The ring is a box-shadow of 1px in the soft ink of the scheme (#c9d3cd in the dark one).
+          if (scheme === "dark") expect(outline).toContain("rgb(201, 211, 205) 0px 0px 0px 1px");
           else expect(outline).not.toContain("0px 0px 0px 1px");
         });
 
@@ -261,7 +261,7 @@ test.describe("customer-facing name (CFG-02)", () => {
     await fakeApi(page);
     await page.goto("/definicoes");
     await expect(page).toHaveTitle("Super Mercado");
-    await expect(page.getByText(/^Super Mercado /)).toBeVisible();
+    await expect(page.locator("footer").getByText("Super Mercado", { exact: true })).toBeVisible();
   });
 });
 
@@ -1232,4 +1232,83 @@ test.describe("review: the foot with the three actions and the undo of a price",
       await expect(page.getByLabel("Preço total (€)")).toHaveValue("1,90");
     });
   }
+});
+
+test.describe("Aparência: the person chooses the theme in Definições", () => {
+  const LIGHT = "rgb(250, 248, 244)";
+  const DARK = "rgb(16, 26, 22)";
+  const ground = (page: Page) => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const radio = (page: Page, name: string) => page.getByRole("radio", { name, exact: true });
+
+  async function open(page: Page, system: "light" | "dark") {
+    await page.emulateMedia({ colorScheme: system });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await fakeApi(page);
+    await page.goto("/definicoes/perfil");
+    await expect(page.getByRole("radiogroup", { name: "Aparência" })).toBeVisible();
+  }
+
+  test("by default it follows the system, in both schemes, and the page does not start in the other one", async ({ page }) => {
+    await open(page, "dark");
+    expect(await ground(page)).toBe(DARK);
+    await expect(radio(page, "Automático")).toHaveAttribute("aria-checked", "true");
+  });
+
+  test("with the system in light, «Escuro» turns the page dark at once and survives a reload", async ({ page }) => {
+    await open(page, "light");
+    expect(await ground(page)).toBe(LIGHT);
+    await radio(page, "Escuro").click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    expect(await ground(page)).toBe(DARK);
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    expect(await ground(page)).toBe(DARK);
+    await expect(radio(page, "Escuro")).toHaveAttribute("aria-checked", "true");
+  });
+
+  test("with the system in dark, «Claro» turns the page light and survives a reload", async ({ page }) => {
+    await open(page, "dark");
+    await radio(page, "Claro").click();
+    expect(await ground(page)).toBe(LIGHT);
+    await page.reload();
+    expect(await ground(page)).toBe(LIGHT);
+  });
+
+  test("«Automático» follows the system again, also when the system changes while the page is open", async ({ page }) => {
+    await open(page, "light");
+    await radio(page, "Escuro").click();
+    await radio(page, "Automático").click();
+    expect(await ground(page)).toBe(LIGHT);
+    await page.emulateMedia({ colorScheme: "dark" });
+    await expect.poll(() => ground(page)).toBe(DARK);
+  });
+
+  test("a choice is not moved by the system", async ({ page }) => {
+    await open(page, "light");
+    await radio(page, "Escuro").click();
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.emulateMedia({ colorScheme: "light" });
+    expect(await ground(page)).toBe(DARK);
+  });
+
+  for (const choice of ["Claro", "Escuro"] as const) {
+    test(`the card has no axe violations and fits at 320px, with «${choice}» chosen`, async ({ page }) => {
+      await open(page, "light");
+      await page.setViewportSize({ width: 320, height: 568 });
+      await radio(page, choice).click();
+      await noHorizontalScroll(page);
+      await noA11yViolations(page);
+    });
+  }
+
+  test("the arrows move the choice", async ({ page }) => {
+    await open(page, "light");
+    await radio(page, "Automático").focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(radio(page, "Claro")).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(radio(page, "Escuro")).toBeFocused();
+    expect(await ground(page)).toBe(DARK);
+  });
 });
