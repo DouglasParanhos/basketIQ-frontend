@@ -29,13 +29,17 @@ const NavContext = createContext<{ hidden: boolean; setHidden: (hidden: boolean)
 /** True while a full screen has taken the bar away: what else surrounds the page (the tabs of Definições) goes too. */
 export const useNavHidden = () => useContext(NavContext).hidden;
 
-/** A full screen (the parts of a receipt, editing the profile, deleting the account) takes the bar away while it is on screen. */
-export function useHideNav() {
+/**
+ * A full screen (the parts of a receipt, editing the profile, deleting the account) takes the bar away while it is on screen.
+ * `active` lets a screen take it away only while something is being edited, when the keyboard needs the room.
+ */
+export function useHideNav(active = true) {
   const { setHidden } = useContext(NavContext);
   useLayoutEffect(() => {
+    if (!active) return;
     setHidden(true);
     return () => setHidden(false);
-  }, [setHidden]);
+  }, [active, setHidden]);
 }
 
 export function AppShell() {

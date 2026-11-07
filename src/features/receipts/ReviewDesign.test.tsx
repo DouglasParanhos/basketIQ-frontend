@@ -32,6 +32,9 @@ async function correctTotal(user: ReturnType<typeof userEvent.setup>, value: str
   await user.tab();
 }
 
+/** «Guardar» in the panel of the open line: it closes the panel, and the foot is back. */
+const saveLine = (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: "Guardar" }));
+
 describe("Rever talão (approved design)", () => {
   it("the warning to review is the gold of the chips, with the warning icon, and says it in words", async () => {
     open();
@@ -85,6 +88,7 @@ describe("Rever talão (approved design)", () => {
       const user = userEvent.setup();
       open();
       await correctTotal(user, "1,90");
+      await saveLine(user);
       await user.click(screen.getByRole("button", { name: "Guardar e rever depois" }));
       expect(await screen.findByText("lista")).toBeInTheDocument();
       expect(patch).toMatchObject({ version: 3, lines: [{ id: "l1", line_total_cents: 190 }, { id: "l2" }] });
@@ -95,6 +99,7 @@ describe("Rever talão (approved design)", () => {
       const user = userEvent.setup();
       open();
       await correctTotal(user, "1,90");
+      await saveLine(user);
       await user.click(screen.getByRole("button", { name: "Guardar e rever depois" }));
       expect(await screen.findByText("Não foi possível guardar.")).toBeVisible();
       expect(screen.queryByText("lista")).toBeNull();
@@ -106,15 +111,27 @@ describe("Rever talão (approved design)", () => {
       const user = userEvent.setup();
       open();
       await correctTotal(user, "1,90");
+      await saveLine(user);
       await user.click(screen.getByRole("button", { name: "Guardar e rever depois" }));
       expect(await screen.findByText(/foi alterada noutro dispositivo/)).toBeVisible();
       expect(screen.queryByText("lista")).toBeNull();
     });
 
-    it("is off while a value is invalid", async () => {
+    it("an invalid value in the line cannot be saved, so the line stays open", async () => {
       const user = userEvent.setup();
       open();
       await correctTotal(user, "abc");
+      expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
+    });
+
+    it("is off while the total of the purchase is invalid", async () => {
+      const user = userEvent.setup();
+      open();
+      await user.click(await screen.findByRole("button", { name: "Editar total da nota" }));
+      const total = screen.getByLabelText("Total da nota");
+      await user.clear(total);
+      await user.type(total, "abc");
+      await user.click(screen.getByRole("button", { name: "Editar total da nota" }));
       expect(screen.getByRole("button", { name: "Guardar e rever depois" })).toBeDisabled();
     });
   });
@@ -193,6 +210,7 @@ describe("Rever talão (approved design)", () => {
       expect(screen.getByLabelText("Preço total (€)")).toHaveValue("1,70");
       expect(screen.queryByText(/Preço alterado de/)).toBeNull();
       await user.selectOptions(screen.getByLabelText("Mercado"), "LIDL"); // something else to save, so a PATCH goes out
+      await saveLine(user);
       await user.click(screen.getByRole("button", { name: "Guardar e rever depois" }));
       await waitFor(() => expect(patch).not.toBeNull());
       expect(patch!.lines[0]).toEqual({ id: "l1" });
@@ -237,6 +255,7 @@ describe("Rever talão (approved design)", () => {
       const user = userEvent.setup();
       open();
       await correctTotal(user, "1,90");
+      await saveLine(user);
       await user.click(screen.getByRole("button", { name: "Eliminar talão" }));
       expect(screen.queryByText(/Preço alterado de/)).toBeNull();
     });
@@ -302,6 +321,7 @@ describe("Rever talão: sair com alterações por guardar", () => {
     const user = userEvent.setup();
     open();
     await correctTotal(user, "1,90");
+    await saveLine(user);
     await user.click(screen.getByRole("button", { name: "Eliminar talão" }));
     await user.click(screen.getByRole("button", { name: "Eliminar compra" }));
     expect(await screen.findByText("lista")).toBeInTheDocument();
@@ -319,9 +339,64 @@ describe("Rever talão: sair com alterações por guardar", () => {
     const user = userEvent.setup();
     open();
     await correctTotal(user, "1,90");
+    await saveLine(user);
     await user.click(screen.getByRole("button", { name: "Confirmar talão" }));
     await waitFor(() => expect(patched).toBe(true));
     expect(screen.queryByText("Sair sem guardar as alterações?")).toBeNull();
+  });
+});
+
+describe("Rever talão: espaço para editar", () => {
+  const actions = ["Confirmar talão", "Guardar e rever depois", "Eliminar talão"];
+  const shown = () => actions.filter((name) => screen.queryByRole("button", { name }));
+
+  it("with a line open the actions of the foot go away, «Desfazer» stays, and «Guardar» brings the foot back", async () => {
+    const user = userEvent.setup();
+    open();
+    await correctTotal(user, "1,90");
+    expect(shown()).toEqual([]);
+    expect(screen.queryByText("Ao confirmar, os valores entram nos seus gastos.")).toBeNull();
+    expect(screen.getByRole("button", { name: "Desfazer" })).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(shown()).toEqual(actions);
+  });
+
+  it("«Cancelar» brings the foot back too", async () => {
+    const user = userEvent.setup();
+    open();
+    await correctTotal(user, "1,90");
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(shown()).toEqual(actions);
+  });
+
+  it("leaving with the line open still asks «Sair sem guardar as alterações?»", async () => {
+    const user = userEvent.setup();
+    open();
+    await correctTotal(user, "1,90");
+    await user.click(screen.getByRole("link", { name: "Voltar às compras" }));
+    expect(await screen.findByText("Sair sem guardar as alterações?")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Continuar a editar" }));
+    expect(screen.getByLabelText("Preço total (€)")).toHaveValue("1,90");
+  });
+
+  it("opening the pencil of the date or of the total takes the actions away; closing it brings them back", async () => {
+    const user = userEvent.setup();
+    open();
+    await screen.findByText("Reveja antes de confirmar");
+    expect(shown()).toEqual(actions);
+    await user.click(screen.getByRole("button", { name: "Editar data e hora" }));
+    expect(shown()).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "Editar data e hora" }));
+    expect(shown()).toEqual(actions);
+    await user.click(screen.getByRole("button", { name: "Editar total da nota" }));
+    expect(shown()).toEqual([]);
+  });
+
+  it("a missing date opens by itself, and that alone does not take the actions away", async () => {
+    server.use(http.get(`${API}/v1/receipts/r1`, () => HttpResponse.json(receipt({ purchase_at: null }))));
+    open();
+    expect(await screen.findByLabelText("Data")).toBeInTheDocument();
+    expect(shown()).toEqual(actions);
   });
 });
 

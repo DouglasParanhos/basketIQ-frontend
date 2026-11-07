@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { nav } from "../test/nav";
 import { renderRoutes } from "../test/render";
 import { API, failConfig, server, serveConfig } from "../test/server";
-import { AppShell } from "./AppShell";
+import { AppShell, useHideNav } from "./AppShell";
 
 const shell = [{ path: "*", element: <AppShell /> }];
 const FOUR = ["Início", "Talões", "Adicionar talão", "Definições"];
@@ -108,5 +108,27 @@ describe("lazy pages inside the shell (spec 010, R14)", () => {
     const bar = await screen.findByRole("navigation", { name: "Navegação principal" });
     expect(within(bar).getByRole("link", { name: "Início" })).toBeInTheDocument();
     expect(await screen.findByRole("status")).toHaveTextContent("A carregar");
+  });
+});
+
+describe("useHideNav", () => {
+  const Screen = ({ active }: { active?: boolean }) => {
+    useHideNav(active);
+    return <p>ecrã</p>;
+  };
+  const withScreen = (active?: boolean) => [{ path: "*", element: <AppShell />, children: [{ path: "*", element: <Screen active={active} /> }] }];
+
+  it("takes the bar away while active, and by default", async () => {
+    serveConfig({ app_name: "Super Mercado" });
+    renderRoutes(withScreen(), "/");
+    expect(await screen.findByText("ecrã")).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Navegação principal" })).toBeNull();
+  });
+
+  it("keeps the bar when it is not active", async () => {
+    serveConfig({ app_name: "Super Mercado" });
+    renderRoutes(withScreen(false), "/");
+    expect(await screen.findByText("ecrã")).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Navegação principal" })).toBeInTheDocument();
   });
 });

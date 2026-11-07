@@ -325,6 +325,7 @@ describe("review (RF-07, F-11..F-15)", () => {
     const qty = screen.getByLabelText("Quantidade");
     await user.clear(qty);
     await user.type(qty, "0,900");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
     await user.click(screen.getByRole("button", { name: /^guardar e rever depois$/i }));
     await waitFor(() => expect(patch).not.toBeNull());
     expect(patch).toEqual({ version: 3, lines: [{ id: "l1" }, { id: "l2", quantity: "0.900" }] });
@@ -372,12 +373,12 @@ describe("review (RF-07, F-11..F-15)", () => {
     const user = userEvent.setup();
     renderRoutes(routes, "/compras/r1");
     await user.click(await screen.findByRole("button", { name: /leite meio gordo/i }));
-    await user.click(screen.getByRole("button", { name: "Mais opções" }));
     await user.click(screen.getByRole("button", { name: /remover linha/i }));
     await user.click(screen.getByRole("button", { name: /adicionar linha/i }));
     await user.type(screen.getByLabelText("Descrição"), "PAO");
     await user.type(screen.getByLabelText("Preço total (€)"), "0,40");
     expect(document.body.textContent?.replace(/\s/g, " ")).toContain("A soma das linhas (1,63 €) não coincide com o total do talão (2,93 €).");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
     await user.click(screen.getByRole("button", { name: /^guardar e rever depois$/i }));
     await waitFor(() => expect(lines).toHaveLength(2));
     expect(lines[0]).toEqual({ id: "l2" });
