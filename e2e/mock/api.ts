@@ -292,6 +292,10 @@ export const reviewReceipt = {
   updated_at: "2026-09-15T12:41:00Z",
 };
 
+/** `reviewReceipt` once confirmed. */
+const validatedReceipt = { ...reviewReceipt, id: "v1", status: "CONFIRMED", review_reasons: [], confirmed_at: "2026-09-15T13:00:00Z", confirmed_by: "USER", version: 4 };
+const reopenedReceipt = { ...reviewReceipt, id: "v1", version: validatedReceipt.version + 1 };
+
 const summary = {
   filters: { from: "2026-10-01", to: "2026-10-31", merchant: null, product_id: null },
   cards: {
@@ -335,6 +339,7 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
   // Every run sees the same page, whatever the host: the passkey screens opt in (passkeys.spec.ts).
   if (!state.passkeys) await noWebAuthn(page);
   let purchasesWithFiles = Math.ceil((state.storedFiles ?? 0) / 3);
+  let reopened = false;
   let profile: Record<string, unknown> = state.migrated
     ? { ...emptyProfile, onboarding_completed_at: "2026-10-31T00:00:00Z" }
     : state.onboarded === false ? { ...emptyProfile } : { ...doneProfile };
@@ -458,6 +463,12 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
       return json(route, { id: "j1", status: "QUEUED", attempt_count: 0, processing_route: null, created_at: "2026-10-31T10:00:00Z" }, 202);
     }
     if (path === "/v1/receipts/r1" && method === "GET") return json(route, reviewReceipt);
+    // A validated receipt (spec 018): «Editar talão» reopens it for review.
+    if (path === "/v1/receipts/v1" && method === "GET") return json(route, reopened ? reopenedReceipt : validatedReceipt);
+    if (path === "/v1/receipts/v1/reopen" && method === "POST") {
+      reopened = true;
+      return json(route, reopenedReceipt);
+    }
     if (path === "/v1/analytics/summary") return json(route, summary);
     if (path === "/v1/analytics/consumption") {
       return json(route, { filters: summary.filters, items: [{ product_id: "p1", name: "LEITE MEIO GORDO", purchases: 3, units: "4", units_per_month: 4.1, spent_cents: 33500, avg_interval_days: 14, first_purchase: "2026-10-02", last_purchase: "2026-10-30" }], empty: false });
