@@ -123,21 +123,31 @@ describe("Rever talão: the lines", () => {
     expect(within(row).getByRole("button", { name: "Editar LEITE MEIO GORDO" })).toBeInTheDocument();
   });
 
-  it("the panel has the two figures, what was read, and «Guardar» keeps the edit", async () => {
+  it("the card has every field in sight and no help text; «Guardar» keeps the edit, and the unit price follows the total", async () => {
     const user = userEvent.setup();
     open();
     await user.click(await pencil(/editar leite meio gordo/i));
-    expect(screen.getByText("a editar")).toBeInTheDocument();
+    for (const label of ["Produto", "Quantidade", "Unidade", "Preço unitário (€)", "Preço total (€)"]) expect(screen.getByLabelText(label)).toBeInTheDocument();
     expect(screen.getByLabelText("Quantidade")).toHaveValue("2");
-    expect(screen.getByText("Lido: 1,70. Confira com o talão original.")).toBeInTheDocument();
+    for (const gone of [/^Lido:/, /^Na nota/, /Nome usado nas análises/, "Mais opções", "a editar", "Confira"]) expect(screen.queryByText(gone)).toBeNull();
     const total = screen.getByLabelText("Preço total (€)");
     await user.clear(total);
     await user.type(total, "1,90");
+    expect(screen.getByLabelText("Preço unitário (€)")).toHaveValue("0,95");
     await user.click(screen.getByRole("button", { name: "Guardar" }));
-    expect(screen.queryByText("a editar")).toBeNull();
     const row = screen.getByText("LEITE MEIO GORDO").closest("li")!;
     expect(within(row).getByText("1,90")).toBeInTheDocument();
     expect(within(row).getByText("Corrigido manualmente")).toBeInTheDocument();
+  });
+
+  it("the quantity and the unit price work out the total", async () => {
+    const user = userEvent.setup();
+    open();
+    await user.click(await pencil(/editar leite meio gordo/i));
+    const quantity = screen.getByLabelText("Quantidade");
+    await user.clear(quantity);
+    await user.type(quantity, "3");
+    expect(screen.getByLabelText("Preço total (€)")).toHaveValue("2,55");
   });
 
   it("«Cancelar» puts the line back, and leaving then asks nothing because nothing is left to save", async () => {
@@ -178,16 +188,122 @@ describe("Rever talão: the lines", () => {
     expect(screen.getByRole("heading", { level: 2, name: "Produtos · 2" })).toBeInTheDocument();
   });
 
-  it("«Mais opções» holds what the canvas does not show: the note, the product, the unit, the unit price and the discount; split and remove are always there", async () => {
+  it("the discount is a link until the line has one", async () => {
     const user = userEvent.setup();
     open();
     await user.click(await pencil(/editar leite meio gordo/i));
-    expect(screen.queryByLabelText("Unidade")).toBeNull();
-    expect(screen.getByRole("button", { name: /dividir linha/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /remover linha/i })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Mais opções" }));
-    expect(screen.getByText(/Na nota:/)).toBeInTheDocument();
-    for (const label of ["Produto", "Unidade", "Preço unitário (€)", "Desconto (€)"]) expect(screen.getByLabelText(label)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Desconto (€)")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "+ Desconto" }));
+    expect(screen.getByLabelText("Desconto (€)")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "+ Desconto" })).toBeNull();
+  });
+
+  it("a line that already has a discount shows it", async () => {
+    serve({ lines: [line({ discount_cents: 20 })] });
+    const user = userEvent.setup();
+    open();
+    await user.click(await pencil(/editar leite meio gordo/i));
+    expect(screen.getByLabelText("Desconto (€)")).toHaveValue("0,20");
+  });
+
+  it("⋯ holds «Dividir linha» and «Remover linha», and removing asks first", async () => {
+    const user = userEvent.setup();
+    open();
+    await user.click(await pencil(/editar leite meio gordo/i));
+    expect(screen.queryByRole("button", { name: /dividir linha/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /remover linha/i })).toBeNull();
+    const more = screen.getByRole("button", { name: "Mais ações da linha" });
+    await user.click(more);
+    expect(more).toHaveAttribute("aria-expanded", "true");
+    await user.click(screen.getByRole("button", { name: /remover linha/i }));
+    expect(screen.getByText("Remover esta linha?")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Guardar" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Manter" }));
+    expect(screen.getByRole("button", { name: "Guardar" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Produtos · 2" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Mais ações da linha" }));
+    await user.click(screen.getByRole("button", { name: /remover linha/i }));
+    await user.click(screen.getByRole("button", { name: "Remover" }));
+    expect(screen.getByRole("heading", { level: 2, name: "Produtos · 1" })).toBeInTheDocument();
+  });
+
+  it("⋯ closes with Esc and gives the focus back", async () => {
+    const user = userEvent.setup();
+    open();
+    await user.click(await pencil(/editar leite meio gordo/i));
+    const more = screen.getByRole("button", { name: "Mais ações da linha" });
+    await user.click(more);
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("button", { name: /dividir linha/i })).toBeNull();
+    expect(more).toHaveFocus();
+  });
+
+  it("⋯ splits the line", async () => {
+    const user = userEvent.setup();
+    open();
+    await user.click(await pencil(/editar leite meio gordo/i));
+    await user.click(screen.getByRole("button", { name: "Mais ações da linha" }));
+    await user.click(screen.getByRole("button", { name: /dividir linha/i }));
+    expect(screen.getByRole("heading", { level: 2, name: "Produtos · 3" })).toBeInTheDocument();
+  });
+
+  it("ⓘ opens a sheet with what the note says and what was read; Esc closes it and the focus goes back to ⓘ", async () => {
+    const user = userEvent.setup();
+    open();
+    await user.click(await pencil(/editar leite meio gordo/i));
+    const info = screen.getByRole("button", { name: "Saber mais sobre esta linha" });
+    await user.click(info);
+    const sheet = screen.getByRole("dialog", { name: "Sobre esta linha" });
+    expect(within(sheet).getByText("Na nota")).toBeInTheDocument();
+    expect(within(sheet).getByText("C LEITE MEIO GORDO 2 X 0,85 1,70")).toBeInTheDocument();
+    expect(within(sheet).getByText("Lido: 1,70")).toBeInTheDocument();
+    expect(within(sheet).getByText(/usado nas análises/)).toBeInTheDocument();
+    expect(within(sheet).getByRole("button", { name: "Fechar" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(info).toHaveFocus();
+  });
+
+  it("a line just added has no ⓘ, and its name is the «Produto» field", async () => {
+    const user = userEvent.setup();
+    open();
+    await user.click(await screen.findByRole("button", { name: "Adicionar linha" }));
+    expect(screen.queryByRole("button", { name: "Saber mais sobre esta linha" })).toBeNull();
+    await user.type(screen.getByLabelText("Produto"), "PAO");
+    expect(screen.getByLabelText("Produto")).toHaveValue("PAO");
+  });
+
+  it("the name can be emptied and typed again", async () => {
+    const user = userEvent.setup();
+    open();
+    await user.click(await pencil(/editar leite meio gordo/i));
+    const name = screen.getByLabelText("Produto");
+    expect(name).toHaveValue("LEITE MEIO GORDO");
+    await user.clear(name);
+    expect(name).toHaveValue("");
+    await user.type(name, "Leite");
+    expect(name).toHaveValue("Leite");
+  });
+
+  it("«Confira» sits next to what was read with little confidence, and nowhere when all is well", async () => {
+    const user = userEvent.setup();
+    open();
+    await user.click(await pencil(/editar banana/i));
+    const field = (label: string) => screen.getByLabelText(label).closest("div")!;
+    expect(within(field("Quantidade")).getByText("Confira")).toBeInTheDocument();
+    expect(within(field("Preço unitário (€)")).getByText("Confira")).toBeInTheDocument();
+    expect(within(field("Preço total (€)")).queryByText("Confira")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+    await user.click(await pencil(/editar leite meio gordo/i));
+    expect(screen.queryByText("Confira")).toBeNull();
+  });
+
+  it("«Confira» also marks a total that quantity × unit price does not explain", async () => {
+    serve({ lines: [line({ line_total_cents: 999 })] });
+    const user = userEvent.setup();
+    open();
+    await user.click(await pencil(/editar leite meio gordo/i));
+    expect(within(screen.getByLabelText("Preço total (€)").closest("div")!).getByText("Confira")).toBeInTheDocument();
   });
 
   it("with many lines it shows the first five and «Ver os outros N produtos», and the rest comes with a click", async () => {

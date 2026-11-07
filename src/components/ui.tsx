@@ -54,16 +54,27 @@ export function Field({
   hideLabel = false,
   error,
   hint,
+  note,
   className = "",
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & { label: string; hideLabel?: boolean; error?: string | null; hint?: string }) {
+}: InputHTMLAttributes<HTMLInputElement> & { label: string; hideLabel?: boolean; error?: string | null; hint?: string; note?: ReactNode }) {
   const id = useId();
   const describedBy = [error ? `${id}-err` : null, hint ? `${id}-hint` : null].filter(Boolean).join(" ") || undefined;
+  const labelEl = (
+    <label htmlFor={id} className={hideLabel ? "sr-only" : "text-sm font-medium text-ink-soft"}>
+      {label}
+    </label>
+  );
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
-      <label htmlFor={id} className={hideLabel ? "sr-only" : "text-sm font-medium text-ink-soft"}>
-        {label}
-      </label>
+      {note ? (
+        <div className="flex items-center gap-2">
+          {labelEl}
+          {note}
+        </div>
+      ) : (
+        labelEl
+      )}
       <input
         id={id}
         aria-invalid={error ? true : undefined}

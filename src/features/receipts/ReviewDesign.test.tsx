@@ -233,6 +233,16 @@ describe("Rever talão (approved design)", () => {
       expect(patches).toBe(0);
     });
 
+    it("«Desfazer» puts back the total and the unit price that moved with it", async () => {
+      const user = userEvent.setup();
+      open();
+      await correctTotal(user, "1,90");
+      expect(screen.getByLabelText("Preço unitário (€)")).toHaveValue("0,95");
+      await user.click(screen.getByRole("button", { name: "Desfazer" }));
+      expect(screen.getByLabelText("Preço total (€)")).toHaveValue("1,70");
+      expect(screen.getByLabelText("Preço unitário (€)")).toHaveValue("0,85");
+    });
+
     it("does not appear when the price is the same, or is not a valid value", async () => {
       const user = userEvent.setup();
       open();
@@ -246,8 +256,9 @@ describe("Rever talão (approved design)", () => {
       const user = userEvent.setup();
       open();
       await correctTotal(user, "1,90");
-      await user.click(screen.getByRole("button", { name: "Mais opções" }));
+      await user.click(screen.getByRole("button", { name: "Mais ações da linha" }));
       await user.click(screen.getByRole("button", { name: /remover linha/i }));
+      await user.click(screen.getByRole("button", { name: "Remover" }));
       expect(screen.queryByText(/Preço alterado de/)).toBeNull();
     });
 
@@ -406,6 +417,6 @@ describe("revertField", () => {
   it("keeps the field touched when it was already", () => {
     const first = setField(line, "line_total", "1,80");
     const second = setField(first, "line_total", "1,90");
-    expect(revertField(second, "line_total", "1,80", true).touched).toEqual(["line_total"]);
+    expect(revertField(second, "line_total", "1,80", true).touched).toContain("line_total");
   });
 });

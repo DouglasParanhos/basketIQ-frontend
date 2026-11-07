@@ -21,22 +21,15 @@ import {
   toPatch,
   validateLine,
   type DraftLine,
-  type PriceField,
 } from "./draft";
-import { flaggedFields, ReviewLines } from "./ReviewLines";
+import { flaggedFields, ReviewLines, type PriceChange } from "./ReviewLines";
 import { ReviewSummary } from "./ReviewSummary";
 import { useOriginalViewer } from "./useOriginalViewer";
 
 type Receipt = Schemas["ReceiptOut"];
 
 /** The last price that was corrected, to offer «Desfazer»: the values are as the field shows them. */
-interface PriceUndo {
-  key: string;
-  field: PriceField;
-  from: string;
-  to: string;
-  wasTouched: boolean;
-}
+type PriceUndo = PriceChange & { key: string };
 
 export function ReviewEditor({ receipt }: { receipt: Receipt }) {
   const qc = useQueryClient();
@@ -156,7 +149,8 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
 
   function undoPrice() {
     if (!undo) return;
-    update(undo.key, (l) => revertField(l, undo.field, undo.from, undo.wasTouched));
+    // The price tied to the one corrected moved with it: both go back.
+    update(undo.key, (l) => undo.sides.reduce((line, s) => revertField(line, s.field, s.from, s.wasTouched), l));
     setUndo(null);
   }
 
@@ -274,7 +268,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
         onField={(key, field, value) => update(key, (l) => setField(l, field, value))}
         onSplit={(key) => reshape(key, splitLine)}
         onRemove={(key) => reshape(key, () => null)}
-        onPriceChange={(key, field, from, to, wasTouched) => setUndo({ key, field, from, to, wasTouched })}
+        onPriceChange={(key, change) => setUndo({ key, ...change })}
         onAdd={addLine}
       />
 
@@ -295,7 +289,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
           {priceUndo && !deleting && !leavingAsked && (
             <div className="flex items-center justify-between gap-2 rounded-2xl bg-ink py-1.5 pl-4 pr-1.5 text-[13px] text-ground">
               <span>
-                Preço alterado de {priceUndo.from} para {priceUndo.to}
+                Preço alterado de {priceUndo.sides[0].from} para {priceUndo.to}
               </span>
               <button type="button" onClick={undoPrice} className="min-h-11 shrink-0 px-3.5 font-extrabold text-[#FFE08A] dark:text-ground dark:underline">
                 Desfazer

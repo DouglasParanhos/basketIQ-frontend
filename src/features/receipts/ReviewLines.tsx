@@ -1,8 +1,10 @@
-import { AlertTriangle, Pencil, Plus, Scissors, Trash2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { AlertTriangle, Info, MoreHorizontal, Pencil, Plus, Scissors, Trash2 } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
+import { BottomSheet } from "../../components/BottomSheet";
 import { Button, Field, Select } from "../../components/ui";
 import { centsToInput, formatAmount, formatQuantity, parseEurToCents } from "../../lib/format";
-import type { DraftLine, LineErrors, LineField, PriceField } from "./draft";
+import { totalDisagrees, type DraftLine, type LineErrors, type LineField, type PriceField } from "./draft";
+import { FootQuestion } from "./FootQuestion";
 
 /** The lines that show before «Ver os outros N produtos»: the rest only hides when nothing in it asks for attention. */
 const SHOWN = 5;
@@ -27,12 +29,18 @@ export function flaggedFields(line: DraftLine): string[] {
     .filter(Boolean);
 }
 
+/** A quantity that the reading left pending, until the person touches it. */
+const quantityPending = (line: DraftLine) => !!line.source?.flags.includes("quantity_pending") && !line.touched.includes("quantity");
+
+/** A line no rule understood, until the person touches it. */
+const unresolvedLine = (line: DraftLine) => !!line.source?.unresolved && line.touched.length === 0;
+
 /** Small highlighter mark with a text label: colour is never the only signal. */
-function Check_({ what }: { what: string }) {
+function Check_({ label }: { label: string }) {
   return (
     <span className="marker ml-1 inline-flex items-center gap-1 rounded px-1 text-[0.7rem] font-semibold not-italic">
       <AlertTriangle aria-hidden className="size-3" />
-      Verificar {what}
+      {label}
     </span>
   );
 }
@@ -54,7 +62,7 @@ interface Props {
   onField: (key: string, field: LineField, value: string) => void;
   onSplit: (key: string) => void;
   onRemove: (key: string) => void;
-  onPriceChange: (key: string, field: PriceField, from: string, to: string, wasTouched: boolean) => void;
+  onPriceChange: (key: string, change: PriceChange) => void;
   onAdd: () => void;
 }
 
@@ -78,7 +86,7 @@ export function ReviewLines(p: Props) {
               onCancel={p.onCancel}
               onSplit={() => p.onSplit(line.key)}
               onRemove={() => p.onRemove(line.key)}
-              onPriceChange={(field, from, to, wasTouched) => p.onPriceChange(line.key, field, from, to, wasTouched)}
+              onPriceChange={(change) => p.onPriceChange(line.key, change)}
             />
           ) : (
             <LineRow key={line.key} line={line} onOpen={() => p.onOpen(line.key)} />
@@ -101,9 +109,8 @@ export function ReviewLines(p: Props) {
 
 function LineRow({ line, onOpen }: { line: DraftLine; onOpen: () => void }) {
   const flagged = flaggedFields(line);
-  const src = line.source;
-  const pending = src?.flags.includes("quantity_pending") && !line.touched.includes("quantity");
-  const unresolved = src?.unresolved && line.touched.length === 0;
+  const pending = quantityPending(line);
+  const unresolved = unresolvedLine(line);
   const name = nameOf(line);
   // A line no rule understood is checked as a whole: its values were never read, so each is not asked for apart.
   const checks = unresolved ? ["esta linha"] : CHECK_ORDER.filter((f) => flagged.includes(f) || (f === "quantity" && pending)).map((f) => FIELD_LABEL[f]);
@@ -112,7 +119,7 @@ function LineRow({ line, onOpen }: { line: DraftLine; onOpen: () => void }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="break-words text-sm font-bold">
           {name}
-          {flagged.includes("description") && !unresolved && <Check_ what="descrição" />}
+          {flagged.includes("description") && !unresolved && <Check_ label="Verificar descrição" />}
         </span>
         {!unresolved && (
           <span className="text-xs text-ink-soft">
@@ -129,12 +136,12 @@ function LineRow({ line, onOpen }: { line: DraftLine; onOpen: () => void }) {
         {checks.length > 0 && (
           <span className="mt-1">
             {checks.map((what) => (
-              <Check_ key={what} what={what} />
+              <Check_ key={what} label={`Verificar ${what}`} />
             ))}
           </span>
         )}
         {line.product_name && line.product_name !== line.raw_description && <span className="text-xs text-ink-soft">Produto: {line.product_name}</span>}
-        {src && (line.touched.length > 0 || src.manually_edited) && <span className="text-xs text-brand">Corrigido manualmente</span>}
+        {line.source && (line.touched.length > 0 || line.source.manually_edited) && <span className="text-xs text-brand">Corrigido manualmente</span>}
       </div>
       <span className={flagged.includes("line_total") ? "marker shrink-0 px-0.5 font-extrabold" : "shrink-0 font-bold"}>{line.line_total || "?"}</span>
       <button type="button" aria-label={`Editar ${name}`} onClick={onOpen} className="grid size-11 shrink-0 place-items-center text-ink-soft">
@@ -142,6 +149,19 @@ function LineRow({ line, onOpen }: { line: DraftLine; onOpen: () => void }) {
       </button>
     </li>
   );
+}
+
+/** How a price was before it was corrected, to put it back. */
+interface PriceSide {
+  field: PriceField;
+  from: string;
+  wasTouched: boolean;
+}
+
+/** A price that was corrected (first side) and the one tied to it, which moved with it (second), to offer «Desfazer»: the values are as the fields show them. */
+export interface PriceChange {
+  to: string;
+  sides: [PriceSide, PriceSide];
 }
 
 interface PanelProps {
@@ -152,88 +172,205 @@ interface PanelProps {
   onCancel: () => void;
   onSplit: () => void;
   onRemove: () => void;
-  onPriceChange: (field: PriceField, from: string, to: string, wasTouched: boolean) => void;
+  onPriceChange: (change: PriceChange) => void;
 }
 
-/** The line being edited: its two figures first, the read value to check them against, the other fields under «Mais opções», and split and remove always in sight. */
+const tiedTo = (field: PriceField): PriceField => (field === "line_total" ? "unit_price" : "line_total");
+
+/** The line being edited: all it takes to correct it, always in sight; what is read from the note is behind ⓘ, the rare actions behind ⋯. */
 function LinePanel({ line, errors, onField, onSave, onCancel, onSplit, onRemove, onPriceChange }: PanelProps) {
-  const [more, setMore] = useState(false);
+  const [info, setInfo] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [discount, setDiscount] = useState(line.discount !== "");
+  const actionsId = useId();
+  const root = useRef<HTMLLIElement>(null);
+  const menuBox = useRef<HTMLDivElement>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
   // A price counts as corrected when the person leaves the field with another valid value than the one it had on entering.
-  const focused = useRef<{ field: PriceField; value: string; wasTouched: boolean } | null>(null);
+  const focused = useRef<{ field: PriceField; line: DraftLine } | null>(null);
   const price = (field: PriceField) => ({
     onFocus: () => {
-      focused.current = { field, value: line[field], wasTouched: line.touched.includes(field) };
+      focused.current = { field, line };
     },
     onBlur: () => {
       const before = focused.current;
       focused.current = null;
       if (before?.field !== field) return;
-      const from = parseEurToCents(before.value);
+      const from = parseEurToCents(before.line[field]);
       const to = parseEurToCents(line[field]);
-      if (from !== null && to !== null && from !== to) onPriceChange(field, centsToInput(from), centsToInput(to), before.wasTouched);
+      if (from === null || to === null || from === to) return;
+      const side = (f: PriceField): PriceSide => ({ field: f, from: before.line[f], wasTouched: before.line.touched.includes(f) });
+      onPriceChange({ to: centsToInput(to), sides: [{ ...side(field), from: centsToInput(from) }, side(tiedTo(field))] });
     },
   });
-  const read = line.source?.line_total_cents;
-  const id = `line-${line.key}`;
-  return (
-    <li id={id} className="-mx-4 border-t border-line bg-warn-soft/40 px-4 py-3 first:border-t-0">
-      <div className="flex items-center justify-between gap-3">
-        <span className="break-words text-sm font-extrabold">{nameOf(line)}</span>
-        <span className="shrink-0 text-[11px] font-extrabold text-warn-ink">a editar</span>
-      </div>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        {!line.source && (
-          <Field label="Descrição" className="col-span-2" value={line.raw_description} error={errors.raw_description} onChange={(e) => onField("raw_description", e.target.value)} />
-        )}
-        <Field label="Quantidade" inputMode="decimal" value={line.quantity} error={errors.quantity} onChange={(e) => onField("quantity", e.target.value)} />
-        <Field label="Preço total (€)" inputMode="decimal" value={line.line_total} error={errors.line_total} onChange={(e) => onField("line_total", e.target.value)} {...price("line_total")} />
-      </div>
-      {read !== null && read !== undefined && <p className="mt-2 text-xs text-ink-soft">Lido: {formatAmount(read)}. Confira com o talão original.</p>}
 
-      <button type="button" aria-expanded={more} aria-controls={`${id}-more`} onClick={() => setMore(!more)} className="mt-1 flex min-h-11 items-center text-[13px] font-bold text-brand">
-        Mais opções
-      </button>
-      {more && (
-        <div id={`${id}-more`} className="flex flex-col gap-3">
-          {line.source && (
-            <p className="text-xs text-ink-soft">
-              Na nota: <span className="font-receipt">{line.source.evidence.join(" / ") || line.source.raw_description}</span>
-            </p>
+  // The card comes into view when it opens.
+  useEffect(() => {
+    root.current?.scrollIntoView?.({ block: "nearest" });
+  }, []);
+  useEffect(() => {
+    if (!menu) return;
+    const away = (e: PointerEvent) => {
+      if (!(e.target instanceof Node) || !menuBox.current?.contains(e.target)) setMenu(false);
+    };
+    const escape = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setMenu(false);
+      menuButton.current?.focus();
+    };
+    document.addEventListener("pointerdown", away);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", away);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [menu]);
+
+  const src = line.source;
+  const flagged = flaggedFields(line);
+  // The mark that asks to check a field against the receipt: it is the only help the card shows by default.
+  const ask = (field: string, extra = false) => (flagged.includes(field) || extra) && <Check_ label="Confira" />;
+  // The person may have emptied the name: a read line shows the original only until the name is touched.
+  const nameValue = src ? (line.touched.includes("product") ? line.product_name : line.product_name || line.raw_description) : line.raw_description;
+
+  return (
+    <li ref={root} className="-mx-4 scroll-mb-4 border-t border-line bg-warn-soft/40 px-4 py-3 first:border-t-0">
+      <div className="flex items-end gap-1">
+        <Field
+          label="Produto"
+          className="min-w-0 flex-1"
+          value={nameValue}
+          error={errors.raw_description}
+          note={ask("description", unresolvedLine(line))}
+          onChange={(e) => onField(src ? "product" : "raw_description", e.target.value)}
+        />
+        {src && (
+          <button type="button" aria-label="Saber mais sobre esta linha" onClick={() => setInfo(true)} className="grid size-11 shrink-0 place-items-center text-ink-soft">
+            <Info aria-hidden className="size-5" />
+          </button>
+        )}
+        <div ref={menuBox} className="relative shrink-0">
+          <button
+            ref={menuButton}
+            type="button"
+            aria-label="Mais ações da linha"
+            aria-expanded={menu}
+            aria-controls={actionsId}
+            onClick={() => setMenu(!menu)}
+            className="grid size-11 place-items-center text-ink-soft"
+          >
+            <MoreHorizontal aria-hidden className="size-5" />
+          </button>
+          {menu && (
+            <ul id={actionsId} className="absolute right-0 top-full z-10 mt-1 w-48 rounded-surface bg-paper p-1 shadow-lg ring-1 ring-line">
+              <li>
+                <button type="button" onClick={onSplit} className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm font-bold">
+                  <Scissors aria-hidden className="size-4" /> Dividir linha
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenu(false);
+                    setRemoving(true);
+                  }}
+                  className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm font-bold text-alert"
+                >
+                  <Trash2 aria-hidden className="size-4" /> Remover linha
+                </button>
+              </li>
+            </ul>
           )}
-          {line.source && (
-            <Field label="Produto" hint="Nome usado nas análises. A descrição original da nota é sempre guardada." value={line.product_name} onChange={(e) => onField("product", e.target.value)} />
-          )}
-          <div className="grid grid-cols-2 gap-2">
-            <Select label="Unidade" value={line.unit} onChange={(e) => onField("unit", e.target.value)}>
-              <option value="un">unidade</option>
-              <option value="kg">kg</option>
-              <option value="g">g</option>
-              <option value="l">l</option>
-              <option value="ml">ml</option>
-            </Select>
-            <Field label="Preço unitário (€)" inputMode="decimal" value={line.unit_price} error={errors.unit_price} onChange={(e) => onField("unit_price", e.target.value)} {...price("unit_price")} />
-            <Field label="Desconto (€)" inputMode="decimal" value={line.discount} error={errors.discount} onChange={(e) => onField("discount", e.target.value)} />
-          </div>
+        </div>
+      </div>
+
+      <div className="mt-2 grid grid-cols-2 items-end gap-x-2 gap-y-2">
+        <Field
+          label="Quantidade"
+          inputMode="decimal"
+          value={line.quantity}
+          error={errors.quantity}
+          note={ask("quantity", quantityPending(line))}
+          onChange={(e) => onField("quantity", e.target.value)}
+        />
+        <Select label="Unidade" value={line.unit} onChange={(e) => onField("unit", e.target.value)}>
+          <option value="un">unidade</option>
+          <option value="kg">kg</option>
+          <option value="g">g</option>
+          <option value="l">l</option>
+          <option value="ml">ml</option>
+        </Select>
+        <Field
+          label="Preço unitário (€)"
+          inputMode="decimal"
+          value={line.unit_price}
+          error={errors.unit_price}
+          note={ask("unit_price")}
+          onChange={(e) => onField("unit_price", e.target.value)}
+          {...price("unit_price")}
+        />
+        <Field
+          label="Preço total (€)"
+          inputMode="decimal"
+          value={line.line_total}
+          error={errors.line_total}
+          note={ask("line_total", totalDisagrees(line))}
+          onChange={(e) => onField("line_total", e.target.value)}
+          {...price("line_total")}
+        />
+        {discount ? (
+          <Field
+            label="Desconto (€)"
+            inputMode="decimal"
+            value={line.discount}
+            error={errors.discount}
+            note={ask("discount")}
+            onChange={(e) => onField("discount", e.target.value)}
+          />
+        ) : (
+          <button type="button" onClick={() => setDiscount(true)} className="col-span-2 flex min-h-11 items-center self-start text-[13px] font-bold text-brand">
+            + Desconto
+          </button>
+        )}
+      </div>
+
+      {removing ? (
+        <div className="mt-3">
+          <FootQuestion>
+            <p className="text-sm font-bold">Remover esta linha?</p>
+            <div className="flex gap-2">
+              <Button type="button" variant="danger" className="flex-1" onClick={onRemove}>
+                Remover
+              </Button>
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setRemoving(false)}>
+                Manter
+              </Button>
+            </div>
+          </FootQuestion>
+        </div>
+      ) : (
+        <div className="mt-3 flex gap-2">
+          <Button type="button" className="flex-1" disabled={Object.keys(errors).length > 0} onClick={onSave}>
+            Guardar
+          </Button>
+          <Button type="button" variant="outline" className="flex-1" onClick={onCancel}>
+            Cancelar
+          </Button>
         </div>
       )}
 
-      <div className="mt-2 flex flex-wrap gap-2">
-        <Button type="button" variant="secondary" onClick={onSplit}>
-          <Scissors aria-hidden className="size-4" /> Dividir linha
-        </Button>
-        <Button type="button" variant="quiet" onClick={onRemove}>
-          <Trash2 aria-hidden className="size-4" /> Remover linha
-        </Button>
-      </div>
-
-      <div className="mt-3 flex gap-2">
-        <Button type="button" className="flex-1" disabled={Object.keys(errors).length > 0} onClick={onSave}>
-          Guardar
-        </Button>
-        <Button type="button" variant="outline" className="flex-1" onClick={onCancel}>
-          Cancelar
-        </Button>
-      </div>
+      {info && src && (
+        <BottomSheet title="Sobre esta linha" onClose={() => setInfo(false)}>
+          <div>
+            <p className="text-xs text-ink-soft">Na nota</p>
+            <p className="font-receipt text-sm">{src.evidence.join(" / ") || src.raw_description}</p>
+          </div>
+          {src.line_total_cents !== null && <p className="text-sm">Lido: {formatAmount(src.line_total_cents)}</p>}
+          <p className="text-sm text-ink-soft">O nome que editar é o usado nas análises. O original da nota fica sempre guardado.</p>
+        </BottomSheet>
+      )}
     </li>
   );
 }

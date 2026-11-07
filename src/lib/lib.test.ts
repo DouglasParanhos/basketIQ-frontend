@@ -104,9 +104,9 @@ describe("file validation (F-08, RF-04)", () => {
 });
 
 describe("review draft (RF-07)", () => {
-  it("sends only the fields the person changed", () => {
+  it("sends only the fields the person changed, and the total that the quantity works out", () => {
     const draft = setField(toDraft(line()), "quantity", "3");
-    expect(toPatch(draft)).toEqual({ id: "l1", quantity: "3" });
+    expect(toPatch(draft)).toEqual({ id: "l1", quantity: "3", line_total_cents: 255 });
     expect(toPatch(toDraft(line()))).toEqual({ id: "l1" });
   });
 
