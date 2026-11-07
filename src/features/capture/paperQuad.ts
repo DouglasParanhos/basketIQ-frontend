@@ -3,7 +3,7 @@
  * `flatten_paper` that finds it, Backend/src/basketiq/pipeline/preprocess.py), on a probe of the same size,
  * so that the corners shown on the phone are the ones the backend will straighten.
  */
-import { levels, PAPER_MAX_AREA, PAPER_MIN_AREA, paperBox, type Box } from "./analyzeFrame";
+import { boxArea, paperThreshold, plausible, type Box } from "./analyzeFrame";
 import { edgeLengths, mapQuad, rectQuad, scaleQuad, type Point, type Quad } from "./homography";
 
 export const PAPER_PROBE_SIDE = 800; // backend preprocess.PAPER_PROBE_SIDE
@@ -15,9 +15,8 @@ const ALONG_BIN = 0.25; // probe pixels: the ends are read from a histogram this
 /** Corners of the receipt (top-left, top-right, bottom-right, bottom-left as seen), as shares (0..1) of the
  * probe's width and height; the paper's box when its edges are not clean; null without a plausible paper. */
 export function paperQuad(gray: Uint8Array, w: number, h: number): Quad | null {
-  const { threshold } = levels(gray);
-  const box = paperBox(gray, w, h, threshold);
-  if (!box || !plausible((box.right - box.left) * (box.bottom - box.top), w, h)) return null;
+  const { threshold, box } = paperThreshold(gray, w, h);
+  if (!box || !plausible(boxArea(box), w, h)) return null;
   if (box.right - box.left > box.bottom - box.top) {
     // Lying sideways: the backend stands it up first. Transposed, the rows cross the paper again.
     const turned = new Uint8Array(w * h);
@@ -32,8 +31,6 @@ export function paperQuad(gray: Uint8Array, w: number, h: number): Quad | null {
   const pixels = corners && size && plausible(size.width * size.height, w, h) ? corners : rectQuad(box.left, box.top, box.right - box.left, box.bottom - box.top);
   return scaleQuad(pixels, 1 / w, 1 / h);
 }
-
-const plausible = (area: number, w: number, h: number) => area >= PAPER_MIN_AREA * w * h && area <= PAPER_MAX_AREA * w * h;
 
 /** The paper mask with the printed text closed: a 7 × 7 maximum, then minimum (PIL's MaxFilter and MinFilter
  * on the grey probe before the threshold, which is the same thing). The window stops at the borders. */

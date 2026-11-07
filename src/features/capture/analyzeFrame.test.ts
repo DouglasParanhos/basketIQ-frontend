@@ -6,9 +6,9 @@ const W = 300;
 const H = 400;
 const LIVE: AnalyzeOptions = { part: false, minPaperFrac: 0.3 };
 
-/** A frame of `background` grey with a receipt (paper 230, printed lines 30) at [left, top, right, bottom]. */
-function frame(background: number, paper?: [number, number, number, number], print = true): Uint8Array {
-  const gray = new Uint8Array(W * H).fill(background);
+/** A frame of `background` grey (or the grey at each x, y) with a receipt (paper 230, printed lines 30) at [left, top, right, bottom]. */
+function frame(background: number | ((x: number, y: number) => number), paper?: [number, number, number, number], print = true): Uint8Array {
+  const gray = typeof background === "number" ? new Uint8Array(W * H).fill(background) : Uint8Array.from({ length: W * H }, (_, i) => background(i % W, Math.floor(i / W)));
   if (!paper) return gray;
   const [left, top, right, bottom] = paper;
   const margin = Math.round((right - left) * 0.08);
@@ -64,7 +64,12 @@ describe("analyzeFrame (live guidance)", () => {
   });
 
   it("a receipt as bright as the desk: bad_background", () => {
-    expect(hintOf(frame(225, [110, 40, 190, 360]))).toBe("bad_background");
+    expect(hintOf(frame(230, [110, 40, 190, 360]))).toBe("bad_background");
+  });
+
+  it("F-233: a receipt on a light, uneven surface (a fleece) is told apart by being the brightest: ok", () => {
+    const fleece = frame((x, y) => ((x * 31 + y * 17) % 97 < 60 ? 200 : 110), [70, 40, 230, 360]);
+    expect(hintOf(fleece)).toBe("ok");
   });
 
   it("a long receipt beyond the top and bottom: cut_ends, but fine for a part", () => {
@@ -96,7 +101,7 @@ describe("analyzeFrame (live guidance)", () => {
 
 describe("analyzeFrame (a photo already taken)", () => {
   it("reports only what the backend warns about: no framing advice", () => {
-    expect(stillOf(frame(225, [110, 40, 190, 360]))).toBe("ok");
+    expect(stillOf(frame(230, [110, 40, 190, 360]))).toBe("ok");
     expect(stillOf(frame(80, [150, 40, 330, 360]))).toBe("ok");
   });
 
@@ -117,7 +122,7 @@ describe("checkStill: the whole receipt in the photo", () => {
     expect(checkStill(frame(80, [70, 40, 230, 360]), W, H, 0.3).whole).toBe(true);
     expect(checkStill(frame(80, [70, -10, 230, 410]), W, H, 0.3).whole).toBe(false); // cut at the top and bottom
     expect(checkStill(frame(80, [150, 40, 330, 360]), W, H, 0.3).whole).toBe(false); // cut at a side
-    expect(checkStill(frame(225, [110, 40, 190, 360]), W, H, 0.3).whole).toBe(false); // no edge against the desk
+    expect(checkStill(frame(230, [110, 40, 190, 360]), W, H, 0.3).whole).toBe(false); // no edge against the desk
     expect(checkStill(frame(80, [70, 40, 230, 360], false), W, H, 0.3).whole).toBe(false); // blank paper
   });
 });
