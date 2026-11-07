@@ -5,7 +5,7 @@ import { useBlocker, useNavigate } from "react-router";
 import { ApiError, api, unwrap, type Merchant, type Schemas } from "../../api/client";
 import { Button, Notice } from "../../components/ui";
 import { centsToInput, formatCents, parseEurToCents } from "../../lib/format";
-import { invalidateReceiptData } from "./cache";
+import { receiptChanged } from "./cache";
 import { DeleteReceiptNotice } from "./DeleteReceipt";
 import { FootQuestion } from "./FootQuestion";
 import {
@@ -90,11 +90,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
   const printedInvalid = printedText.trim() !== "" && printed === null;
   const hasErrors = hasLineErrors || printedInvalid;
 
-  const refresh = (updated: Receipt) => {
-    qc.setQueryData(["receipt", receipt.id], updated);
-    void invalidateReceiptData(qc);
-    void qc.invalidateQueries({ queryKey: ["summary"] });
-  };
+  const refresh = (updated: Receipt) => void receiptChanged(qc, updated);
 
   const save = useMutation({
     mutationFn: async () => {

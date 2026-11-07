@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { api, unwrap } from "../../api/client";
 import { Button, Notice } from "../../components/ui";
-import { invalidateReceiptData } from "./cache";
+import { receiptChanged } from "./cache";
 import { FootQuestion } from "./FootQuestion";
 
 /** Delete the purchase and its file, then go to `to`. The edits of the review, if any, go with the purchase. */
@@ -15,8 +15,7 @@ export function useDeleteReceipt(receiptId: string, to: string) {
       if (!res.response.ok) unwrap(res);
     },
     onSuccess: () => {
-      void invalidateReceiptData(qc);
-      void qc.invalidateQueries({ queryKey: ["summary"] });
+      void receiptChanged(qc);
       navigate(to, { replace: true, state: { discard: true } });
     },
   });
