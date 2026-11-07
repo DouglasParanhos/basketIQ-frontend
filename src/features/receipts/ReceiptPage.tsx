@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink, Home, Plus } from "lucide-react";
+import { ArrowLeft, ExternalLink, Home, Pencil, Plus } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { ApiError, api, unwrap, type Schemas } from "../../api/client";
@@ -7,8 +7,9 @@ import { Button, LinkButton, Notice, Select, Spinner, StatusBadge } from "../../
 import { formatAmount, formatCents, formatDate, formatDateTime, formatQuantity } from "../../lib/format";
 import { MERCHANT_OPTIONS, merchantName } from "../../lib/merchants";
 import { EDITABLE, IN_PROGRESS } from "../../lib/status";
-import { invalidateReceiptData } from "./cache";
+import { invalidateReceiptData, receiptChanged } from "./cache";
 import { DeleteReceiptNotice, useDeleteReceipt } from "./DeleteReceipt";
+import { FootQuestion } from "./FootQuestion";
 import { ReviewEditor } from "./ReviewEditor";
 import { useOriginalViewer } from "./useOriginalViewer";
 
@@ -319,6 +320,7 @@ function ConfirmedReceipt({ receipt: r }: { receipt: Receipt }) {
         {r.confirmed_by === "AUTO" ? "Confirmada automaticamente" : "Confirmada por si"} em {formatDate(r.confirmed_at)}
       </p>
     </article>
+    {r.status === "CONFIRMED" && <EditValidated receipt={r} />}
     <div className="flex gap-3">
       <LinkButton to="/" variant="secondary" className="flex-1">
         <Home aria-hidden className="size-5" /> Início
@@ -328,6 +330,46 @@ function ConfirmedReceipt({ receipt: r }: { receipt: Receipt }) {
       </LinkButton>
     </div>
     </>
+  );
+}
+
+/** «Editar talão» on a validated receipt (spec 018): asks first, since the receipt goes back to review and out of the spending until it is
+ * confirmed again. The reopened receipt comes back in review, so the page shows the editor. */
+function EditValidated({ receipt: r }: { receipt: Receipt }) {
+  const qc = useQueryClient();
+  const [asking, setAsking] = useState(false);
+  const reopen = useMutation({
+    mutationFn: async () =>
+      unwrap(await api.POST("/v1/receipts/{receipt_id}/reopen", { params: { path: { receipt_id: r.id } }, body: { version: r.version } })),
+    onSuccess: (reopened) => receiptChanged(qc, reopened),
+  });
+  if (!asking) {
+    return (
+      <Button variant="secondary" onClick={() => setAsking(true)}>
+        <Pencil aria-hidden className="size-5" /> Editar talão
+      </Button>
+    );
+  }
+  return (
+    <FootQuestion>
+      <Notice
+        tone="warning"
+        title="Este talão já foi validado"
+        action={
+          <>
+            <Button busy={reopen.isPending} onClick={() => reopen.mutate()}>
+              Sim, editar
+            </Button>
+            <Button variant="quiet" disabled={reopen.isPending} onClick={() => setAsking(false)}>
+              Cancelar
+            </Button>
+          </>
+        }
+      >
+        Se o editar, volta a ficar por rever e deixa de contar nos gastos até o confirmar outra vez. Quer continuar?
+        {reopen.error && <p className="mt-2">{reopen.error.message}</p>}
+      </Notice>
+    </FootQuestion>
   );
 }
 

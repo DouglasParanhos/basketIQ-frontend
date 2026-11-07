@@ -447,6 +447,54 @@ describe("review (RF-07, F-11..F-15)", () => {
     expect(await screen.findByText(/já foi apagado/i)).toBeInTheDocument();
     expect(deleted).toBe(true);
   });
+
+  describe("editing a receipt already validated (spec 018)", () => {
+    const validated = receipt({ status: "CONFIRMED", review_reasons: [], confirmed_by: "USER", confirmed_at: "2026-09-15T13:00:00Z" });
+
+    /** The validated receipt open, «Editar talão» tapped; `reopen` answers POST …/reopen. */
+    async function askToEdit(reopen: Parameters<typeof http.post>[1]) {
+      server.use(http.get(`${API}/v1/receipts/r1`, () => HttpResponse.json(validated)), http.post(`${API}/v1/receipts/r1/reopen`, reopen));
+      const user = userEvent.setup();
+      renderRoutes(routes, "/compras/r1");
+      await user.click(await screen.findByRole("button", { name: "Editar talão" }));
+      return user;
+    }
+
+    it("F-239: «Editar talão» first asks, sends nothing and keeps the receipt read-only; «Cancelar» closes the question", async () => {
+      let sent = false;
+      const user = await askToEdit(() => {
+        sent = true;
+        return HttpResponse.json(receipt());
+      });
+      expect(screen.getByText("Este talão já foi validado")).toBeInTheDocument();
+      expect(
+        screen.getByText("Se o editar, volta a ficar por rever e deixa de contar nos gastos até o confirmar outra vez. Quer continuar?"),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /banana/i })).not.toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Cancelar" }));
+      expect(screen.queryByText("Este talão já foi validado")).not.toBeInTheDocument();
+      expect(sent).toBe(false);
+    });
+
+    it("F-240: «Sim, editar» reopens it with the current version and shows the review", async () => {
+      let body: unknown = null;
+      const user = await askToEdit(async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(receipt({ version: validated.version + 1 }));
+      });
+      await user.click(screen.getByRole("button", { name: "Sim, editar" }));
+      expect(await screen.findByRole("button", { name: /banana/i })).toBeInTheDocument();
+      expect(body).toEqual({ version: validated.version });
+    });
+
+    it("F-240: an error reopening stays in the question", async () => {
+      const user = await askToEdit(() =>
+        HttpResponse.json({ code: "version_conflict", message: "A compra foi alterada noutro lado. Recarregue.", request_id: "r" }, { status: 409 }),
+      );
+      await user.click(screen.getByRole("button", { name: "Sim, editar" }));
+      expect(await screen.findByText("A compra foi alterada noutro lado. Recarregue.")).toBeInTheDocument();
+    });
+  });
 });
 
 describe("dashboard (RF-09, RF-11)", () => {

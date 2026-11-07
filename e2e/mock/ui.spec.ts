@@ -1144,6 +1144,22 @@ test.describe("review: the foot with the three actions and the undo of a price",
       await noA11yViolations(page);
     });
 
+    test(`F-241: «Editar talão» on a validated receipt asks first, then opens the review, without axe violations (${scheme})`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.setViewportSize({ width: 320, height: 568 });
+      await fakeApi(page);
+      await page.goto("/compras/v1");
+      await page.getByRole("button", { name: "Editar talão" }).click();
+      await expect(page.getByText("Este talão já foi validado")).toBeVisible();
+      await expectReachable(page, ["Sim, editar", "Cancelar"]);
+      await noHorizontalScroll(page);
+      await noA11yViolations(page);
+      await page.getByRole("button", { name: "Sim, editar" }).click();
+      await expect(page.getByRole("heading", { name: "Rever talão" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Confirmar talão" })).toBeVisible();
+      await noA11yViolations(page);
+    });
+
     test(`the card and the panel of a line, with the date and the total open, have no axe violations (${scheme}, 320px)`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme });
       await page.setViewportSize({ width: 320, height: 568 });

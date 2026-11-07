@@ -1,9 +1,9 @@
 import type { Page } from "@playwright/test";
 
 /**
- * What a phone's rear camera would see: a synthetic receipt (no personal data) on a dark table, on a light
- * desk, far, too close, too long for one photo. The page's `getUserMedia` returns a stream of a canvas with
- * the scene, so the in-app camera analyses it exactly as it would a real picture.
+ * What a phone's rear camera would see: a synthetic receipt (no personal data) on a dark table, on a desk
+ * as white as the paper, far, too close, too long for one photo. The page's `getUserMedia` returns a stream
+ * of a canvas with the scene, so the in-app camera analyses it exactly as it would a real picture.
  */
 
 const WIDTH = 1080; // a phone's rear camera in portrait: 600 px of paper need 61 % of this width
@@ -41,7 +41,8 @@ function installCamera({ scene, width, height }: { scene: Scene; width: number; 
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d")!;
-  const surface = scene.surface === "dark" ? ([42, 40, 38] as const) : ([228, 223, 216] as const);
+  // A light desk as white as the paper (#f4f3ef): a slightly darker one is told apart (F-233).
+  const surface = scene.surface === "dark" ? ([42, 40, 38] as const) : ([244, 243, 239] as const);
   const pixels = ctx.createImageData(width, height);
   let seed = 7;
   const grain = () => ((seed = (seed * 16807) % 2147483647) / 2147483647 - 0.5) * 16; // reproducible

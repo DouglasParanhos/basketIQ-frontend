@@ -1,11 +1,11 @@
 /**
  * What is wrong with a photo of a receipt, read from its grey pixels. A port of the checks the backend runs
- * after the upload (Backend/src/basketiq/pipeline/preprocess.py `_otsu_threshold`/`_paper_box`, quality.py),
+ * after the upload (Backend/src/basketiq/pipeline/preprocess.py `_paper_threshold`/`_paper_box`, quality.py),
  * so that the camera can tell the person what to do before the photo is taken.
  *
- * The paper is the bright part of the frame (Otsu threshold): the columns that are bright in at least half
- * the share of the brightest column, and the rows of those columns that are 20 % bright. The print is what
- * is clearly darker than the paper inside it.
+ * The paper is the bright part of the frame (Otsu threshold, or Otsu's threshold of the bright side when the
+ * surface is light too): the columns that are bright in at least half the share of the brightest column, and
+ * the rows of those columns that are 20 % bright. The print is what is clearly darker than the paper inside it.
  */
 import type { Quad } from "./homography";
 
@@ -18,6 +18,8 @@ const PAPER_MIN_FILL = 0.5; // backend preprocess.PAPER_MIN_FILL
 const PAPER_MIN_ROW_FILL = 0.2; // backend preprocess.PAPER_MIN_ROW_FILL
 export const PAPER_MIN_AREA = 0.02; // backend preprocess.PAPER_MIN_AREA
 export const PAPER_MAX_AREA = 0.95; // backend preprocess.PAPER_MAX_AREA
+const PAPER_INSIDE_BRIGHT = 0.75; // backend preprocess.PAPER_INSIDE_BRIGHT
+const PAPER_SOLID = 0.5; // backend preprocess.PAPER_SOLID
 const INK_SHARE = 0.6; // print is darker than this share of the paper's mean grey
 const INK_MIN_COLUMN = 0.01; // a column with less print than this share of the paper height has none
 const EDGE_MARGIN = 0.015; // of the frame: paper this close to an edge touches it
@@ -49,10 +51,14 @@ export function toGray(rgba: Uint8ClampedArray, out?: Uint8Array): Uint8Array {
   return gray;
 }
 
-/** Otsu's threshold (backend `_otsu_threshold`), with the mean grey of the frame and of its bright part. */
-export function levels(gray: Uint8Array): { threshold: number; mean: number; brightMean: number } {
+function histogram(gray: Uint8Array): Float64Array {
   const counts = new Float64Array(256);
   for (let i = 0; i < gray.length; i++) counts[gray[i]!]!++;
+  return counts;
+}
+
+/** Otsu's threshold (backend `_otsu_threshold`), with the mean grey of the levels counted and of their bright part. */
+function otsu(counts: Float64Array): { threshold: number; mean: number; brightMean: number } {
   let total = 0;
   let sum = 0;
   for (let level = 0; level < 256; level++) {
@@ -135,6 +141,49 @@ export function paperBox(gray: Uint8Array, w: number, h: number, threshold: numb
   return top < 0 ? null : { left, top, right, bottom };
 }
 
+
+export const boxArea = (box: Box) => (box.right - box.left) * (box.bottom - box.top);
+
+/** Whether `area` pixels are a plausible share of a `w` × `h` frame for a receipt. */
+export const plausible = (area: number, w: number, h: number) => area >= PAPER_MIN_AREA * w * h && area <= PAPER_MAX_AREA * w * h;
+
+interface PaperLevels {
+  threshold: number;
+  box: Box | null;
+  /** The mean grey of the frame and of its bright part (Otsu's first split). */
+  mean: number;
+  brightMean: number;
+}
+
+/** The grey level between the paper and what is around it, and the paper's box (backend `_paper_threshold`):
+ * on a light surface the paper and the surface are both bright, so Otsu's threshold of the bright side is
+ * tried too, and taken when it finds a plausible paper much smaller than the first, and solid (on a white desk
+ * it only picks out the brightest grains of the desk). */
+export function paperThreshold(gray: Uint8Array, w: number, h: number): PaperLevels {
+  const counts = histogram(gray);
+  const { threshold, mean, brightMean } = otsu(counts);
+  const first = paperBox(gray, w, h, threshold);
+  if (!first) return { threshold, box: null, mean, brightMean };
+  counts.fill(0, 0, threshold + 1);
+  const brighter = otsu(counts).threshold;
+  const second = paperBox(gray, w, h, brighter);
+  if (
+    second &&
+    plausible(boxArea(second), w, h) &&
+    boxArea(second) < PAPER_INSIDE_BRIGHT * boxArea(first) &&
+    brightShare(gray, w, second, brighter) >= PAPER_SOLID
+  ) {
+    return { threshold: brighter, box: second, mean, brightMean };
+  }
+  return { threshold, box: first, mean, brightMean };
+}
+
+function brightShare(gray: Uint8Array, w: number, box: Box, threshold: number): number {
+  let bright = 0;
+  for (let y = box.top; y < box.bottom; y++) for (let x = box.left; x < box.right; x++) if (gray[y * w + x]! > threshold) bright++;
+  return bright / boxArea(box);
+}
+
 /** Columns of the print inside the paper: [first, last + 1], or null without print. */
 function printSpan(gray: Uint8Array, w: number, box: Box, threshold: number): [number, number] | null {
   let paperSum = 0;
@@ -163,9 +212,8 @@ function printSpan(gray: Uint8Array, w: number, box: Box, threshold: number): [n
 
 /** The paper in a frame and how it sits: one measurement for the live advice and for a photo taken. */
 function measure(gray: Uint8Array, w: number, h: number) {
-  const { threshold, mean, brightMean } = levels(gray);
-  const box = paperBox(gray, w, h, threshold);
-  const area = box ? ((box.right - box.left) * (box.bottom - box.top)) / (w * h) : 0;
+  const { threshold, box, mean, brightMean } = paperThreshold(gray, w, h);
+  const area = box ? boxArea(box) / (w * h) : 0;
   const mx = EDGE_MARGIN * w;
   const my = EDGE_MARGIN * h;
   return {

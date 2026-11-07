@@ -26,9 +26,8 @@ from basketiq.pipeline.preprocess import (
     PAPER_MIN_AREA,
     PAPER_TEXT_GAP,
     _gray_probe,
-    _otsu_threshold,
-    _paper_box,
     _paper_quad,
+    _paper_threshold,
 )
 from tests.golden.real_variants import _TRANSFORMS, _capture, _source
 
@@ -39,8 +38,7 @@ SUFFIXES = {".jpg", ".jpeg", ".png", ".pdf"}
 def corners(gray: np.ndarray) -> list[list[float]] | None:
     """Corners as shares of the probe (top-left, top-right, bottom-right, bottom-left as seen), or None."""
     h, w = gray.shape
-    threshold = _otsu_threshold(gray)
-    box = _paper_box(gray > threshold)
+    threshold, box = _paper_threshold(gray)
     if box is None:
         return None
     left, top, right, bottom = box
