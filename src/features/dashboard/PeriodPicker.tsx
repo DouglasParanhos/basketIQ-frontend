@@ -25,7 +25,7 @@ export function PeriodPicker({ value, onChange }: { value: Period; onChange: (p:
                   : periodFor(kind, { y: Number(value.from.slice(0, 4)) || today.y, m0: Number(value.from.slice(5, 7)) - 1 || today.m0 }),
               )
             }
-            className="min-h-11 rounded-full text-sm font-bold text-ink ring-1 ring-inset ring-line aria-checked:bg-brand aria-checked:text-white aria-checked:ring-brand dark:aria-checked:text-ground"
+            className="min-h-11 rounded-full text-sm font-bold text-ink ring-1 ring-inset ring-line aria-checked:bg-brand aria-checked:text-on-brand aria-checked:ring-brand"
           >
             {label}
           </button>

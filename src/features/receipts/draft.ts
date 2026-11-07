@@ -58,9 +58,32 @@ export type PriceField = "unit_price" | "line_total";
 
 const draftKey = (field: LineField) => (field === "product" ? "product_name" : field);
 
+const touch = (touched: LineField[], field: LineField) => (touched.includes(field) ? touched : [...touched, field]);
+
+/**
+ * Sets a field. The quantity, the unit price and the total are tied: a new quantity or unit price works out the total,
+ * a new total works out the unit price. The other figure is only worked out from valid values, and is touched too so that it is sent.
+ */
 export function setField(line: DraftLine, field: LineField, value: string): DraftLine {
-  const touched = line.touched.includes(field) ? line.touched : [...line.touched, field];
-  return { ...line, [draftKey(field)]: value, touched };
+  const next: DraftLine = { ...line, [draftKey(field)]: value, touched: touch(line.touched, field) };
+  if (field !== "quantity" && field !== "unit_price" && field !== "line_total") return next;
+  const quantity = Number(parseQuantity(next.quantity));
+  if (!quantity) return next;
+  if (field === "line_total") {
+    const total = parseEurToCents(next.line_total);
+    return total === null ? next : { ...next, unit_price: centsToInput(Math.round(total / quantity)), touched: touch(next.touched, "unit_price") };
+  }
+  const unit = parseEurToCents(next.unit_price);
+  return unit === null ? next : { ...next, line_total: centsToInput(Math.round(quantity * unit)), touched: touch(next.touched, "line_total") };
+}
+
+/** Whether quantity × unit price is further from the total than rounding explains (the unit price has only whole cents). */
+export function totalDisagrees(line: DraftLine): boolean {
+  const quantity = Number(parseQuantity(line.quantity));
+  const unit = parseEurToCents(line.unit_price);
+  const total = parseEurToCents(line.line_total);
+  if (!quantity || unit === null || total === null) return false;
+  return Math.abs(quantity * unit - total) > 0.5 * quantity + 1;
 }
 
 /** «Desfazer»: the field goes back to its value, and is only «touched» again if it was before the edit (so the PATCH leaves it out). */

@@ -1,6 +1,6 @@
 import type { KeyboardEvent } from "react";
 
-const STEP: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+export const STEP: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
 
 export interface SegmentedTab {
   id: string;

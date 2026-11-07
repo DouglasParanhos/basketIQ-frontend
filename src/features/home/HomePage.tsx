@@ -33,7 +33,7 @@ function Cards({ overview, isCurrentMonth, people, example }: { overview: Schema
 /** The banner of the example: what it is, and the way out. */
 function ExampleBanner() {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-[14px] bg-warn-soft py-1 pl-3.5 pr-1.5 text-xs font-extrabold text-warn-ink">
+    <div className="flex items-center justify-between gap-2 rounded-[14px] bg-warn-soft dark:ring-1 dark:ring-inset dark:ring-warn-line py-1 pl-3.5 pr-1.5 text-xs font-extrabold text-warn-ink">
       <p>Dados de exemplo · loja fictícia</p>
       <Link to="/" className="inline-flex min-h-11 items-center px-2.5 font-extrabold text-brand underline">
         Sair do exemplo

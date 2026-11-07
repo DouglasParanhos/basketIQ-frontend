@@ -15,6 +15,7 @@ Fonte: `DefinicoesV2.dc.html` com a tabela de substituições do `README.md` de 
 | Por definir | «Ainda não definiu.» e o botão «Definir» | em vez de «Editar» |
 | Botão | Editar (nome acessível «Editar pessoas na casa», «Editar mercados», «Editar meta pessoal», «Editar objetivos») | alvos ≥ 44 px |
 | Guardado | Perfil guardado. | região `status` |
+| Aparência | Aparência · «Automático» / «Claro» / «Escuro» | `radiogroup` com visto no escolhido; aplica-se logo, guardado neste aparelho; não entra na edição do perfil |
 | **Perfil, edição** | | |
 | Título | Editar perfil | |
 | Pessoas | «Menos uma pessoa» / «Mais uma pessoa»; sem valor: «—» (aí «Mais uma pessoa» passa a 1 e «Menos uma pessoa» está desativado) e «Não indicar» | sem «Ajusta as comparações» (spec 015) |

@@ -75,9 +75,9 @@ export function ReceiptsPage() {
             role="radio"
             aria-checked={f.id === filter.id}
             onClick={() => choose(f.id)}
-            className="min-h-11 shrink-0 rounded-full border-[1.5px] border-line bg-paper px-3.5 text-[13px] font-bold aria-checked:border-brand aria-checked:bg-brand aria-checked:text-white dark:aria-checked:text-ground"
+            className="min-h-11 shrink-0 rounded-full border-[1.5px] border-line bg-paper px-3.5 text-[13px] font-bold aria-checked:border-brand aria-checked:bg-brand aria-checked:text-on-brand"
           >
-            {f.id === "acao" && asked > 0 && <span aria-hidden className="mr-2 inline-block size-2 rounded-full bg-marker" />}
+            {f.id === "acao" && asked > 0 && <span aria-hidden className="mr-2 inline-block size-2 rounded-full bg-marker dark:bg-warn" />}
             {f.id === "acao" && asked > 0 ? `${f.label} · ${asked >= 100 ? "99+" : asked}` : f.label}
           </button>
         ))}

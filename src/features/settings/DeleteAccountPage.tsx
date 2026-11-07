@@ -64,7 +64,7 @@ export function DeleteAccountPage() {
         <span
           aria-hidden
           className={`grid size-[26px] shrink-0 place-items-center rounded-lg border-2 peer-focus-visible:ring-2 peer-focus-visible:ring-brand peer-focus-visible:ring-offset-2 ${
-            understood ? "border-alert bg-alert text-white dark:text-ground" : "border-line bg-paper"
+            understood ? "border-alert bg-alert text-on-brand" : "border-line bg-paper"
           }`}
         >
           {understood && <Check className="size-4" strokeWidth={3} />}

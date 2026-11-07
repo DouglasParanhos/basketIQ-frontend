@@ -7,8 +7,8 @@ import { KNOWN_MERCHANTS, merchantStyle } from "./merchants";
 const css = readFileSync("src/styles.css", "utf8");
 
 const BLOCKS = {
-  light: css.slice(css.indexOf("@theme"), css.indexOf("@layer base")),
-  dark: css.slice(css.indexOf("prefers-color-scheme: dark"), css.indexOf(":focus-visible")),
+  light: /@theme\s*\{([^}]*)\}/.exec(css)![1]!,
+  dark: /:root\[data-theme="dark"\]\s*\{([^}]*)\}/.exec(css)![1]!,
 };
 
 /** The value of a token in the light scheme (the @theme block) or the dark one (the media query). */
@@ -40,6 +40,23 @@ describe("brand colours kept in sync by hand (header of styles.css)", () => {
   });
 });
 
+describe("the dark scheme (the green of the cart with its lightness raised)", () => {
+  it("is the new palette: no brown or yellow backgrounds, and nothing left of the one derived from the old teal", () => {
+    for (const old of ["#121a15", "#1a261f", "#eaf2ec", "#4cc38a", "#075b50", "#3f3000", "#6b5200", "#a9bbb0"]) {
+      expect(BLOCKS.dark.toLowerCase(), old).not.toContain(old);
+    }
+    expect(token("brand", "dark")).toBe("#5fa882");
+    expect(token("ground", "dark")).toBe("#101a16");
+    expect(token("paper", "dark")).toBe("#1d2723");
+  });
+
+  it("the green of the dark scheme is lighter than the cart's, which stays the green of the light scheme", () => {
+    expect(luminance(token("brand", "dark"))).toBeGreaterThan(luminance(token("brand", "light")));
+    expect(token("brand", "light")).toBe("#1f6f4a");
+  });
+
+});
+
 describe("colours of the stores (approved design)", () => {
   // The letters of the tiles are 9 to 22 px: small text, so 4.5:1 for every store (Auchan's red was darkened for it, see merchants.ts).
   for (const code of [...KNOWN_MERCHANTS, "UNKNOWN"]) {
@@ -69,7 +86,6 @@ describe("colours of the Início (spec 011, D-P3)", () => {
       const pairs: [string, string][] = [
         ["brand", "ground"],
         ["brand", "paper"],
-        ["brand", "brand-pill"],
         // «EM RESUMO» of the privacy policy: the label, the text and the ticks on the mint card.
         ["ink", "brand-soft"],
         ["ink-soft", "brand-soft"],
@@ -83,6 +99,28 @@ describe("colours of the Início (spec 011, D-P3)", () => {
       for (const [text, background] of pairs) {
         expect(ratio(token(text, scheme), token(background, scheme)), `${text} on ${background}`).toBeGreaterThanOrEqual(4.5);
       }
+    });
+
+    it(`the icon of the active item has at least 3:1 on its pill, as a graphic (the label is on the bar, not on the pill) (${scheme})`, () => {
+      expect(ratio(token("brand", scheme), token("brand-pill", scheme))).toBeGreaterThanOrEqual(3);
+    });
+
+    it(`the text of the buttons and badges painted with the brand colour has at least 4.5:1 (${scheme})`, () => {
+      expect(ratio(token("on-brand", scheme), token("brand", scheme))).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it(`the warning: title, text and icon on its tint, and on the line being edited (${scheme})`, () => {
+      expect(ratio(token("ink", scheme), token("notice", scheme)), "title").toBeGreaterThanOrEqual(4.5);
+      expect(ratio(token("warn-body", scheme), token("notice", scheme)), "text").toBeGreaterThanOrEqual(4.5);
+      expect(ratio(token("warn-icon", scheme), token("notice", scheme)), "icon").toBeGreaterThanOrEqual(3);
+      expect(ratio(token("ink", scheme), token("editing", scheme)), "the line being edited").toBeGreaterThanOrEqual(4.5);
+      expect(ratio(token("ink-soft", scheme), token("editing", scheme)), "its labels").toBeGreaterThanOrEqual(4.5);
+      expect(ratio(token("brand", scheme), token("editing", scheme)), "its links").toBeGreaterThanOrEqual(4.5);
+    });
+
+    it(`what marks a value to check keeps its text readable: the mark and the badge (${scheme})`, () => {
+      expect(ratio(token("ink", scheme), token("marker", scheme)), "mark").toBeGreaterThanOrEqual(4.5);
+      expect(ratio(token("marker-ink", scheme), token("marker", scheme)), "badge").toBeGreaterThanOrEqual(4.5);
     });
 
     it(`F-184: the text on the soft backgrounds of the average card has at least 4.5:1 (${scheme})`, () => {

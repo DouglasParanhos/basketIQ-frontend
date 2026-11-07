@@ -171,8 +171,8 @@ test.describe("login and privacy policy: the approved design", () => {
           await page.goto("/login");
           await expect(page.getByRole("link", { name: "Entrar com Google" })).toBeVisible();
           const outline = await page.locator(".ticket-paper > div[aria-hidden]").first().evaluate((el) => getComputedStyle(el).boxShadow);
-          // The ring is a box-shadow of 1px in the soft ink of the scheme (#a9bbb0 in the dark one).
-          if (scheme === "dark") expect(outline).toContain("rgb(169, 187, 176) 0px 0px 0px 1px");
+          // The ring is a box-shadow of 1px in the soft ink of the scheme (#c9d3cd in the dark one).
+          if (scheme === "dark") expect(outline).toContain("rgb(201, 211, 205) 0px 0px 0px 1px");
           else expect(outline).not.toContain("0px 0px 0px 1px");
         });
 
@@ -261,7 +261,7 @@ test.describe("customer-facing name (CFG-02)", () => {
     await fakeApi(page);
     await page.goto("/definicoes");
     await expect(page).toHaveTitle("Super Mercado");
-    await expect(page.getByText(/^Super Mercado /)).toBeVisible();
+    await expect(page.locator("footer").getByText("Super Mercado", { exact: true })).toBeVisible();
   });
 });
 
@@ -1160,7 +1160,7 @@ test.describe("review: the foot with the three actions and the undo of a price",
       await noA11yViolations(page);
     });
 
-    test(`the card and the panel of a line, with the date and «Mais opções» open, have no axe violations (${scheme}, 320px)`, async ({ page }) => {
+    test(`the card and the panel of a line, with the date and the total open, have no axe violations (${scheme}, 320px)`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme });
       await page.setViewportSize({ width: 320, height: 568 });
       await fakeApi(page);
@@ -1168,13 +1168,53 @@ test.describe("review: the foot with the three actions and the undo of a price",
       await page.getByRole("button", { name: "Editar data e hora" }).click();
       await page.getByRole("button", { name: "Editar total da nota" }).click();
       await page.getByRole("button", { name: /Editar LEITE MEIO GORDO/ }).click();
-      await page.getByRole("button", { name: "Mais opções" }).click();
       await expect(page.getByLabel("Preço unitário (€)")).toBeVisible();
       await noHorizontalScroll(page);
       await noA11yViolations(page);
     });
 
-    test(`with a line open the bar and the foot are away, «Remover linha» is in sight, and «Guardar» brings them back (${scheme}, 320px)`, async ({ page }) => {
+    test(`the ⋯ list and the ⓘ sheet have no axe violations, and the focus goes back (${scheme}, 320px)`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.setViewportSize({ width: 320, height: 568 });
+      await fakeApi(page);
+      await page.goto("/compras/r1");
+      await page.getByRole("button", { name: /Editar LEITE MEIO GORDO/ }).click();
+      const more = page.getByRole("button", { name: "Mais ações da linha" });
+      await more.click();
+      await expect(page.getByRole("button", { name: "Remover linha" })).toBeVisible();
+      await noA11yViolations(page);
+      await page.keyboard.press("Escape");
+      await expect(more).toBeFocused();
+      const info = page.getByRole("button", { name: "Saber mais sobre esta linha" });
+      await info.click();
+      await expect(page.getByRole("dialog", { name: "Sobre esta linha" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Fechar" })).toBeFocused();
+      await noA11yViolations(page);
+      await page.keyboard.press("Escape");
+      await expect(info).toBeFocused();
+    });
+
+    test(`the card of a line fits one phone screen without scrolling, with «Guardar» and «Cancelar» in sight (${scheme}, 390px)`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.setViewportSize({ width: 390, height: 844 });
+      await fakeApi(page);
+      await page.goto("/compras/r1");
+      await page.getByRole("button", { name: /Editar LEITE MEIO GORDO/ }).click();
+      const card = page.getByRole("list", { name: "Produtos" }).locator("li").first();
+      const box = (await card.boundingBox())!;
+      expect(box.height).toBeLessThan(844);
+      for (const name of ["Guardar", "Cancelar"]) {
+        const button = (await page.getByRole("button", { name, exact: true }).boundingBox())!;
+        expect(button.y + button.height).toBeLessThanOrEqual(844);
+      }
+      for (const name of ["Saber mais sobre esta linha", "Mais ações da linha"]) {
+        const button = (await page.getByRole("button", { name }).boundingBox())!;
+        expect(Math.min(button.width, button.height)).toBeGreaterThanOrEqual(44);
+      }
+      await noHorizontalScroll(page);
+    });
+
+    test(`with a line open the bar and the foot are away, «Guardar» and «Cancelar» are in sight, and «Guardar» brings them back (${scheme}, 320px)`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme });
       await page.setViewportSize({ width: 320, height: 568 });
       await fakeApi(page);
@@ -1183,7 +1223,7 @@ test.describe("review: the foot with the three actions and the undo of a price",
       await page.getByRole("button", { name: /Editar LEITE MEIO GORDO/ }).click();
       await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeHidden();
       for (const name of ["Confirmar talão", "Guardar e rever depois", "Eliminar talão"]) await expect(page.getByRole("button", { name, exact: true })).toBeHidden();
-      for (const name of ["Remover linha", "Dividir linha", "Guardar", "Cancelar"]) await expect(page.getByRole("button", { name: new RegExp(`^${name}$`) })).toBeVisible();
+      for (const name of ["Guardar", "Cancelar"]) await expect(page.getByRole("button", { name: new RegExp(`^${name}$`) })).toBeVisible();
       await noHorizontalScroll(page);
       await noA11yViolations(page);
       await page.getByRole("button", { name: "Guardar", exact: true }).click();
@@ -1208,4 +1248,83 @@ test.describe("review: the foot with the three actions and the undo of a price",
       await expect(page.getByLabel("Preço total (€)")).toHaveValue("1,90");
     });
   }
+});
+
+test.describe("Aparência: the person chooses the theme in Definições", () => {
+  const LIGHT = "rgb(250, 248, 244)";
+  const DARK = "rgb(16, 26, 22)";
+  const ground = (page: Page) => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const radio = (page: Page, name: string) => page.getByRole("radio", { name, exact: true });
+
+  async function open(page: Page, system: "light" | "dark") {
+    await page.emulateMedia({ colorScheme: system });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await fakeApi(page);
+    await page.goto("/definicoes/perfil");
+    await expect(page.getByRole("radiogroup", { name: "Aparência" })).toBeVisible();
+  }
+
+  test("by default it follows the system, in both schemes, and the page does not start in the other one", async ({ page }) => {
+    await open(page, "dark");
+    expect(await ground(page)).toBe(DARK);
+    await expect(radio(page, "Automático")).toHaveAttribute("aria-checked", "true");
+  });
+
+  test("with the system in light, «Escuro» turns the page dark at once and survives a reload", async ({ page }) => {
+    await open(page, "light");
+    expect(await ground(page)).toBe(LIGHT);
+    await radio(page, "Escuro").click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    expect(await ground(page)).toBe(DARK);
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    expect(await ground(page)).toBe(DARK);
+    await expect(radio(page, "Escuro")).toHaveAttribute("aria-checked", "true");
+  });
+
+  test("with the system in dark, «Claro» turns the page light and survives a reload", async ({ page }) => {
+    await open(page, "dark");
+    await radio(page, "Claro").click();
+    expect(await ground(page)).toBe(LIGHT);
+    await page.reload();
+    expect(await ground(page)).toBe(LIGHT);
+  });
+
+  test("«Automático» follows the system again, also when the system changes while the page is open", async ({ page }) => {
+    await open(page, "light");
+    await radio(page, "Escuro").click();
+    await radio(page, "Automático").click();
+    expect(await ground(page)).toBe(LIGHT);
+    await page.emulateMedia({ colorScheme: "dark" });
+    await expect.poll(() => ground(page)).toBe(DARK);
+  });
+
+  test("a choice is not moved by the system", async ({ page }) => {
+    await open(page, "light");
+    await radio(page, "Escuro").click();
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.emulateMedia({ colorScheme: "light" });
+    expect(await ground(page)).toBe(DARK);
+  });
+
+  for (const choice of ["Claro", "Escuro"] as const) {
+    test(`the card has no axe violations and fits at 320px, with «${choice}» chosen`, async ({ page }) => {
+      await open(page, "light");
+      await page.setViewportSize({ width: 320, height: 568 });
+      await radio(page, choice).click();
+      await noHorizontalScroll(page);
+      await noA11yViolations(page);
+    });
+  }
+
+  test("the arrows move the choice", async ({ page }) => {
+    await open(page, "light");
+    await radio(page, "Automático").focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(radio(page, "Claro")).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(radio(page, "Escuro")).toBeFocused();
+    expect(await ground(page)).toBe(DARK);
+  });
 });

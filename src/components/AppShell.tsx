@@ -70,7 +70,7 @@ export function AppShell() {
                     className={`flex min-h-14 flex-col items-center justify-center gap-[3px] text-xs ${primary ? "" : "w-full"} ${isActive && !primary ? "font-extrabold text-brand" : "font-semibold text-ink-soft"}`}
                   >
                     {primary || !icon ? (
-                      <span className="-mt-[22px] grid size-14 place-items-center rounded-full bg-brand text-white shadow-[0_6px_16px_color-mix(in_srgb,var(--color-brand)_35%,transparent)] dark:text-ground md:mt-0">
+                      <span className="-mt-[22px] grid size-14 place-items-center rounded-full bg-brand text-on-brand shadow-[0_6px_16px_color-mix(in_srgb,var(--color-brand)_35%,transparent)] md:mt-0">
                         <Plus aria-hidden className="size-6" strokeWidth={2.4} />
                       </span>
                     ) : (

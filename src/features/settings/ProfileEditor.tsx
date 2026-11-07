@@ -91,7 +91,7 @@ export function ProfileEditor({ saved, focus, onDone }: { saved: Profile; focus:
                 aria-label="Mais uma pessoa"
                 disabled={draft.people !== null && draft.people >= 12}
                 onClick={() => setDraft({ ...draft, people: stepPeople(draft.people, 1) })}
-                className={`${ROUND_BUTTON} border-brand bg-brand text-white hover:border-brand-deep dark:text-ground`}
+                className={`${ROUND_BUTTON} border-brand bg-brand text-on-brand hover:border-brand-deep`}
               >
                 <Plus aria-hidden className="size-5" />
               </button>

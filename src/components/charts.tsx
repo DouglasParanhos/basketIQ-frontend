@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatCents, formatWholeEuros, NBSP } from "../lib/format";
+import { subscribeTheme } from "../lib/theme";
 
 /** Chart colours come from CSS tokens so light/dark use their own validated steps. */
 function useToken(name: string, fallback: string): string {
@@ -8,10 +9,7 @@ function useToken(name: string, fallback: string): string {
     typeof window === "undefined" ? fallback : getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
   const [value, setValue] = useState(read);
   useEffect(() => {
-    const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
-    const update = () => setValue(read());
-    mq?.addEventListener("change", update);
-    return () => mq?.removeEventListener("change", update);
+    return subscribeTheme(() => setValue(read()));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return value;

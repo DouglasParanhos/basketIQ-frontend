@@ -115,7 +115,7 @@ export function LoginPage() {
   return (
     <main className="relative mx-auto flex min-h-dvh max-w-md flex-col justify-between gap-8 overflow-hidden px-6 pb-7 pt-8">
       {message && (
-        <p role="status" className="absolute inset-x-4 top-3.5 z-10 rounded-2xl bg-warn-soft px-3.5 py-3 text-[13px] leading-[1.45] text-warn-ink shadow-[0_6px_16px_rgb(20_20_19/0.18)]">
+        <p role="status" className="absolute inset-x-4 top-3.5 z-10 rounded-2xl bg-warn-soft dark:ring-1 dark:ring-inset dark:ring-warn-line px-3.5 py-3 text-[13px] leading-[1.45] text-warn-ink shadow-[0_6px_16px_rgb(20_20_19/0.18)]">
           {message}
         </p>
       )}
@@ -156,7 +156,7 @@ export function LoginPage() {
         {/* Full-page navigation: the OAuth flow is handled by the API (BFF). */}
         <a
           href="/v1/auth/login"
-          className="flex h-14 items-center justify-center gap-3 rounded-[28px] bg-brand text-base font-extrabold text-white hover:bg-brand-deep dark:text-ground"
+          className="flex h-14 items-center justify-center gap-3 rounded-[28px] bg-brand text-base font-extrabold text-on-brand hover:bg-brand-deep"
         >
           <span className="grid size-8 place-items-center rounded-full bg-white">
             <GoogleMark />

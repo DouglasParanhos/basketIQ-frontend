@@ -30,7 +30,7 @@ export function MerchantChips({ value, onChange }: { value: string; onChange: (m
             ) : (
               <span
                 className={`inline-flex h-10 items-center gap-2 rounded-full border-[1.5px] px-3.5 text-[13px] font-bold ${
-                  value === id ? "border-brand bg-brand text-white dark:text-ground" : "border-line bg-paper text-ink"
+                  value === id ? "border-brand bg-brand text-on-brand" : "border-line bg-paper text-ink"
                 }`}
               >
                 {value === id && <Check aria-hidden className="size-4" strokeWidth={3} />}

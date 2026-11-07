@@ -7,12 +7,12 @@ import { STATUS, type ReceiptStatus } from "../lib/status";
 type Variant = "primary" | "secondary" | "quiet" | "ghost" | "outline" | "danger" | "dangerQuiet" | "dangerOutline";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-brand text-white hover:bg-brand-deep dark:text-ground",
+  primary: "bg-brand text-on-brand hover:bg-brand-deep",
   secondary: "bg-paper text-brand ring-1 ring-inset ring-line hover:ring-brand",
   quiet: "text-brand hover:bg-brand-soft",
   ghost: "text-ink hover:bg-brand-soft",
   outline: "border-[1.5px] border-ink text-ink hover:bg-brand-soft",
-  danger: "bg-alert text-white hover:opacity-90 dark:text-ground",
+  danger: "bg-alert text-on-brand hover:opacity-90",
   dangerQuiet: "text-alert hover:bg-alert-soft",
   dangerOutline: "border-[1.5px] border-alert text-alert hover:bg-alert-soft",
 };
@@ -54,16 +54,27 @@ export function Field({
   hideLabel = false,
   error,
   hint,
+  note,
   className = "",
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & { label: string; hideLabel?: boolean; error?: string | null; hint?: string }) {
+}: InputHTMLAttributes<HTMLInputElement> & { label: string; hideLabel?: boolean; error?: string | null; hint?: string; note?: ReactNode }) {
   const id = useId();
   const describedBy = [error ? `${id}-err` : null, hint ? `${id}-hint` : null].filter(Boolean).join(" ") || undefined;
+  const labelEl = (
+    <label htmlFor={id} className={hideLabel ? "sr-only" : "text-sm font-medium text-ink-soft"}>
+      {label}
+    </label>
+  );
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
-      <label htmlFor={id} className={hideLabel ? "sr-only" : "text-sm font-medium text-ink-soft"}>
-        {label}
-      </label>
+      {note ? (
+        <div className="flex items-center gap-2">
+          {labelEl}
+          {note}
+        </div>
+      ) : (
+        labelEl
+      )}
       <input
         id={id}
         aria-invalid={error ? true : undefined}
@@ -107,7 +118,7 @@ export function Select({
 const NOTICE = {
   info: { icon: Info, cls: "bg-brand-soft text-ink" },
   success: { icon: CheckCircle2, cls: "bg-ok-soft text-ink" },
-  warning: { icon: AlertTriangle, cls: "bg-warn-soft text-warn-ink" },
+  warning: { icon: AlertTriangle, cls: "bg-notice text-ink ring-1 ring-inset ring-warn-line", iconCls: "text-warn-icon", bodyCls: "text-warn-body" },
   error: { icon: OctagonAlert, cls: "bg-alert-soft text-ink" },
 } as const;
 
@@ -122,13 +133,13 @@ export function Notice({
   children?: ReactNode;
   action?: ReactNode;
 }) {
-  const { icon: Icon, cls } = NOTICE[tone];
+  const { icon: Icon, cls, iconCls = "", bodyCls = "" } = NOTICE[tone] as { icon: typeof Info; cls: string; iconCls?: string; bodyCls?: string };
   return (
     <div role={tone === "error" ? "alert" : "status"} className={`flex gap-3 rounded-surface p-4 ${cls}`}>
-      <Icon aria-hidden className="mt-0.5 size-5 shrink-0" />
+      <Icon aria-hidden className={`mt-0.5 size-5 shrink-0 ${iconCls}`} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         {title && <p className="font-semibold">{title}</p>}
-        {children && <div className="text-sm leading-relaxed">{children}</div>}
+        {children && <div className={`text-sm leading-relaxed ${bodyCls}`}>{children}</div>}
         {action && <div className="mt-2 flex flex-wrap gap-2">{action}</div>}
       </div>
     </div>

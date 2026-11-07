@@ -11,6 +11,16 @@
     <link rel="manifest" href="/v1/config/manifest.webmanifest" />
     <!-- Fallback only: the app replaces it with the name from GET /v1/config. -->
     <title>Super Mercado</title>
+    <!-- The theme before the first paint, so the page does not flash light: the same choice as src/lib/theme.ts (key "basketiq.theme"). -->
+    <script>
+      (function () {
+        try {
+          var choice = localStorage.getItem("basketiq.theme");
+          var dark = choice === "dark" || (choice !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

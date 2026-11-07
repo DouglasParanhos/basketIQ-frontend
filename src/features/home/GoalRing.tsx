@@ -10,7 +10,7 @@ export const DEFINE_GOAL_PATH = "/definicoes/perfil?editar=meta";
 const STROKE: Record<RingTone, string> = { ok: "stroke-ok", warn: "stroke-warn", alert: "stroke-alert", none: "stroke-line" };
 const CHIP: Record<RingTone, string> = {
   ok: "bg-ok-soft text-ok",
-  warn: "bg-warn-soft text-warn-ink",
+  warn: "bg-warn-soft dark:ring-1 dark:ring-inset dark:ring-warn-line text-warn-ink",
   alert: "bg-alert-soft text-alert",
   none: "bg-brand-soft text-ink",
 };

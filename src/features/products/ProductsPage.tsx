@@ -68,7 +68,7 @@ export default function ProductsPage() {
             role="radio"
             aria-checked={o.id === order}
             onClick={() => update({ ordem: o.id === "compras" ? null : o.id })}
-            className="min-h-11 shrink-0 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line aria-checked:bg-brand aria-checked:text-white aria-checked:ring-brand dark:aria-checked:text-ground"
+            className="min-h-11 shrink-0 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line aria-checked:bg-brand aria-checked:text-on-brand aria-checked:ring-brand"
           >
             {o.label}
           </button>

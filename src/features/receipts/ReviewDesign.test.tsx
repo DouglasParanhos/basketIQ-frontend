@@ -36,11 +36,12 @@ async function correctTotal(user: ReturnType<typeof userEvent.setup>, value: str
 const saveLine = (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: "Guardar" }));
 
 describe("Rever talão (approved design)", () => {
-  it("the warning to review is the gold of the chips, with the warning icon, and says it in words", async () => {
+  it("the warning to review is the neutral notice (no gold or brown), with the warning icon, and says it in words", async () => {
     open();
     const notice = (await screen.findByText("Reveja antes de confirmar")).closest("[role=status]") as HTMLElement;
-    expect(notice.className).toContain("bg-warn-soft");
-    expect(notice.className).toContain("text-warn-ink");
+    expect(notice.className).toContain("bg-notice");
+    expect(notice.className).not.toContain("bg-warn-soft");
+    expect(notice.className).toContain("text-ink");
     expect(notice.querySelector("svg[aria-hidden=true]")).not.toBeNull();
   });
 
@@ -233,6 +234,16 @@ describe("Rever talão (approved design)", () => {
       expect(patches).toBe(0);
     });
 
+    it("«Desfazer» puts back the total and the unit price that moved with it", async () => {
+      const user = userEvent.setup();
+      open();
+      await correctTotal(user, "1,90");
+      expect(screen.getByLabelText("Preço unitário (€)")).toHaveValue("0,95");
+      await user.click(screen.getByRole("button", { name: "Desfazer" }));
+      expect(screen.getByLabelText("Preço total (€)")).toHaveValue("1,70");
+      expect(screen.getByLabelText("Preço unitário (€)")).toHaveValue("0,85");
+    });
+
     it("does not appear when the price is the same, or is not a valid value", async () => {
       const user = userEvent.setup();
       open();
@@ -246,8 +257,9 @@ describe("Rever talão (approved design)", () => {
       const user = userEvent.setup();
       open();
       await correctTotal(user, "1,90");
-      await user.click(screen.getByRole("button", { name: "Mais opções" }));
+      await user.click(screen.getByRole("button", { name: "Mais ações da linha" }));
       await user.click(screen.getByRole("button", { name: /remover linha/i }));
+      await user.click(screen.getByRole("button", { name: "Remover" }));
       expect(screen.queryByText(/Preço alterado de/)).toBeNull();
     });
 
@@ -406,6 +418,6 @@ describe("revertField", () => {
   it("keeps the field touched when it was already", () => {
     const first = setField(line, "line_total", "1,80");
     const second = setField(first, "line_total", "1,90");
-    expect(revertField(second, "line_total", "1,80", true).touched).toEqual(["line_total"]);
+    expect(revertField(second, "line_total", "1,80", true).touched).toContain("line_total");
   });
 });

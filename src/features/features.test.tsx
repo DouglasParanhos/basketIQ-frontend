@@ -309,7 +309,7 @@ describe("review (RF-07, F-11..F-15)", () => {
     expect(screen.queryByText("A fotografia pode ser melhorada")).not.toBeInTheDocument();
   });
 
-  it("F-13: editing a line sends only the changed field with the version", async () => {
+  it("F-13: editing a line sends only the changed fields (the quantity and the total it works out) with the version", async () => {
     let patch: Record<string, unknown> | null = null;
     server.use(
       http.patch(`${API}/v1/receipts/r1`, async ({ request }) => {
@@ -328,7 +328,7 @@ describe("review (RF-07, F-11..F-15)", () => {
     await user.click(screen.getByRole("button", { name: "Guardar" }));
     await user.click(screen.getByRole("button", { name: /^guardar e rever depois$/i }));
     await waitFor(() => expect(patch).not.toBeNull());
-    expect(patch).toEqual({ version: 3, lines: [{ id: "l1" }, { id: "l2", quantity: "0.900" }] });
+    expect(patch).toEqual({ version: 3, lines: [{ id: "l1" }, { id: "l2", quantity: "0.900", line_total_cents: 130 }] }); // 0,9 × 1,44
     expect(await screen.findByText("lista")).toBeInTheDocument(); // «rever depois»: back to the list
   });
 
@@ -373,9 +373,11 @@ describe("review (RF-07, F-11..F-15)", () => {
     const user = userEvent.setup();
     renderRoutes(routes, "/compras/r1");
     await user.click(await screen.findByRole("button", { name: /leite meio gordo/i }));
+    await user.click(screen.getByRole("button", { name: "Mais ações da linha" }));
     await user.click(screen.getByRole("button", { name: /remover linha/i }));
+    await user.click(screen.getByRole("button", { name: "Remover" }));
     await user.click(screen.getByRole("button", { name: /adicionar linha/i }));
-    await user.type(screen.getByLabelText("Descrição"), "PAO");
+    await user.type(screen.getByLabelText("Produto"), "PAO");
     await user.type(screen.getByLabelText("Preço total (€)"), "0,40");
     expect(document.body.textContent?.replace(/\s/g, " ")).toContain("A soma das linhas (1,63 €) não coincide com o total do talão (2,93 €).");
     await user.click(screen.getByRole("button", { name: "Guardar" }));
