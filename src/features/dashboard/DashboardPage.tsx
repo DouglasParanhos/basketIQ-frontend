@@ -1,18 +1,20 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { X } from "lucide-react";
+import { Printer, X } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
 import { api, unwrap, type Merchant, type Schemas } from "../../api/client";
 import { DataTable, SpendBars, type Point } from "../../components/charts";
-import { LinkButton, Notice, Select, Spinner } from "../../components/ui";
+import { Button, LinkButton, Notice, Select, Spinner } from "../../components/ui";
 import { formatCents, formatMonth, formatPercent, formatVariationAgainst } from "../../lib/format";
 import { MERCHANT_OPTIONS, merchantName, merchantStyle } from "../../lib/merchants";
 import { describePeriod, lisbonToday, periodFor, type Period, type PeriodKind } from "../../lib/period";
+import { usePrintInLight } from "../../lib/theme";
 import { PeriodPicker } from "./PeriodPicker";
 
 type Summary = Schemas["SummaryOut"];
 
 const dayShort = new Intl.DateTimeFormat("pt-PT", { day: "numeric", timeZone: "UTC" });
 const dayLong = new Intl.DateTimeFormat("pt-PT", { weekday: "short", day: "numeric", month: "long", timeZone: "UTC" });
+const dateLong = new Intl.DateTimeFormat("pt-PT", { day: "numeric", month: "long", year: "numeric" });
 const monthShort = new Intl.DateTimeFormat("pt-PT", { month: "short", timeZone: "UTC" });
 
 function usePeriodParams() {
@@ -47,7 +49,23 @@ function points(summary: Summary): Point[] {
   });
 }
 
+/** Only on paper: what the page is about, since the filters are hidden there. Says the figures are the person's own, not official. */
+function PrintHeader({ period, merchant, product }: { period: Period; merchant: string | null; product?: string }) {
+  const scope = [merchant ? merchantName(merchant) : "Todos os mercados", product].filter(Boolean).join(" · ");
+  return (
+    <header className="hidden print:block">
+      <p className="text-sm">Super Mercado</p>
+      <h2 className="font-display text-2xl font-semibold first-letter:uppercase">Resumo de compras · {describePeriod(period)}</h2>
+      <p className="text-sm">{scope}</p>
+      <p className="text-xs">
+        Valores dos seus talões confirmados, gerados a {dateLong.format(new Date())}. Não são preços oficiais dos mercados.
+      </p>
+    </header>
+  );
+}
+
 export function DashboardPage() {
+  usePrintInLight();
   const { period, merchant, product, update } = usePeriodParams();
   const merchantFilter = (merchant ?? undefined) as Merchant | undefined;
   // Fired next to the summary so the two requests run in parallel.
@@ -99,11 +117,14 @@ export function DashboardPage() {
         </section>
       ) : (
         <>
-          <PeriodPicker
-            value={period}
-            onChange={(p) => update({ periodo: p.kind === "month" ? null : p.kind, de: p.from, ate: p.to })}
-          />
-          <div className="flex flex-wrap items-end gap-3">
+          <PrintHeader period={period} merchant={merchant} product={product?.name} />
+          <div className="print:hidden">
+            <PeriodPicker
+              value={period}
+              onChange={(p) => update({ periodo: p.kind === "month" ? null : p.kind, de: p.from, ate: p.to })}
+            />
+          </div>
+          <div className="flex flex-wrap items-end gap-3 print:hidden">
             <Select
               label="Mercado"
               value={merchant ?? ""}
@@ -134,6 +155,11 @@ export function DashboardPage() {
           {query.isLoading && <Spinner />}
           {query.error && <Notice tone="error">{query.error.message}</Notice>}
           {s && <SummaryView summary={s} consumption={consumption.data} period={period} onProduct={(id, name) => update({ produto: id, produto_nome: name })} stale={query.isPlaceholderData} />}
+          {s && (
+            <Button variant="secondary" className="self-start print:hidden" onClick={() => window.print()}>
+              <Printer aria-hidden className="size-4" /> Imprimir ou guardar em PDF
+            </Button>
+          )}
         </>
       )}
     </div>

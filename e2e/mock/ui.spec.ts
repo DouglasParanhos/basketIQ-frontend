@@ -1019,6 +1019,19 @@ test.describe("talões (spec 012)", () => {
     await expect(page.getByRole("combobox", { name: "Ano" })).toHaveCount(0);
   });
 
+  test("F-262: on paper the Resumo leaves out the navigation, the filters and the button, and shows the title of the report", async ({ page }) => {
+    await fakeApi(page);
+    await page.goto("/compras/resumo");
+    await expect(page.getByRole("button", { name: "Imprimir ou guardar em PDF" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Resumo de compras/ })).toBeHidden();
+    await page.emulateMedia({ media: "print" });
+    await expect(page.getByRole("heading", { name: /^Resumo de compras/ })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Imprimir ou guardar em PDF" })).toBeHidden();
+    await expect(page.getByRole("combobox", { name: "Mercado" })).toBeHidden();
+    await expect(page.getByRole("tablist", { name: "Talões" })).toBeHidden();
+  });
+
   test("F-197: the products show the average price with its base and the counts, are reordered by name and never say «mais barato»", async ({ page }) => {
     await fakeApi(page);
     await page.goto("/produtos");
