@@ -123,6 +123,21 @@ describe("Rever talão: the lines", () => {
     expect(within(row).getByRole("button", { name: "Editar LEITE MEIO GORDO" })).toBeInTheDocument();
   });
 
+  it("F-286: the corrected product name leads and what was read from the receipt is shown small below it", async () => {
+    serve({ lines: [line({ id: "n1", raw_description: "LEITE MG UHT 1L", product: { id: "p1", name: "Leite meio gordo" } })] });
+    open();
+    const row = (await screen.findByText("Leite meio gordo")).closest("li")!;
+    expect(within(row).getByText("Lido no talão: LEITE MG UHT 1L")).toBeInTheDocument();
+    expect(within(row).getByRole("button", { name: "Editar Leite meio gordo" })).toBeInTheDocument();
+  });
+
+  it("F-286: with no corrected name the line shows what was read, and no «Lido no talão» line", async () => {
+    serve({ lines: [line({ id: "n2", raw_description: "BANANA", product: null })] });
+    open();
+    const row = (await screen.findByText("BANANA")).closest("li")!;
+    expect(within(row).queryByText(/Lido no talão/)).not.toBeInTheDocument();
+  });
+
   it("the card has every field in sight and no help text; «Guardar» keeps the edit, and the unit price follows the total", async () => {
     const user = userEvent.setup();
     open();

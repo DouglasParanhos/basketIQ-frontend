@@ -246,6 +246,7 @@ describe("review (RF-07, F-11..F-15)", () => {
       id: "l3",
       line_number: 3,
       raw_description: "QUEQUE",
+      product: null,
       quantity: "4.000",
       flags: ["quantity_pending", "low_confidence:quantity", "low_confidence:unit"],
       review_status: "NEEDS_REVIEW",
