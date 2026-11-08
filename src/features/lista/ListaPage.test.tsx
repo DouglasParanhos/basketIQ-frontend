@@ -6,9 +6,10 @@ import { routes } from "../../App";
 import { listArticles } from "../../test/fixtures";
 import { currentDestinations, nav } from "../../test/nav";
 import { renderRoutes } from "../../test/render";
+import { banned } from "../../test/banned";
 import { API, errorBody, server, serveConfig } from "../../test/server";
 
-const FORBIDDEN = /mais barato|poupa|poupou|poupar|perda|caro\b|ranking|orçamento|você|inteligente|sugest|recomend|previs/i;
+const FORBIDDEN = banned("perda|ranking|inteligente|sugest|recomend|previs");
 
 const main = () => document.querySelector("main")!;
 

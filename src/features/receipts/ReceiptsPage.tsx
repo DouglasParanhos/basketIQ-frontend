@@ -1,7 +1,8 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Navigate, useSearchParams } from "react-router";
 import { api, unwrap } from "../../api/client";
-import { Button, LinkButton, Notice, Spinner } from "../../components/ui";
+import { RadioPills } from "../../components/RadioPills";
+import { Button, ErrorNotice, LinkButton, Notice, Spinner } from "../../components/ui";
 import { IN_PROGRESS, type ReceiptStatus } from "../../lib/status";
 import { useMonths } from "../taloes/useMonths";
 import { useYear } from "../taloes/useYear";
@@ -68,23 +69,27 @@ export function ReceiptsPage() {
   return (
     <>
       <h2 className="sr-only">Compras</h2>
-      <div role="radiogroup" aria-label="Filtrar compras" className="mb-4 mt-3 flex gap-2 overflow-x-auto">
-        {FILTERS.map((f) => (
-          <button
-            key={f.id}
-            role="radio"
-            aria-checked={f.id === filter.id}
-            onClick={() => choose(f.id)}
-            className="min-h-11 shrink-0 rounded-full border-[1.5px] border-line bg-paper px-3.5 text-[13px] font-bold aria-checked:border-brand aria-checked:bg-brand aria-checked:text-on-brand"
-          >
-            {f.id === "acao" && asked > 0 && <span aria-hidden className="mr-2 inline-block size-2 rounded-full bg-marker dark:bg-warn" />}
-            {f.id === "acao" && asked > 0 ? `${f.label} · ${asked >= 100 ? "99+" : asked}` : f.label}
-          </button>
-        ))}
-      </div>
+      <RadioPills
+        label="Filtrar compras"
+        options={FILTERS.map((f) => ({
+          id: f.id,
+          label:
+            f.id === "acao" && asked > 0 ? (
+              <>
+                <span aria-hidden className="inline-block size-2 rounded-full bg-marker dark:bg-warn" />
+                {f.label} · {asked >= 100 ? "99+" : asked}
+              </>
+            ) : (
+              f.label
+            ),
+        }))}
+        value={filter.id}
+        className="mb-4 mt-3"
+        onChange={choose}
+      />
 
       {query.isLoading && <Spinner />}
-      {query.error && <Notice tone="error">{query.error.message}</Notice>}
+      {query.error && <ErrorNotice what="carregar as compras" error={query.error} onRetry={() => void query.refetch()} />}
       {!query.isLoading && items.length === 0 && (
         <Notice
           tone="info"

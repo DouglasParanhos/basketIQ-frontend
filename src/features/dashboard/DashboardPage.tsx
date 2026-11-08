@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
 import { api, unwrap, type Merchant, type Schemas } from "../../api/client";
 import { DataTable, SpendBars, type Point } from "../../components/charts";
-import { LinkButton, Notice, Select, Spinner } from "../../components/ui";
+import { ErrorNotice, LinkButton, Notice, Select, Spinner } from "../../components/ui";
 import { formatCents, formatMonth, formatPercent, formatVariationAgainst } from "../../lib/format";
 import { MERCHANT_OPTIONS, merchantName, merchantStyle } from "../../lib/merchants";
 import { describePeriod, lisbonToday, periodFor, type Period, type PeriodKind } from "../../lib/period";
@@ -132,7 +132,7 @@ export function DashboardPage() {
           </div>
 
           {query.isLoading && <Spinner />}
-          {query.error && <Notice tone="error">{query.error.message}</Notice>}
+          {query.error && <ErrorNotice what="carregar o resumo" error={query.error} onRetry={() => void query.refetch()} />}
           {s && <SummaryView summary={s} consumption={consumption.data} period={period} onProduct={(id, name) => update({ produto: id, produto_nome: name })} stale={query.isPlaceholderData} />}
         </>
       )}

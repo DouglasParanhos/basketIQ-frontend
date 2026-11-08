@@ -78,7 +78,7 @@ describe("list of products (spec 012, US3)", () => {
     serveProducts(all);
     open("/produtos?ordem=xyz");
     await screen.findByRole("link", { name: /Banana/ });
-    expect(screen.getByRole("radio", { name: "Mais comprados" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Mais comprados" })).toBeChecked();
   });
 
   it("F-197: the search stays on the server, labelled «Pesquisar produto»", async () => {

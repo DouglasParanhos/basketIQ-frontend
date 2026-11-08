@@ -1,36 +1,32 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { RadioPills } from "../../components/RadioPills";
 import { describePeriod, lisbonToday, periodFor, shiftPeriod, type Period, type PeriodKind } from "../../lib/period";
 
-const KINDS: { kind: PeriodKind; label: string }[] = [
-  { kind: "month", label: "Mês" },
-  { kind: "quarter", label: "Trimestre" },
-  { kind: "year", label: "Ano" },
-  { kind: "custom", label: "Intervalo" },
+const KINDS: { id: PeriodKind; label: string }[] = [
+  { id: "month", label: "Mês" },
+  { id: "quarter", label: "Trimestre" },
+  { id: "year", label: "Ano" },
+  { id: "custom", label: "Intervalo" },
 ];
 
 export function PeriodPicker({ value, onChange }: { value: Period; onChange: (p: Period) => void }) {
   const today = lisbonToday();
   return (
     <div className="flex flex-col gap-3">
-      <div role="radiogroup" aria-label="Período" className="grid grid-cols-4 gap-1.5">
-        {KINDS.map(({ kind, label }) => (
-          <button
-            key={kind}
-            role="radio"
-            aria-checked={value.kind === kind}
-            onClick={() =>
-              onChange(
-                kind === "custom"
-                  ? { kind, from: value.from, to: value.to }
-                  : periodFor(kind, { y: Number(value.from.slice(0, 4)) || today.y, m0: Number(value.from.slice(5, 7)) - 1 || today.m0 }),
-              )
-            }
-            className="min-h-11 rounded-full text-sm font-bold text-ink ring-1 ring-inset ring-line aria-checked:bg-brand aria-checked:text-on-brand aria-checked:ring-brand"
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <RadioPills
+        label="Período"
+        options={KINDS}
+        value={value.kind}
+        className="grid grid-cols-4 gap-1.5"
+        dense
+        onChange={(kind) =>
+          onChange(
+            kind === "custom"
+              ? { kind, from: value.from, to: value.to }
+              : periodFor(kind, { y: Number(value.from.slice(0, 4)) || today.y, m0: Number(value.from.slice(5, 7)) - 1 || today.m0 }),
+          )
+        }
+      />
       {value.kind === "custom" ? (
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1 text-sm text-ink-soft">

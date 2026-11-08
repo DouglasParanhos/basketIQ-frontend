@@ -7,6 +7,7 @@ import { serveReceipts } from "../../test/server";
 import { DashboardPage } from "../dashboard/DashboardPage";
 import ProductPage from "../products/ProductPage";
 import ProductsPage from "../products/ProductsPage";
+import { banned } from "../../test/banned";
 import { ReceiptsPage } from "../receipts/ReceiptsPage";
 import { TaloesLayout } from "./TaloesLayout";
 
@@ -26,7 +27,7 @@ const routes = [
   { path: "/compras/:id", element: <p>detalhe da compra</p> },
   { path: "/adicionar", element: <p>adicionar</p> },
 ];
-const FORBIDDEN = /mais barato|ranking|poupou|poupar|orçamento|você|90 dias|olá/i;
+const FORBIDDEN = banned("ranking|90 dias|olá");
 
 describe("Talões quality (spec 012, US5)", () => {
   it.each([
@@ -57,7 +58,7 @@ describe("Talões quality (spec 012, US5)", () => {
     expect(window.sessionStorage.length).toBe(0);
   });
 
-  it("F-199: Tab goes through Compras in the visual order: the year, the tab, the filters, then the purchases", async () => {
+  it("F-199: Tab goes through Compras in the visual order: the year, the tab, the filters (one stop, the arrows do the rest), then the purchases", async () => {
     serveReceipts([[receiptItem({ id: "n", merchant: "LIDL", created_at: "2026-10-24T12:00:00Z" })]]);
     renderRoutes(routes, "/compras");
     await screen.findByRole("link", { name: /Lidl/ });
@@ -69,8 +70,9 @@ describe("Talões quality (spec 012, US5)", () => {
       seen.push((el.getAttribute("aria-label") ?? (el as HTMLSelectElement).labels?.[0]?.textContent ?? el.textContent ?? "").trim());
     }
     const at = (needle: string | RegExp) => seen.findIndex((s) => (typeof needle === "string" ? s === needle : needle.test(s)));
-    const order = [at(/^Ano/), at("Compras"), at("Todas"), at(/^Requer ação/), at("Confirmadas"), at(/Lidl/)];
+    const order = [at(/^Ano/), at("Compras"), at("Todas"), at(/Lidl/)];
     expect(order.every((i) => i >= 0), seen.join(" | ")).toBe(true);
+    expect(seen.some((s) => /^Requer ação|^Confirmadas/.test(s)), seen.join(" | ")).toBe(false);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
 });

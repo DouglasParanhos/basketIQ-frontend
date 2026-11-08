@@ -506,7 +506,7 @@ test.describe("definições (spec 014)", () => {
     await fakeApi(page, { storedFiles: 9, admin: true });
     await walkSettings(page, async () => {
       const small = await page
-        .locator("main button:visible, main a:visible, main label:has(input):visible, main input:not([type=checkbox]):visible, main [role=tab]:visible")
+        .locator("main button:visible, main a:visible, main label:has(input):visible, main input:not([type=checkbox]):not([type=radio]):visible, main [role=tab]:visible")
         .evaluateAll((nodes) =>
           nodes
             .map((node) => ({ text: (node.textContent ?? node.getAttribute("aria-label") ?? "").trim().slice(0, 30), box: node.getBoundingClientRect() }))
@@ -1003,7 +1003,7 @@ test.describe("talões (spec 012)", () => {
     await expect(page.getByRole("heading", { level: 3, name: /Dezembro 2025 · 2 confirmados/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Pingo Doce/ })).toHaveCount(0);
 
-    await page.getByRole("radio", { name: /Requer ação/ }).click();
+    await page.getByRole("radio", { name: /Requer ação/ }).check({ force: true });
     await expect(page).toHaveURL(/filtro=acao/);
     await expect(page.getByRole("link", { name: /Mercadona/ })).toBeVisible();
     await page.getByRole("link", { name: /Mercadona/ }).click();
@@ -1026,7 +1026,7 @@ test.describe("talões (spec 012)", () => {
     await expect(chicken).toContainText("4 compras · 3 mercados");
     await expect(chicken).toContainText("5,52 € /kg");
     await expect(page.getByRole("link", { name: /Água/ })).not.toContainText("€");
-    await page.getByRole("radio", { name: "A–Z" }).click();
+    await page.getByText("A–Z", { exact: true }).click();
     await expect(page).toHaveURL(/ordem=az$/);
     await expect(page.getByRole("main").getByRole("link").first()).toContainText("Água");
     await chicken.click();
@@ -1267,24 +1267,24 @@ test.describe("Aparência: the person chooses the theme in Definições", () => 
   test("by default it follows the system, in both schemes, and the page does not start in the other one", async ({ page }) => {
     await open(page, "dark");
     expect(await ground(page)).toBe(DARK);
-    await expect(radio(page, "Automático")).toHaveAttribute("aria-checked", "true");
+    await expect(radio(page, "Automático")).toBeChecked();
   });
 
   test("with the system in light, «Escuro» turns the page dark at once and survives a reload", async ({ page }) => {
     await open(page, "light");
     expect(await ground(page)).toBe(LIGHT);
-    await radio(page, "Escuro").click();
+    await radio(page, "Escuro").check({ force: true });
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     expect(await ground(page)).toBe(DARK);
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     expect(await ground(page)).toBe(DARK);
-    await expect(radio(page, "Escuro")).toHaveAttribute("aria-checked", "true");
+    await expect(radio(page, "Escuro")).toBeChecked();
   });
 
   test("with the system in dark, «Claro» turns the page light and survives a reload", async ({ page }) => {
     await open(page, "dark");
-    await radio(page, "Claro").click();
+    await radio(page, "Claro").check({ force: true });
     expect(await ground(page)).toBe(LIGHT);
     await page.reload();
     expect(await ground(page)).toBe(LIGHT);
@@ -1292,8 +1292,8 @@ test.describe("Aparência: the person chooses the theme in Definições", () => 
 
   test("«Automático» follows the system again, also when the system changes while the page is open", async ({ page }) => {
     await open(page, "light");
-    await radio(page, "Escuro").click();
-    await radio(page, "Automático").click();
+    await radio(page, "Escuro").check({ force: true });
+    await radio(page, "Automático").check({ force: true });
     expect(await ground(page)).toBe(LIGHT);
     await page.emulateMedia({ colorScheme: "dark" });
     await expect.poll(() => ground(page)).toBe(DARK);
@@ -1301,7 +1301,7 @@ test.describe("Aparência: the person chooses the theme in Definições", () => 
 
   test("a choice is not moved by the system", async ({ page }) => {
     await open(page, "light");
-    await radio(page, "Escuro").click();
+    await radio(page, "Escuro").check({ force: true });
     await page.emulateMedia({ colorScheme: "light" });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.emulateMedia({ colorScheme: "light" });
@@ -1312,7 +1312,7 @@ test.describe("Aparência: the person chooses the theme in Definições", () => 
     test(`the card has no axe violations and fits at 320px, with «${choice}» chosen`, async ({ page }) => {
       await open(page, "light");
       await page.setViewportSize({ width: 320, height: 568 });
-      await radio(page, choice).click();
+      await radio(page, choice).check({ force: true });
       await noHorizontalScroll(page);
       await noA11yViolations(page);
     });

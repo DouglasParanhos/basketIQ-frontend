@@ -31,16 +31,18 @@ function pending(user: typeof me = { ...me, privacy_accepted_at: null, privacy_v
 }
 
 describe("Política de privacidade (approved design)", () => {
-  it("has the title, the summary with three ticks and the five sections of the full policy, all closed", async () => {
+  it("has the title, the summary with four ticks and the five sections of the full policy, all closed", async () => {
     pending();
     renderRoutes(routes, "/privacidade");
     expect(await screen.findByRole("heading", { level: 1, name: "Política de privacidade" })).toBeInTheDocument();
     const summary = screen.getByRole("region", { name: "EM RESUMO" });
     expect(within(summary).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
-      "Guardamos o seu nome, o e-mail e os dados dos seus talões.",
-      "Usamos só para lhe mostrar as suas compras. Não vendemos nem partilhamos.",
-      "Os ficheiros originais são apagados 30 dias depois de confirmar o talão. Pode apagar tudo quando quiser.",
+      "Guardamos o seu nome, o e-mail e os dados dos seus talões, e usamo-los para lhe mostrar as suas compras.",
+      "Com os dados dos talões criamos também números anónimos e agregados, por exemplo o preço mediano de um produto numa semana, numa cadeia e num concelho. Não dizem quem os gerou e podemos partilhá-los ou vendê-los.",
+      "Nunca partilhamos o seu talão, o seu nome, o seu e-mail nem a hora das suas compras.",
+      "Os ficheiros originais são apagados 30 dias depois de confirmar o talão. Pode apagar a sua conta quando quiser.",
     ]);
+    expect(summary).not.toHaveTextContent(/não vendemos|não partilhamos/i);
     const titles = ["Que dados guardamos", "Para que servem", "Onde são processados os talões", "Durante quanto tempo", "Os seus direitos"];
     for (const title of titles) expect(screen.getByRole("button", { name: title })).toHaveAttribute("aria-expanded", "false");
   });

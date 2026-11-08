@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link, useParams } from "react-router";
 import { api, unwrap } from "../../api/client";
 import { DataTable, PriceLine } from "../../components/charts";
-import { Notice, Spinner } from "../../components/ui";
+import { ErrorNotice, Spinner } from "../../components/ui";
 import { formatCents, formatDate, formatQuantity } from "../../lib/format";
 import { merchantName } from "../../lib/merchants";
 
@@ -16,7 +16,7 @@ export default function ProductPage() {
     queryFn: async () => unwrap(await api.GET("/v1/products/{product_id}/analytics", { params: { path: { product_id: id } } })),
   });
   if (query.isLoading) return <Spinner />;
-  if (query.error) return <Notice tone="error">{query.error.message}</Notice>;
+  if (query.error) return <ErrorNotice what="carregar o produto" error={query.error} onRetry={() => void query.refetch()} />;
   const a = query.data!;
   const basis = BASIS[a.price_basis] ?? a.price_basis;
   const priced = a.history.filter((h) => h.unit_price_cents !== null && h.price_basis === a.price_basis);

@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router";
 import { Button, Notice, Spinner, Surface } from "../../components/ui";
 import { formatDate } from "../../lib/format";
+import { useConfirmFocus } from "../../lib/useConfirmFocus";
 import { useMe } from "../auth/session";
 import { DeleteIncomplete, useDeleteStoredFiles, useStoredFiles } from "./useStoredFiles";
 
@@ -11,10 +12,7 @@ export function PrivacyTab() {
   const files = useStoredFiles();
   const remove = useDeleteStoredFiles();
   const [confirming, setConfirming] = useState(false);
-  const confirmTitle = useRef<HTMLHeadingElement>(null);
-  useEffect(() => {
-    if (confirming) confirmTitle.current?.focus();
-  }, [confirming]);
+  const confirmTitle = useConfirmFocus<HTMLHeadingElement>(confirming);
   if (!me) return null;
 
   const count = files.data?.files;

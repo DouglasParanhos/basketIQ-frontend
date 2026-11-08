@@ -8,9 +8,10 @@ import { useLogout, useMe } from "../auth/session";
 
 // The third line says «depois de confirmar o talão», not «ao fim de 30 dias» as in the canvas: the backend only schedules the erasure in `mark_confirmed`.
 const SUMMARY = [
-  "Guardamos o seu nome, o e-mail e os dados dos seus talões.",
-  "Usamos só para lhe mostrar as suas compras. Não vendemos nem partilhamos.",
-  "Os ficheiros originais são apagados 30 dias depois de confirmar o talão. Pode apagar tudo quando quiser.",
+  "Guardamos o seu nome, o e-mail e os dados dos seus talões, e usamo-los para lhe mostrar as suas compras.",
+  "Com os dados dos talões criamos também números anónimos e agregados, por exemplo o preço mediano de um produto numa semana, numa cadeia e num concelho. Não dizem quem os gerou e podemos partilhá-los ou vendê-los.",
+  "Nunca partilhamos o seu talão, o seu nome, o seu e-mail nem a hora das suas compras.",
+  "Os ficheiros originais são apagados 30 dias depois de confirmar o talão. Pode apagar a sua conta quando quiser.",
 ];
 
 // The full policy: the text that was already here (the owner writes the final text), under the titles of the design.
@@ -19,7 +20,10 @@ const SECTIONS: { title: string; body: string }[] = [
     title: "Que dados guardamos",
     body: "Da sua conta Google: identificador, nome e e-mail. Das notas: o ficheiro original e os dados extraídos (supermercado, data, produtos, quantidades, preços, descontos e totais). Se ativar a entrada com passkey: a chave pública e as datas de criação e de último uso; no telemóvel fica um cookie com o identificador da passkey, para a oferecer ao entrar. A digital, o rosto e o PIN nunca saem do telemóvel.",
   },
-  { title: "Para que servem", body: "Apenas para lhe mostrar as suas compras e análises. Não partilhamos nem vendemos dados." },
+  {
+    title: "Para que servem",
+    body: "Para si: mostrar as suas compras e análises, e ajudar a fazer a lista e a ver o que costuma pagar. Dados anónimos e agregados: juntamos os dados dos talões de muitas pessoas em números que não identificam ninguém (semana, cadeia, concelho, grupo de produto, preço mediano, quantidades). Um número só é usado quando vem de pelo menos 5 pessoas diferentes. Pode ser usado para mostrar o histórico de preços a outros utilizadores, para estudos e para venda a terceiros. Nunca inclui o talão, o nome, o e-mail, o NIF, o número do documento, a loja exata nem a hora da compra.",
+  },
   {
     title: "Onde são processados os talões",
     body: "A leitura das notas é feita nos nossos servidores, com reconhecimento de texto local. As notas não são enviadas a serviços externos. Se no futuro um serviço externo for usado para notas difíceis, só acontecerá dentro desta política e ficará registado.",
@@ -30,7 +34,7 @@ const SECTIONS: { title: string; body: string }[] = [
   },
   {
     title: "Os seus direitos",
-    body: "Pode apagar uma compra, apenas o ficheiro original ou a conta inteira em Definições. A eliminação da conta remove notas, ficheiros e dados de compras.",
+    body: "Pode apagar uma compra, apenas o ficheiro original ou a conta inteira em Definições. A eliminação da conta remove notas, ficheiros e dados de compras. Não retira os números anónimos e agregados já criados, porque já não se ligam a si nem a ninguém.",
   },
 ];
 

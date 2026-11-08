@@ -2,6 +2,7 @@ import { AlertTriangle, CheckCircle2, Info, Loader2, OctagonAlert } from "lucide
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
 import { useId } from "react";
 import { Link, type LinkProps } from "react-router";
+import { ApiError } from "../api/client";
 import { STATUS, type ReceiptStatus } from "../lib/status";
 
 type Variant = "primary" | "secondary" | "quiet" | "ghost" | "outline" | "danger" | "dangerQuiet" | "dangerOutline";
@@ -27,18 +28,26 @@ const SIZES: Record<Size, string> = {
 };
 
 const BASE =
-  "inline-flex items-center justify-center gap-2 rounded-full px-4 transition-colors disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex items-center justify-center gap-2 rounded-full px-4 transition-colors disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-not-allowed aria-busy:opacity-50";
 
+/** A busy button is not `disabled`: it keeps the focus (A-05), and its click does nothing until the work is done. */
 export function Button({
   variant = "primary",
   size = "md",
   busy = false,
   className = "",
   children,
+  onClick,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size; busy?: boolean }) {
   return (
-    <button className={`${BASE} ${SIZES[size]} ${VARIANTS[variant]} ${className}`} disabled={busy || props.disabled} aria-busy={busy} {...props}>
+    <button
+      aria-busy={busy}
+      aria-disabled={busy || undefined}
+      {...props}
+      className={`${BASE} ${SIZES[size]} ${VARIANTS[variant]} ${className}`}
+      onClick={busy ? (e) => e.preventDefault() : onClick}
+    >
       {busy && <Loader2 aria-hidden className="size-4 animate-spin" />}
       {children}
     </button>
@@ -143,6 +152,28 @@ export function Notice({
         {action && <div className="mt-2 flex flex-wrap gap-2">{action}</div>}
       </div>
     </div>
+  );
+}
+
+const SERVER_MESSAGE = "Algo falhou do nosso lado. Tente de novo daqui a pouco.";
+
+/** The common error frame (T-17, T-18): what failed as the title, the cause below it, «Tentar de novo» when there is a way. A server fault never shows the backend's text. */
+export function ErrorNotice({ what, error, onRetry }: { what: string; error: Error; onRetry?: () => void }) {
+  const cause = error instanceof ApiError && error.status >= 500 ? SERVER_MESSAGE : error.message;
+  return (
+    <Notice
+      tone="error"
+      title={`Não foi possível ${what}.`}
+      action={
+        onRetry && (
+          <Button variant="outline" size="sm" onClick={onRetry}>
+            Tentar de novo
+          </Button>
+        )
+      }
+    >
+      {cause}
+    </Notice>
   );
 }
 

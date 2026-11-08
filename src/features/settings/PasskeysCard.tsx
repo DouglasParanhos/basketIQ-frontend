@@ -1,18 +1,16 @@
 import { Fingerprint } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { Schemas } from "../../api/client";
 import { Button, Notice, Spinner, Surface } from "../../components/ui";
 import { formatDate } from "../../lib/format";
+import { useConfirmFocus } from "../../lib/useConfirmFocus";
 import { addPasskeyError, useAddPasskey, usePasskeySupport, usePasskeys, useRemovePasskey } from "../auth/passkeys";
 
 /** One passkey: its dates and «Remover», with a confirmation that takes the focus (as in PrivacyTab). */
 function PasskeyRow({ passkey }: { passkey: Schemas["PasskeyOut"] }) {
   const remove = useRemovePasskey();
   const [confirming, setConfirming] = useState(false);
-  const confirmTitle = useRef<HTMLParagraphElement>(null);
-  useEffect(() => {
-    if (confirming) confirmTitle.current?.focus();
-  }, [confirming]);
+  const confirmTitle = useConfirmFocus<HTMLParagraphElement>(confirming);
 
   return (
     <li className="flex flex-col gap-2 py-2.5">

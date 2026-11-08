@@ -3,7 +3,8 @@ import { ChevronRight, Search } from "lucide-react";
 import { useDeferredValue } from "react";
 import { Link, useSearchParams } from "react-router";
 import { api, unwrap, type Schemas } from "../../api/client";
-import { Notice, Spinner } from "../../components/ui";
+import { RadioPills } from "../../components/RadioPills";
+import { ErrorNotice, Notice, Spinner } from "../../components/ui";
 import { formatUnitPrice } from "../../lib/format";
 import { ORDERS, parseOrder, sortProducts } from "./sort";
 
@@ -61,21 +62,9 @@ export default function ProductsPage() {
           className="min-h-[3.25rem] w-full rounded-full border-[1.5px] border-line bg-paper pl-12 pr-4 text-base"
         />
       </label>
-      <div role="radiogroup" aria-label="Ordenar produtos" className="mb-3 flex gap-2 overflow-x-auto">
-        {ORDERS.map((o) => (
-          <button
-            key={o.id}
-            role="radio"
-            aria-checked={o.id === order}
-            onClick={() => update({ ordem: o.id === "compras" ? null : o.id })}
-            className="min-h-11 shrink-0 rounded-full px-4 text-sm font-semibold ring-1 ring-inset ring-line aria-checked:bg-brand aria-checked:text-on-brand aria-checked:ring-brand"
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
+      <RadioPills label="Ordenar produtos" options={ORDERS} value={order} className="mb-3" onChange={(id) => update({ ordem: id === "compras" ? null : id })} />
       {query.isLoading && <Spinner />}
-      {query.error && <Notice tone="error">{query.error.message}</Notice>}
+      {query.error && <ErrorNotice what="carregar os produtos" error={query.error} onRetry={() => void query.refetch()} />}
       {query.data?.length === 0 && (
         <Notice tone="info">{q ? `Nenhum produto com “${q}” nas compras confirmadas.` : "Os produtos aparecem aqui depois de confirmar compras."}</Notice>
       )}
