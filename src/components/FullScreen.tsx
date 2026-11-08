@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from "react";
+import { useEffect, useRef, type ReactNode, type Ref } from "react";
 import { useHideNav } from "./AppShell";
 
 /**
@@ -19,11 +19,16 @@ export function FullScreen({
   children: ReactNode;
 }) {
   useHideNav();
+  // The title takes the focus by default (WCAG 2.4.3); a screen that has a better target passes its own `titleRef`.
+  const own = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (!titleRef) own.current?.focus();
+  }, [titleRef]);
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 pb-3 pt-5">
         <div className="justify-self-start">{start}</div>
-        <h1 ref={titleRef} tabIndex={-1} className="text-center font-display text-xl font-semibold leading-tight">
+        <h1 ref={titleRef ?? own} tabIndex={-1} className="text-center font-display text-xl font-semibold leading-tight">
           {title}
         </h1>
         <div />

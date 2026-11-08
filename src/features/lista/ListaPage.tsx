@@ -3,11 +3,10 @@ import { ChevronRight } from "lucide-react";
 import { Link } from "react-router";
 import { api, unwrap, type Schemas } from "../../api/client";
 import { Button, Notice, PageHeader, Spinner } from "../../components/ui";
-import { formatQuantity, formatUnitPrice } from "../../lib/format";
+import { formatQuantity, formatUnitPrice, plural } from "../../lib/format";
 import { merchantName } from "../../lib/merchants";
 import { formatDayMonth } from "../../lib/month";
 
-const plural = (n: number | string, one: string, many: string) => `${formatQuantity(String(n))} ${Number(n) === 1 ? one : many}`;
 
 function Price({ point, label, basis }: { point: Schemas["ArticlePrice"] | null; label: string; basis: string }) {
   if (!point) return null;

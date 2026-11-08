@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 import { createContext, Suspense, useContext, useLayoutEffect, useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import { useSmartListEnabled } from "../config/appConfig";
+import { RouteAnnouncer } from "./RouteAnnouncer";
 import { Spinner } from "./ui";
 
 const under = (path: string, base: string) => path === base || path.startsWith(`${base}/`);
@@ -86,7 +87,8 @@ export function AppShell() {
           </ul>
         </nav>
       )}
-      <main id="conteudo" className={`mx-auto w-full max-w-2xl px-5 ${navHidden ? "" : "pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-12"}`}>
+      <RouteAnnouncer />
+      <main id="conteudo" tabIndex={-1} className={`mx-auto w-full max-w-2xl px-5 outline-none ${navHidden ? "" : "pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-12"}`}>
         <NavContext.Provider value={nav}>
           <Suspense fallback={<Spinner />}>
             <Outlet />

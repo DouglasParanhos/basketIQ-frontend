@@ -2,6 +2,7 @@ import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@ta
 import { lazy, Suspense, useState } from "react";
 import { createBrowserRouter, isRouteErrorResponse, Navigate, Outlet, RouterProvider, useRouteError, type RouteObject } from "react-router";
 import { ApiError, setSessionExpiredHandler } from "./api/client";
+import { AnnounceProvider } from "./components/Announce";
 import { AppShell } from "./components/AppShell";
 import { Notice, Spinner } from "./components/ui";
 import { DocumentTitle, useAppConfig } from "./config/appConfig";
@@ -61,60 +62,75 @@ function Protected({ admin = false }: { admin?: boolean }) {
   );
 }
 
+/** Above every route, so that each screen has its own title (WCAG 2.4.2). */
+function RootLayout() {
+  return (
+    <AnnounceProvider>
+      <DocumentTitle />
+      <Outlet />
+    </AnnounceProvider>
+  );
+}
+
 /** Exported so the tests render the real table. */
 export const routes: RouteObject[] = [
-  { path: "/login", element: <LoginPage />, errorElement: <RouteError /> },
-  { path: "/privacidade", element: <PrivacyPage />, errorElement: <RouteError /> },
-  // Signed in and consented. The onboarding is a full screen (no navigation bar); every other private page sits behind
-  // the onboarding guard, which is above the AppShell so that nothing of the shell shows while it decides.
   {
-    element: <Protected />,
-    errorElement: <RouteError />,
+    element: <RootLayout />,
     children: [
-      { path: "/boas-vindas", element: <OnboardingPage /> },
+      { path: "/login", element: <LoginPage />, errorElement: <RouteError /> },
+      { path: "/privacidade", element: <PrivacyPage />, errorElement: <RouteError /> },
+      // Signed in and consented. The onboarding is a full screen (no navigation bar); every other private page sits behind
+      // the onboarding guard, which is above the AppShell so that nothing of the shell shows while it decides.
       {
-        element: <RequireOnboarding />,
+        element: <Protected />,
+        errorElement: <RouteError />,
         children: [
+          { path: "/boas-vindas", element: <OnboardingPage /> },
           {
-            element: <AppShell />,
-            errorElement: <RouteError />,
+            element: <RequireOnboarding />,
             children: [
-              { path: "/", element: <HomeRoute /> },
               {
-                element: <TaloesLayout />,
+                element: <AppShell />,
+                errorElement: <RouteError />,
                 children: [
-                  { path: "/compras", element: <ReceiptsPage /> },
-                  { path: "/compras/resumo", element: <DashboardPage /> },
-                  { path: "/produtos", element: <ProductsPage /> },
+                  { path: "/", element: <HomeRoute /> },
+                  {
+                    element: <TaloesLayout />,
+                    children: [
+                      { path: "/compras", element: <ReceiptsPage /> },
+                      { path: "/compras/resumo", element: <DashboardPage /> },
+                      { path: "/produtos", element: <ProductsPage /> },
+                    ],
+                  },
+                  { path: "/compras/:id", element: <ReceiptPage /> },
+                  { path: "/adicionar", element: <AddPage /> },
+                  { path: "/lista", element: <ListaRoute /> },
+                  { path: "/produtos/:id", element: <ProductPage /> },
+                  {
+                    path: "/definicoes",
+                    element: <SettingsLayout />,
+                    children: [
+                      { index: true, element: <Navigate to="/definicoes/perfil" replace /> },
+                      { path: "perfil", element: <ProfileTab /> },
+                      { path: "privacidade", element: <PrivacyTab /> },
+                      { path: "conta", element: <AccountTab /> },
+                    ],
+                  },
+                  { path: "/definicoes/conta/eliminar", element: <DeleteAccountPage /> },
                 ],
               },
-              { path: "/compras/:id", element: <ReceiptPage /> },
-              { path: "/adicionar", element: <AddPage /> },
-              { path: "/lista", element: <ListaRoute /> },
-              { path: "/produtos/:id", element: <ProductPage /> },
-              {
-                path: "/definicoes",
-                element: <SettingsLayout />,
-                children: [
-                  { index: true, element: <Navigate to="/definicoes/perfil" replace /> },
-                  { path: "perfil", element: <ProfileTab /> },
-                  { path: "privacidade", element: <PrivacyTab /> },
-                  { path: "conta", element: <AccountTab /> },
-                ],
-              },
-              { path: "/definicoes/conta/eliminar", element: <DeleteAccountPage /> },
             ],
           },
         ],
       },
-    ],
-  },
-  {
-    element: <AppShell />,
-    errorElement: <RouteError />,
-    children: [
-      { element: <Protected admin />, children: [{ path: "/operador", element: <AdminPage /> }] },
-      { path: "*", element: <RouteError /> },
+      {
+        element: <AppShell />,
+        errorElement: <RouteError />,
+        children: [
+          { element: <Protected admin />, children: [{ path: "/operador", element: <AdminPage /> }] },
+          { path: "*", element: <RouteError /> },
+        ],
+      },
     ],
   },
 ];
@@ -142,7 +158,6 @@ export function App() {
   setSessionExpiredHandler(() => sessionLost(new ApiError(401, undefined)));
   return (
     <QueryClientProvider client={client}>
-      <DocumentTitle />
       <RouterProvider router={router} />
     </QueryClientProvider>
   );

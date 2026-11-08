@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronDown } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { api, unwrap } from "../../api/client";
 import { Button, Notice } from "../../components/ui";
 import { useLogout, useMe } from "../auth/session";
@@ -78,6 +78,11 @@ export function PrivacyPage() {
 
   return (
     <main className={`mx-auto max-w-2xl px-6 pt-12 ${needsConsent ? "pb-[calc(11rem+env(safe-area-inset-bottom))]" : "pb-16"}`}>
+      {!needsConsent && (
+        <Link to={me ? "/definicoes/privacidade" : "/login"} className="mb-4 inline-block min-h-11 py-2 font-semibold text-brand underline">
+          Voltar
+        </Link>
+      )}
       <h1 className="font-display text-[30px] font-semibold leading-[1.1]">Política de privacidade</h1>
 
       <section aria-labelledby="resumo" className="mt-4 flex flex-col gap-3 rounded-[20px] bg-brand-soft p-4">

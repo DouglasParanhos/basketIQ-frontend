@@ -107,7 +107,7 @@ describe("lazy pages inside the shell (spec 010, R14)", () => {
     renderRoutes([{ element: <AppShell />, children: [{ path: "/", element: <Pending /> }] }], "/");
     const bar = await screen.findByRole("navigation", { name: "Navegação principal" });
     expect(within(bar).getByRole("link", { name: "Início" })).toBeInTheDocument();
-    expect(await screen.findByRole("status")).toHaveTextContent("A carregar");
+    expect(await within(screen.getByRole("main")).findByRole("status")).toHaveTextContent("A carregar");
   });
 });
 

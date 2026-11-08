@@ -249,7 +249,7 @@ test.describe("customer-facing name (CFG-02)", () => {
   test("title, login and manifest follow the name served by the backend", async ({ page }) => {
     await fakeApi(page, { signedIn: false, appName: "Mercado do Zé" });
     await page.goto("/login");
-    await expect(page).toHaveTitle("Mercado do Zé");
+    await expect(page).toHaveTitle("Entrar · Mercado do Zé");
     await expect(page.getByRole("heading", { level: 1, name: "Mercado do Zé" })).toBeVisible();
     await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href", "/v1/config/manifest.webmanifest");
     // Fetched from the page, like the browser does (page.request would bypass the fake API).
@@ -260,7 +260,7 @@ test.describe("customer-facing name (CFG-02)", () => {
   test("default name is Super Mercado", async ({ page }) => {
     await fakeApi(page);
     await page.goto("/definicoes");
-    await expect(page).toHaveTitle("Super Mercado");
+    await expect(page).toHaveTitle("Perfil · Super Mercado");
     await expect(page.locator("footer").getByText("Super Mercado", { exact: true })).toBeVisible();
   });
 });
@@ -421,7 +421,7 @@ test.describe("onboarding (spec 010)", () => {
   test("F-115: while the profile loads there is only the loading indicator, no navigation bar", async ({ page }) => {
     await fakeApi(page, { onboarded: false, profileDelayMs: 600 });
     await page.goto("/");
-    await expect(page.getByRole("status")).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "A carregar" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Navegação principal" })).toHaveCount(0);
     await expect(page.getByRole("heading", { level: 1, name: "Início" })).toHaveCount(0);
     await expect(page).toHaveURL(/\/boas-vindas$/);
@@ -782,7 +782,7 @@ test.describe("início (spec 011)", () => {
           await page.goto("/");
           await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeAttached();
           await expect(page.getByText("Este mês", { exact: true })).toBeVisible();
-          await expect(page.getByRole("status")).toHaveCount(0); // finished loading
+          await expect(page.getByRole("status").filter({ hasText: "A carregar" })).toHaveCount(0); // finished loading
           await noA11yViolations(page);
           await noHorizontalScroll(page);
         }
@@ -880,7 +880,7 @@ test.describe("início (spec 011)", () => {
   test("F-187: while it loads there is only the indicator, and an error offers «Tentar de novo»", async ({ page }) => {
     const state = await fakeApi(page, { overviewDelayMs: 800 });
     await page.goto("/");
-    await expect(page.getByRole("status")).toContainText("A carregar");
+    await expect(page.getByRole("status").filter({ hasText: "A carregar" })).toContainText("A carregar");
     await expect(page.getByText(/\d,\d\d €/)).toHaveCount(0);
     await expect(page.getByRole("img", { name: /anel verde/i })).toBeVisible();
     state.overviewFail = true;

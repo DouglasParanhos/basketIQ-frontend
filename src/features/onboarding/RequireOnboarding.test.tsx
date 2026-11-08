@@ -83,7 +83,7 @@ describe("the onboarding guard (spec 010, US3)", () => {
     await waitFor(() => expect(profileRequests).toBe(1));
     expect(screen.queryByRole("heading", { level: 1, name: "Início" })).not.toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: NAV_NAME })).not.toBeInTheDocument();
-    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.getByText(/A carregar/)).toBeInTheDocument();
     await screen.findByRole("heading", { level: 1, name: "Qual é o seu objetivo com a aplicação?" });
     expect(router.state.location.pathname).toBe("/boas-vindas");
   });
