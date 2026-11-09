@@ -51,7 +51,7 @@ export function ItemRow({ item, onCheck, onHaveAtHome, onEdit, onRemove }: Props
                 aria-expanded={open}
                 aria-controls={panelId}
                 onClick={() => setOpen(!open)}
-                className="inline-flex min-h-8 items-center gap-0.5 text-sm font-semibold text-brand"
+                className="inline-flex min-h-8 items-center gap-0.5 text-sm font-semibold text-brand-deep"
               >
                 Ver evolução
                 <ChevronDown aria-hidden className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />

@@ -49,15 +49,15 @@
 ### User Story 3 - «Ver evolução» (G2) — P1
 
 1. **Given** an item with purchases, **When** «Ver evolução ⌄» is touched, **Then** a panel opens under the item without leaving the list, with Esperado, Última vez, Menor and Maior, the chart, and the **list of purchases** (date, supermarket, price, quantity). — F-325, D9, G2
-2. **Given** the panel, **When** the period is changed, **Then** 3 and 6 months are offered; if the period has no purchase, the older ones are shown. — F-326, D9
+2. **Given** the panel, **When** it is shown, **Then** it covers the last six months, with no period to choose; if none of the purchases is in them, the older ones are shown. — F-326, D9
 3. **Given** purchases at several supermarkets, **When** the chart is drawn, **Then** every point is the person's own purchase, filled, in the colour of its supermarket, with a legend (a hollow grey point is reserved for the price base, which does not exist yet). — F-327, D9
 4. **Given** no data, **When** the item has no purchases, **Then** the stamp «Sem informação» shows where the evolution would be, the value is «—», and there is no arrow and no chart. — F-328, D10
-5. **Given** the chart, **When** a screen reader reads it, **Then** «Ver como tabela» gives the same data, and the purchases are also listed under the chart with date, supermarket, price and quantity. — F-329, D9, §8
+5. **Given** the chart, **When** a screen reader reads it, **Then** the purchases listed under it (date, supermarket, price, quantity) are the same data in text; there is no second copy as a table. — F-329, D9, §8
 
 ### User Story 4 - «Adicionar» (G5) — P1
 
 1. **Given** the floating button «Adicionar», **When** it is touched, **Then** a modal sheet opens: the focus goes to the field «Produto», stays inside, `Esc` closes it and the focus returns to the button. — F-330, D13, G5
-2. **Given** the sheet, **When** a product is written and «Adicionar» is touched, **Then** it joins the list, the sheet stays open for more, and the box «Já tenho em casa» sets that state. «Concluído» closes. — F-331, D13
+2. **Given** the sheet, **When** a product is written and «Adicionar» is touched, **Then** it joins the list, the sheet stays open for more, and the box «Já tenho em casa» (with a line that says it stays on the list, without entering the estimate or the purchase) sets that state. «Concluído» closes. — F-331, D13
 3. **Given** the history, **When** the sheet opens, **Then** «Para a próxima compra» («Produtos que costuma comprar por esta altura.») has «+» buttons, and an added suggestion leaves the section. — F-332, D13
 4. **Given** no history, **When** the sheet opens, **Then** the section «Para a próxima compra» is not shown. — F-333, D13
 

@@ -68,10 +68,15 @@ export function AddSheet({ onClose, onAdd }: AddProps) {
           </ul>
         </section>
       )}
-      <label className="flex min-h-11 cursor-pointer items-center gap-3">
-        <input type="checkbox" checked={haveAtHome} onChange={(e) => setHaveAtHome(e.target.checked)} className="size-6 accent-[var(--color-brand)]" />
-        <span className="font-semibold">Já tenho em casa</span>
-      </label>
+      <div>
+        <label className="flex min-h-11 cursor-pointer items-center gap-3">
+          <input type="checkbox" checked={haveAtHome} onChange={(e) => setHaveAtHome(e.target.checked)} aria-describedby="have-hint" className="size-6 shrink-0 accent-[var(--color-brand)]" />
+          <span className="font-semibold">Já tenho em casa</span>
+        </label>
+        <p id="have-hint" className="pl-9 text-sm text-ink-soft">
+          Fica na lista para ver o preço, mas não entra na estimativa nem na compra.
+        </p>
+      </div>
       <Button variant="secondary" size="lg" onClick={onClose}>
         Concluído
       </Button>

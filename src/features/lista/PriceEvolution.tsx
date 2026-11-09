@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { DataTable, PriceLine, type PricePoint } from "../../components/charts";
-import { RadioPills } from "../../components/RadioPills";
+import { PriceLine, type PricePoint } from "../../components/charts";
 import { ErrorNotice, Spinner } from "../../components/ui";
 import { formatDate, formatQuantity } from "../../lib/format";
 import { merchantName, merchantStyle } from "../../lib/merchants";
@@ -9,10 +7,8 @@ import { NoInfoStamp } from "../../components/NoInfoStamp";
 import { priceText } from "./listFormat";
 import { useEvolution } from "./useShoppingList";
 
-const PERIODS = [
-  { id: "3", label: "3 meses" },
-  { id: "6", label: "6 meses" },
-] as const;
+/** The chart shows the last six months; when there is no purchase in them, the server sends the older ones. */
+const MONTHS = 6;
 
 function Figure({ label, cents, basis }: { label: string; cents: number | null | undefined; basis: string }) {
   return (
@@ -25,8 +21,7 @@ function Figure({ label, cents, basis }: { label: string; cents: number | null |
 
 /** G2: what was paid for an item over time, under the item, without leaving the list. */
 export function PriceEvolution({ itemId, panelId }: { itemId: string; panelId: string }) {
-  const [months, setMonths] = useState("6");
-  const query = useEvolution(itemId, Number(months));
+  const query = useEvolution(itemId, MONTHS);
 
   if (query.isLoading) return <Spinner label="A carregar a evolução…" />;
   if (query.error) return <ErrorNotice what="carregar a evolução" error={query.error} onRetry={() => void query.refetch()} />;
@@ -52,10 +47,7 @@ export function PriceEvolution({ itemId, panelId }: { itemId: string; panelId: s
 
   return (
     <div id={panelId} className="mb-3 rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="font-bold">Evolução do preço</h3>
-        <RadioPills label="Período" options={[...PERIODS]} value={months} onChange={setMonths} className="[&_label]:min-h-9 [&_label]:text-xs" />
-      </div>
+      <h3 className="font-bold">Evolução do preço</h3>
       <dl className="mt-3 grid grid-cols-4 gap-2 text-sm">
         <Figure label="Esperado" cents={e.expected?.price_cents} basis={basis} />
         <Figure label="Última vez" cents={e.last_cents} basis={basis} />
@@ -87,11 +79,6 @@ export function PriceEvolution({ itemId, panelId }: { itemId: string; panelId: s
           </li>
         ))}
       </ul>
-      <DataTable
-        caption="Preço pago por compra"
-        head={["Data", "Supermercado", "Preço"]}
-        rows={points.map((p) => [formatDate(p.date), p.store, priceText(p.price_cents, basis)])}
-      />
     </div>
   );
 }

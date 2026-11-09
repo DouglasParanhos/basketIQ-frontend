@@ -2,7 +2,7 @@ import { onlineManager } from "@tanstack/react-query";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { routes } from "../../App";
 import { currentDestinations, nav } from "../../test/nav";
 import { banned } from "../../test/banned";
@@ -174,6 +174,18 @@ describe("Lista de compras: «Já tenho», os três pontinhos, excluir e desfaze
     expect(dots).toHaveFocus();
   });
 
+  it("F-320: the menu is placed on the screen, and opens above the button when there is no room below", async () => {
+    lista();
+    const user = userEvent.setup();
+    const dots = await screen.findByRole("button", { name: "Mais opções de Pão de forma" });
+    vi.spyOn(dots, "getBoundingClientRect").mockReturnValue({ top: 700, bottom: 744, left: 300, right: 344, width: 44, height: 44, x: 300, y: 700, toJSON: () => ({}) });
+    await user.click(dots);
+    const menu = screen.getByRole("menu");
+    expect(menu).toHaveClass("fixed");
+    expect(menu.style.bottom).not.toBe("");
+    expect(menu.style.top).toBe("");
+  });
+
   it("F-321: «Já tenho em casa» sets the state, and a product at home offers «Voltar a pôr na compra»", async () => {
     const fake = lista();
     const user = userEvent.setup();
@@ -268,13 +280,12 @@ describe("Lista de compras: G2, ver evolução", () => {
     expect(within(coffee).queryByRole("heading", { name: "Evolução do preço" })).toBeNull();
   });
 
-  it("F-326: the period offers 3 and 6 months", async () => {
+  it("F-326: there is no period to choose: the chart is the last six months", async () => {
     lista();
-    const user = await openEvolution("Café moído");
-    const group = await screen.findByRole("radiogroup", { name: "Período" });
-    expect(within(group).getByRole("radio", { name: "6 meses" })).toBeChecked();
-    await user.click(within(group).getByRole("radio", { name: "3 meses" }));
-    expect(within(group).getByRole("radio", { name: "3 meses" })).toBeChecked();
+    await openEvolution("Café moído");
+    expect(await screen.findByRole("heading", { name: "Evolução do preço" })).toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup", { name: "Período" })).toBeNull();
+    expect(screen.queryByText(/3 meses/)).toBeNull();
   });
 
   it("F-327: the legend names the supermarkets of the purchases, all the person's own", async () => {
@@ -294,10 +305,14 @@ describe("Lista de compras: G2, ver evolução", () => {
     expect(document.querySelectorAll("main [role=img][aria-label^=Preço]").length).toBe(0);
   });
 
-  it("F-329: the same data is offered as a table for those who do not see the chart", async () => {
+  it("F-329: the purchases are listed under the chart with date, supermarket and price, and there is no second copy of them as a table", async () => {
     lista();
     await openEvolution("Café moído");
-    expect(await screen.findByText("Ver como tabela")).toBeInTheDocument();
+    const purchases = (await screen.findByRole("heading", { name: "Compras" })).nextElementSibling as HTMLElement;
+    expect(within(purchases).getAllByRole("listitem")).toHaveLength(4);
+    expect(within(purchases).getAllByText(/Lidl/)).toHaveLength(4);
+    expect(screen.queryByText("Ver como tabela")).toBeNull();
+    expect(screen.queryByRole("table")).toBeNull();
   });
 });
 
@@ -323,6 +338,7 @@ describe("Lista de compras: G5, adicionar", () => {
     const user = userEvent.setup();
     await user.click((await screen.findAllByRole("button", { name: "Adicionar" }))[0]!);
     const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByRole("checkbox", { name: /Já tenho em casa/ })).toHaveAccessibleDescription("Fica na lista para ver o preço, mas não entra na estimativa nem na compra.");
     await user.type(within(dialog).getByLabelText("Produto"), "Bananas");
     await user.click(within(dialog).getByRole("checkbox", { name: "Já tenho em casa" }));
     await user.click(within(dialog).getByRole("button", { name: "Adicionar" }));

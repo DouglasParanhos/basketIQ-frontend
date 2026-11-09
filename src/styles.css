@@ -121,7 +121,8 @@
     --color-marker-line: #e8b84a;
     --color-ok: #75be9a;
     --color-ok-soft: #1d3228;
-    --color-have: #27352c;
+    /* A light veil over the dark surface: a dark green could not be told from it. */
+    --color-have: rgb(255 255 255 / 0.13);
     --color-alert: #ffb4ab;
     --color-alert-soft: #4a1a17;
     --color-chart: #5fa882;

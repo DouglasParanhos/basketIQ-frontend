@@ -1129,6 +1129,25 @@ test.describe("lista de compras (spec 019)", () => {
     await expect.poll(names).toEqual(before);
   });
 
+  test("F-320: the menu of the only item of a group is shown whole, and not cut by the list", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await open(page);
+    const dots = page.getByRole("button", { name: "Mais opções de Pão de forma" });
+    await dots.click();
+    const items = page.getByRole("menuitem");
+    await expect(items).toHaveCount(3);
+    // The point at the middle of each entry belongs to that entry: nothing covers it or cuts it.
+    for (const name of ["Editar", "Já tenho em casa", "Excluir da lista"]) {
+      const entry = page.getByRole("menuitem", { name: new RegExp(name) });
+      const hit = await entry.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return !!top && el.contains(top) && r.bottom <= window.innerHeight && r.left >= 0 && r.right <= window.innerWidth;
+      });
+      expect(hit, name).toBe(true);
+    }
+  });
+
   test("F-315: the supermarket is chosen from every supermarket and the estimate follows", async ({ page }) => {
     await open(page);
     await page.getByRole("button", { name: /Supermercado.*Lidl/ }).click();
