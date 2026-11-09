@@ -22,8 +22,8 @@ const VARIANTS: Record<Variant, string> = {
 type Size = "sm" | "md" | "lg";
 
 const SIZES: Record<Size, string> = {
-  sm: "min-h-11 text-[13px] font-bold",
-  md: "min-h-12 text-[0.95rem] font-semibold",
+  sm: "min-h-11 text-[length:calc(13px_*_var(--text-scale))] font-bold",
+  md: "min-h-12 text-[length:calc(0.95rem_*_var(--text-scale))] font-semibold",
   lg: "min-h-14 text-base font-bold",
 };
 
@@ -205,7 +205,7 @@ export function StatusBadge({ status }: { status: ReceiptStatus }) {
 export function PageHeader({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <header className="flex flex-wrap items-end justify-between gap-3 pb-4 pt-6">
-      <h1 className="font-display text-[1.75rem] font-semibold leading-tight">{title}</h1>
+      <h1 className="font-display text-[length:calc(1.75rem_*_var(--text-scale))] font-semibold leading-tight">{title}</h1>
       {children}
     </header>
   );
@@ -228,7 +228,7 @@ export function Surface({
 }
 
 /** The small label in capitals above a value. */
-export const SMALL_CAPS = "text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-soft";
+export const SMALL_CAPS = "text-[length:calc(0.6875rem_*_var(--text-scale))] font-semibold uppercase tracking-widest text-ink-soft";
 
 /** The 44 px round button (back, crop, delete, steppers): the shape, with the colours added by each use. */
 export const ROUND_BUTTON =

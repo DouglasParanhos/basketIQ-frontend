@@ -18,8 +18,8 @@ function PasskeyRow({ passkey }: { passkey: Schemas["PasskeyOut"] }) {
         <div className="flex items-center gap-2.5">
           <Fingerprint aria-hidden className="size-5 shrink-0 text-ink-soft" />
           <div>
-            <p className="text-[13px] font-semibold">Passkey criada a {formatDate(passkey.created_at)}</p>
-            <p className="text-[12px] text-ink-soft">{passkey.last_used_at ? `Último uso a ${formatDate(passkey.last_used_at)}` : "Ainda não usada"}</p>
+            <p className="text-[length:calc(13px_*_var(--text-scale))] font-semibold">Passkey criada a {formatDate(passkey.created_at)}</p>
+            <p className="text-[length:calc(12px_*_var(--text-scale))] text-ink-soft">{passkey.last_used_at ? `Último uso a ${formatDate(passkey.last_used_at)}` : "Ainda não usada"}</p>
           </div>
         </div>
         {!confirming && (
@@ -60,8 +60,8 @@ export function PasskeysCard() {
 
   return (
     <Surface>
-      <h2 className="text-[15px] font-bold">Entrar com passkey</h2>
-      <p className="mt-1 text-[13px] text-ink-soft">
+      <h2 className="text-[length:calc(15px_*_var(--text-scale))] font-bold">Entrar com passkey</h2>
+      <p className="mt-1 text-[length:calc(13px_*_var(--text-scale))] text-ink-soft">
         Entre com a digital, o rosto ou o PIN do telemóvel, sem passar pela Google. A digital nunca sai do telemóvel.
       </p>
       <div className="mt-3 flex flex-col gap-3">
@@ -89,7 +89,7 @@ export function PasskeysCard() {
             Adicionar passkey neste telemóvel
           </Button>
         ) : (
-          <p className="text-[13px] text-ink-soft">Este dispositivo não permite criar passkeys.</p>
+          <p className="text-[length:calc(13px_*_var(--text-scale))] text-ink-soft">Este dispositivo não permite criar passkeys.</p>
         )}
         {addError && <Notice tone="error">{addError}</Notice>}
       </div>

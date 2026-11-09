@@ -29,7 +29,7 @@ export function MerchantChips({ value, onChange }: { value: string; onChange: (m
               <MarketPill code={id} name={name} selected={value === id} checkmark />
             ) : (
               <span
-                className={`inline-flex h-10 items-center gap-2 rounded-full border-[1.5px] px-3.5 text-[13px] font-bold ${
+                className={`inline-flex h-10 items-center gap-2 rounded-full border-[1.5px] px-3.5 text-[length:calc(13px_*_var(--text-scale))] font-bold ${
                   value === id ? "border-brand bg-brand text-on-brand" : "border-line bg-paper text-ink"
                 }`}
               >
@@ -60,7 +60,7 @@ export function MerchantField({ value, onChange, disabled }: { value: string; on
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
-          className="min-h-11 w-full appearance-none bg-transparent pr-8 text-[15px] font-bold text-ink disabled:opacity-50"
+          className="min-h-11 w-full appearance-none bg-transparent pr-8 text-[length:calc(15px_*_var(--text-scale))] font-bold text-ink disabled:opacity-50"
         >
           <option value="">{AUTO}</option>
           {merchants.data?.map(({ id, name }) => (

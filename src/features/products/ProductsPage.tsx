@@ -21,7 +21,7 @@ function Price({ product: p }: { product: Schemas["ProductSearchItem"] }) {
   return (
     <span className="text-right">
       <span className="amount block font-bold">{formatUnitPrice(p.avg_price_cents, p.price_basis)}</span>
-      <span className="block text-[0.6875rem] text-ink-soft">preço médio</span>
+      <span className="block text-[length:calc(0.6875rem_*_var(--text-scale))] text-ink-soft">preço médio</span>
     </span>
   );
 }

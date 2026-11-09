@@ -27,9 +27,9 @@ export function SourceButtons({ onPick }: { onPick: (source: Source) => void }) 
             <Icon aria-hidden className="size-6" />
           </span>
           <span className="flex flex-col">
-            <span className="text-[17px] font-bold">{label}</span>
+            <span className="text-[length:calc(17px_*_var(--text-scale))] font-bold">{label}</span>
             {/* In the dark scheme the hint is not dimmed: 80 % of the dark text on the green is only 3.9:1. */}
-            <span className={`text-[13px] ${i === 0 ? "text-white/80 dark:text-on-brand" : "text-ink-soft"}`}>{hint}</span>
+            <span className={`text-[length:calc(13px_*_var(--text-scale))] ${i === 0 ? "text-white/80 dark:text-on-brand" : "text-ink-soft"}`}>{hint}</span>
           </span>
         </button>
       ))}

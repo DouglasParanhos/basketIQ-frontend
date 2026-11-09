@@ -55,11 +55,11 @@ export function GoalRing({ overview, isCurrentMonth }: { overview: Schemas["Over
       </div>
       <div className="flex flex-col items-start gap-2 border-t border-line pt-3">
         {view.tone === "none" ? (
-          <Link to={DEFINE_GOAL_PATH} className={`inline-flex min-h-11 items-center rounded-full px-3 text-[13px] font-bold ${CHIP.none}`}>
+          <Link to={DEFINE_GOAL_PATH} className={`inline-flex min-h-11 items-center rounded-full px-3 text-[length:calc(13px_*_var(--text-scale))] font-bold ${CHIP.none}`}>
             Definir a minha meta pessoal
           </Link>
         ) : (
-          <p className={`rounded-full px-3 py-1.5 text-[13px] font-bold ${CHIP[view.tone]}`}>{view.text}</p>
+          <p className={`rounded-full px-3 py-1.5 text-[length:calc(13px_*_var(--text-scale))] font-bold ${CHIP[view.tone]}`}>{view.text}</p>
         )}
         <p className="text-xs leading-snug text-ink-soft">A meta pessoal é um objetivo seu, não um limite. Pode mudá-la quando quiser.</p>
       </div>

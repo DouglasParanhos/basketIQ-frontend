@@ -956,7 +956,8 @@ test.describe("talões (spec 012)", () => {
           await expect(page.locator("main")).toBeVisible();
           await page.waitForLoadState("networkidle");
           await noA11yViolations(page);
-          await noHorizontalScroll(page);
+          const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+          expect(overflow, `horizontal scroll on ${path}`).toBeLessThanOrEqual(0);
         }
       });
     }
@@ -1166,6 +1167,52 @@ test.describe("lista de compras (spec 019)", () => {
     await fakeApi(off, { smartList: false });
     await off.goto("/lista");
     await expect(off.getByText("Não foi possível mostrar esta página")).toBeVisible();
+  });
+});
+
+// ---------------------------------------------------------------- Tamanho do texto (Definições › Aparência)
+
+test.describe("tamanho do texto", () => {
+  const SCREENS = ["/", "/compras", "/compras/resumo", "/lista", "/definicoes/perfil", "/adicionar"];
+
+  for (const size of ["menor", "maximo"] as const) {
+    for (const scheme of ["light", "dark"] as const) {
+      test(`F-343: with the text «${size}», every main screen has no axe violations and no horizontal scroll at 320 px (${scheme})`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.setViewportSize({ width: 320, height: 800 });
+        await page.addInitScript((choice) => localStorage.setItem("basketiq.textSize", choice), size);
+        await fakeApi(page, { smartList: true });
+        for (const path of SCREENS) {
+          await page.goto(path);
+          await expect(page.getByRole("main")).toBeVisible();
+          await page.waitForLoadState("networkidle");
+          await noA11yViolations(page);
+          const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+          expect(overflow, `horizontal scroll on ${path}`).toBeLessThanOrEqual(0);
+        }
+      });
+    }
+  }
+
+  test("F-344: the choice in Definições changes the size of the text at once, keeps it after reloading, and leaves the touch targets at 44 px", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await fakeApi(page);
+    await page.goto("/definicoes/perfil");
+    const bodySize = () => page.evaluate(() => parseFloat(getComputedStyle(document.body).fontSize));
+    const standard = await bodySize();
+    expect(standard).toBeCloseTo(15.04, 1);
+    const group = page.getByRole("radiogroup", { name: "Tamanho do texto" });
+    await group.getByText("Máximo", { exact: true }).click();
+    expect(await bodySize()).toBeGreaterThan(standard * 1.3);
+    await page.reload();
+    expect(await bodySize()).toBeGreaterThan(standard * 1.3);
+    await expect(group.getByRole("radio", { name: "Máximo" })).toBeChecked();
+    await group.getByText("Menor", { exact: true }).click();
+    expect(await bodySize()).toBeLessThan(standard * 0.95);
+    const small = await page
+      .locator("main button:visible, main label:has(input):visible")
+      .evaluateAll((nodes) => nodes.map((n) => ({ t: (n.textContent ?? "").trim().slice(0, 24), b: n.getBoundingClientRect() })).filter(({ b }) => b.height < 43.5 && b.width < 43.5).map(({ t, b }) => `${t}: ${Math.round(b.width)}x${Math.round(b.height)}`));
+    expect(small).toEqual([]);
   });
 });
 

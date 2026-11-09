@@ -66,7 +66,7 @@ export function ListaPage() {
   return (
     <div className="flex flex-col gap-3 pb-40 pt-6">
       <header>
-        <h1 className="font-display text-[2rem] font-semibold leading-tight">Lista de compras</h1>
+        <h1 className="font-display text-[length:calc(2rem_*_var(--text-scale))] font-semibold leading-tight">Lista de compras</h1>
         {list && (
           <p className="text-ink-soft">
             {plural(list.items_total, "produto", "produtos")} · {list.checked_count} no carrinho

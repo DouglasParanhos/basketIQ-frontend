@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
+import { TEXT_SIZE_KEY } from "../../lib/textSize";
 import { THEME_KEY } from "../../lib/theme";
 import { AppearanceCard } from "./AppearanceCard";
 
@@ -10,6 +11,7 @@ const theme = () => document.documentElement.dataset.theme;
 beforeEach(() => {
   localStorage.clear();
   delete document.documentElement.dataset.theme;
+  document.documentElement.style.removeProperty("--text-scale");
 });
 
 describe("Aparência (Definições)", () => {
@@ -70,5 +72,18 @@ describe("Aparência (Definições)", () => {
     await user.click(radio("Escuro"));
     expect(radio("Escuro").closest("label")!.querySelector("svg")).not.toBeNull();
     expect(radio("Claro").closest("label")!.querySelector("svg")).toBeNull();
+  });
+
+  it("F-342: «Tamanho do texto» has five choices, «Padrão» at first, and a choice applies at once and stays", async () => {
+    const user = userEvent.setup();
+    render(<AppearanceCard />);
+    const group = screen.getByRole("radiogroup", { name: "Tamanho do texto" });
+    expect(within(group).getAllByRole("radio").map((r) => r.closest("label")!.textContent)).toEqual(["Menor", "Padrão", "Maior", "Muito maior", "Máximo"]);
+    expect(within(group).getByRole("radio", { name: "Padrão" })).toBeChecked();
+    await user.click(within(group).getByRole("radio", { name: "Menor" }));
+    expect(document.documentElement.style.getPropertyValue("--text-scale")).toBe("0.85");
+    expect(localStorage.getItem(TEXT_SIZE_KEY)).toBe("menor");
+    await user.click(within(group).getByRole("radio", { name: "Máximo" }));
+    expect(document.documentElement.style.getPropertyValue("--text-scale")).toBe("1.31");
   });
 });

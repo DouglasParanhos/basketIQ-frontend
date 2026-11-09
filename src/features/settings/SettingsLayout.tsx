@@ -20,7 +20,7 @@ function BrandFooter({ appName }: { appName: string }) {
     <footer className="flex flex-col items-center gap-1 pb-8 pt-8 text-center">
       <BrandMark className="mb-1 h-7 w-auto" />
       <p className="font-display text-base font-semibold">{appName}</p>
-      <p className="text-[13px] text-ink-soft">os seus talões</p>
+      <p className="text-[length:calc(13px_*_var(--text-scale))] text-ink-soft">os seus talões</p>
       <p className="text-xs text-ink-soft">v{__APP_VERSION__}</p>
       <p className="mt-2 max-w-xs text-xs text-ink-soft">Marcas e nomes pertencem aos respetivos titulares. Sem afiliação.</p>
     </footer>
@@ -47,8 +47,8 @@ export function SettingsLayout() {
             {(me.display_name ?? me.email).trim().charAt(0).toLocaleUpperCase("pt-PT")}
           </span>
           <div className="min-w-0">
-            <p className="text-[15px] font-bold">Conta Google</p>
-            <p className="truncate text-[13px] text-ink-soft">{me.email}</p>
+            <p className="text-[length:calc(15px_*_var(--text-scale))] font-bold">Conta Google</p>
+            <p className="truncate text-[length:calc(13px_*_var(--text-scale))] text-ink-soft">{me.email}</p>
           </div>
         </Surface>
       )}

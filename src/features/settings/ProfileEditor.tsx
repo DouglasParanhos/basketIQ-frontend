@@ -45,7 +45,7 @@ export function ProfileEditor({ saved, focus, onDone }: { saved: Profile; focus:
     <FullScreen
       title="Editar perfil"
       start={
-        <button type="button" onClick={leave} className="inline-flex min-h-11 items-center rounded-full px-2 text-[15px] font-bold text-ink-soft hover:bg-brand-soft">
+        <button type="button" onClick={leave} className="inline-flex min-h-11 items-center rounded-full px-2 text-[length:calc(15px_*_var(--text-scale))] font-bold text-ink-soft hover:bg-brand-soft">
           Cancelar
         </button>
       }
@@ -76,14 +76,14 @@ export function ProfileEditor({ saved, focus, onDone }: { saved: Profile; focus:
       <form id={FORM_ID} ref={root} onSubmit={submit} className="flex flex-col gap-3">
         <Surface tone="bordered">
           <div className="flex items-center justify-between gap-3">
-            <h3 data-block="people" tabIndex={-1} className="text-[15px] font-bold">
+            <h3 data-block="people" tabIndex={-1} className="text-[length:calc(15px_*_var(--text-scale))] font-bold">
               Pessoas na casa
             </h3>
             <div className="flex items-center gap-3">
               <button type="button" aria-label="Menos uma pessoa" disabled={draft.people === null || draft.people <= 1} onClick={() => setDraft({ ...draft, people: stepPeople(draft.people, -1) })} className={ROUND_NEUTRAL}>
                 <Minus aria-hidden className="size-5" />
               </button>
-              <output aria-live="polite" className="min-w-8 text-center font-display text-[26px] font-semibold leading-none">
+              <output aria-live="polite" className="min-w-8 text-center font-display text-[length:calc(26px_*_var(--text-scale))] font-semibold leading-none">
                 {draft.people ?? "—"}
               </output>
               <button
@@ -105,7 +105,7 @@ export function ProfileEditor({ saved, focus, onDone }: { saved: Profile; focus:
         </Surface>
 
         <Surface tone="bordered">
-          <h3 data-block="merchants" tabIndex={-1} className="text-[15px] font-bold">
+          <h3 data-block="merchants" tabIndex={-1} className="text-[length:calc(15px_*_var(--text-scale))] font-bold">
             Onde faz compras
           </h3>
           <div className="mt-3">
@@ -140,7 +140,7 @@ export function ProfileEditor({ saved, focus, onDone }: { saved: Profile; focus:
         </Surface>
 
         <Surface tone="bordered">
-          <h3 data-block="goal" tabIndex={-1} className="text-[15px] font-bold">
+          <h3 data-block="goal" tabIndex={-1} className="text-[length:calc(15px_*_var(--text-scale))] font-bold">
             Meta pessoal do mês
           </h3>
           <Field
@@ -157,7 +157,7 @@ export function ProfileEditor({ saved, focus, onDone }: { saved: Profile; focus:
         </Surface>
 
         <Surface tone="bordered">
-          <h3 data-block="goals" tabIndex={-1} className="text-[15px] font-bold">
+          <h3 data-block="goals" tabIndex={-1} className="text-[length:calc(15px_*_var(--text-scale))] font-bold">
             Objetivos
           </h3>
           <div className="mt-3 flex flex-col gap-2.5">

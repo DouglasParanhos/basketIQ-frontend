@@ -38,7 +38,7 @@ const unresolvedLine = (line: DraftLine) => !!line.source?.unresolved && line.to
 /** Small highlighter mark with a text label: colour is never the only signal. */
 function Check_({ label }: { label: string }) {
   return (
-    <span className="marker ml-1 inline-flex items-center gap-1 rounded px-1 text-[0.7rem] font-semibold not-italic">
+    <span className="marker ml-1 inline-flex items-center gap-1 rounded px-1 text-[length:calc(0.7rem_*_var(--text-scale))] font-semibold not-italic">
       <AlertTriangle aria-hidden className="size-3" />
       {label}
     </span>
@@ -331,7 +331,7 @@ function LinePanel({ line, errors, onField, onSave, onCancel, onSplit, onRemove,
             onChange={(e) => onField("discount", e.target.value)}
           />
         ) : (
-          <button type="button" onClick={() => setDiscount(true)} className="col-span-2 flex min-h-11 items-center self-start text-[13px] font-bold text-brand">
+          <button type="button" onClick={() => setDiscount(true)} className="col-span-2 flex min-h-11 items-center self-start text-[length:calc(13px_*_var(--text-scale))] font-bold text-brand">
             + Desconto
           </button>
         )}

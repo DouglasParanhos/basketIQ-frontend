@@ -219,12 +219,12 @@ function SummaryView({
   return (
     <div className={`flex flex-col gap-5 transition-opacity ${stale ? "opacity-60" : ""}`} aria-busy={stale}>
       <section aria-labelledby="gasto" className="rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
-        <h2 id="gasto" className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-soft">
+        <h2 id="gasto" className="text-[length:calc(0.6875rem_*_var(--text-scale))] font-semibold uppercase tracking-widest text-ink-soft">
           Gasto em mercado · {s.cards.purchases} {s.cards.purchases === 1 ? "talão" : "talões"}
         </h2>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <p className="amount font-display text-[2.375rem] font-semibold leading-none">{formatCents(s.cards.total_spent_cents)}</p>
-          {variation && <span className="rounded-full bg-brand-soft px-3 py-1 text-[13px] font-bold text-brand-deep">{variation}</span>}
+          <p className="amount font-display text-[length:calc(2.375rem_*_var(--text-scale))] font-semibold leading-none">{formatCents(s.cards.total_spent_cents)}</p>
+          {variation && <span className="rounded-full bg-brand-soft px-3 py-1 text-[length:calc(13px_*_var(--text-scale))] font-bold text-brand-deep">{variation}</span>}
         </div>
         <p className="mt-2 text-sm text-ink-soft first-letter:uppercase">
           {variation ? `${previousLabel}: ${formatCents(s.cards.previous_period.total_spent_cents)}` : `Sem compras em ${previousLabel} para comparar.`}

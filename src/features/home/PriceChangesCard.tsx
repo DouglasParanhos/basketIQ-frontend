@@ -42,7 +42,7 @@ export function PriceChangesCard({ changes }: { changes: PriceChange[] }) {
           );
         })}
       </ul>
-      <p className="text-[0.6875rem] leading-snug text-ink-soft">Só mostramos mudanças de {formatPercent(15)} ou mais e de {formatCents(20)} ou mais.</p>
+      <p className="text-[length:calc(0.6875rem_*_var(--text-scale))] leading-snug text-ink-soft">Só mostramos mudanças de {formatPercent(15)} ou mais e de {formatCents(20)} ou mais.</p>
     </section>
   );
 }

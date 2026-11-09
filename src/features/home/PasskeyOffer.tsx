@@ -24,8 +24,8 @@ export function PasskeyOffer() {
       <div className="flex gap-3">
         <Fingerprint aria-hidden className="mt-0.5 size-6 shrink-0 text-brand" />
         <div>
-          <h2 className="text-[15px] font-bold">Entrar mais depressa</h2>
-          <p className="mt-1 text-[13px] text-ink-soft">Ative a passkey e entre com a digital, o rosto ou o PIN do telemóvel.</p>
+          <h2 className="text-[length:calc(15px_*_var(--text-scale))] font-bold">Entrar mais depressa</h2>
+          <p className="mt-1 text-[length:calc(13px_*_var(--text-scale))] text-ink-soft">Ative a passkey e entre com a digital, o rosto ou o PIN do telemóvel.</p>
         </div>
       </div>
       {addError && <Notice tone="error">{addError}</Notice>}

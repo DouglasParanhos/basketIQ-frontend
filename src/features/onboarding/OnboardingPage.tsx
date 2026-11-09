@@ -49,7 +49,7 @@ function Onboarding({ saved }: { saved: Profile | null }) {
           <span aria-hidden className="grid size-[84px] place-items-center rounded-full bg-brand-soft text-brand">
             <Check className="size-10" strokeWidth={2.5} />
           </span>
-          <h1 ref={titleRef} tabIndex={-1} className="font-display text-[2.125rem] font-semibold leading-tight outline-none">
+          <h1 ref={titleRef} tabIndex={-1} className="font-display text-[length:calc(2.125rem_*_var(--text-scale))] font-semibold leading-tight outline-none">
             Tudo pronto
           </h1>
           <p className="leading-6 text-ink-soft">Pode editar estas respostas no Perfil a qualquer momento.</p>
@@ -59,7 +59,7 @@ function Onboarding({ saved }: { saved: Profile | null }) {
           <LinkButton to="/adicionar" replace size="lg" className="w-full">
             Adicionar o meu primeiro talão
           </LinkButton>
-          <LinkButton to="/" replace variant="quiet" className="min-h-[52px] w-full border-[1.5px] border-brand text-[0.9375rem] font-bold">
+          <LinkButton to="/" replace variant="quiet" className="min-h-[52px] w-full border-[1.5px] border-brand text-[length:calc(0.9375rem_*_var(--text-scale))] font-bold">
             Ver o início
           </LinkButton>
         </div>
@@ -109,7 +109,7 @@ function Onboarding({ saved }: { saved: Profile | null }) {
 
       <div className="flex-1 pt-6">
         <p id={STEP_LABEL_ID} className="sr-only">{`Passo ${state.step + 1} de ${STEP_COUNT}`}</p>
-        <h1 ref={titleRef} tabIndex={-1} aria-describedby={STEP_LABEL_ID} className="mt-1 font-display text-[2rem] font-semibold leading-[1.12] tracking-[-0.01em] outline-none">
+        <h1 ref={titleRef} tabIndex={-1} aria-describedby={STEP_LABEL_ID} className="mt-1 font-display text-[length:calc(2rem_*_var(--text-scale))] font-semibold leading-[1.12] tracking-[-0.01em] outline-none">
           {copy.title}
         </h1>
         <p className="mt-2 text-ink-soft">{copy.hint}</p>

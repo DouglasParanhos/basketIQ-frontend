@@ -51,13 +51,13 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
           aria-expanded={open}
           aria-controls={`${id}-text`}
           onClick={() => setOpen(!open)}
-          className="flex min-h-12 w-full items-center justify-between gap-3 text-left text-[15px] font-bold"
+          className="flex min-h-12 w-full items-center justify-between gap-3 text-left text-[length:calc(15px_*_var(--text-scale))] font-bold"
         >
           {title}
           <ChevronDown aria-hidden strokeWidth={2} className={`size-[18px] shrink-0 text-ink-soft transition-transform ${open ? "rotate-180" : ""}`} />
         </button>
       </h3>
-      <div id={`${id}-text`} role="region" aria-labelledby={`${id}-title`} hidden={!open} className="pb-4 text-[15px] leading-relaxed">
+      <div id={`${id}-text`} role="region" aria-labelledby={`${id}-title`} hidden={!open} className="pb-4 text-[length:calc(15px_*_var(--text-scale))] leading-relaxed">
         {children}
       </div>
     </div>
@@ -87,24 +87,24 @@ export function PrivacyPage() {
           Voltar
         </Link>
       )}
-      <h1 className="font-display text-[30px] font-semibold leading-[1.1]">Política de privacidade</h1>
+      <h1 className="font-display text-[length:calc(30px_*_var(--text-scale))] font-semibold leading-[1.1]">Política de privacidade</h1>
 
       <section aria-labelledby="resumo" className="mt-4 flex flex-col gap-3 rounded-[20px] bg-brand-soft p-4">
-        <h2 id="resumo" className="text-[11px] font-normal tracking-[0.1em] text-ink-soft">
+        <h2 id="resumo" className="text-[length:calc(11px_*_var(--text-scale))] font-normal tracking-[0.1em] text-ink-soft">
           EM RESUMO
         </h2>
         <ul className="flex flex-col gap-3">
           {SUMMARY.map((line) => (
             <li key={line} className="flex items-start gap-2.5">
               <Check aria-hidden strokeWidth={2.6} className="mt-0.5 size-5 shrink-0 text-brand" />
-              <span className="text-[15px] leading-[1.45]">{line}</span>
+              <span className="text-[length:calc(15px_*_var(--text-scale))] leading-[1.45]">{line}</span>
             </li>
           ))}
         </ul>
       </section>
 
       <section aria-labelledby="completa" className="mt-4">
-        <h2 id="completa" className="mb-1.5 text-[11px] font-normal tracking-[0.1em] text-ink-soft">
+        <h2 id="completa" className="mb-1.5 text-[length:calc(11px_*_var(--text-scale))] font-normal tracking-[0.1em] text-ink-soft">
           POLÍTICA COMPLETA
         </h2>
         {SECTIONS.map(({ title, body }) => (
@@ -121,7 +121,7 @@ export function PrivacyPage() {
             <Button size="lg" className="w-full rounded-[28px] font-extrabold" busy={accept.isPending} disabled={busy} onClick={() => accept.mutate()}>
               Li a política e continuar
             </Button>
-            <Button variant="ghost" className="w-full text-[15px] font-bold" disabled={busy} onClick={() => logout.mutate()}>
+            <Button variant="ghost" className="w-full text-[length:calc(15px_*_var(--text-scale))] font-bold" disabled={busy} onClick={() => logout.mutate()}>
               Sair
             </Button>
           </div>

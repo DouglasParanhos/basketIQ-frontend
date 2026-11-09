@@ -124,7 +124,7 @@ export function ReceiptsPage() {
             <div className="torn bg-paper px-4 pb-[30px] shadow-[0_1px_0_var(--color-muted-bar)] [--tear:10px]">
               {/* The label heads the first sheet only, as in the design; the others start with the first row. */}
               {first && (
-                <p aria-hidden className="font-receipt border-b border-dashed border-muted-bar pb-2 pt-3 text-center text-[11px] font-semibold tracking-[0.1em] text-ink-soft">
+                <p aria-hidden className="font-receipt border-b border-dashed border-muted-bar pb-2 pt-3 text-center text-[length:calc(11px_*_var(--text-scale))] font-semibold tracking-[0.1em] text-ink-soft">
                   OS SEUS TALÕES
                 </p>
               )}
