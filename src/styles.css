@@ -63,6 +63,8 @@
   --color-on-brand: #ffffff;
   --color-ok: #1f6f4a;
   --color-ok-soft: #e6f1ea;
+  /* The row of a product already at home on the shopping list: pastel sage (G1b). One token, easy to swap. */
+  --color-have: #e4ebdd;
   --color-alert: #b3261e;
   --color-alert-soft: #fbe3e0;
   /* >= 3:1 against paper and ground, in both schemes. */
@@ -119,6 +121,7 @@
     --color-marker-line: #e8b84a;
     --color-ok: #75be9a;
     --color-ok-soft: #1d3228;
+    --color-have: #27352c;
     --color-alert: #ffb4ab;
     --color-alert-soft: #4a1a17;
     --color-chart: #5fa882;

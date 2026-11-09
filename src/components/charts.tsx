@@ -61,8 +61,11 @@ export function SpendBars({ points, title }: { points: Point[]; title: string })
   );
 }
 
+/** One purchase on the chart. `color` is the store's colour (the own colour of the chart when absent); a hollow grey point (`origin: "base"`) is a price of the shared base, not the person's own purchase. */
+export type PricePoint = Point & { merchant: string; color?: string; origin?: "own" | "base" };
+
 /** Unit price over time for one product. */
-export function PriceLine({ points, title, basis }: { points: (Point & { merchant: string })[]; title: string; basis: string }) {
+export function PriceLine({ points, title, basis }: { points: PricePoint[]; title: string; basis: string }) {
   const color = useToken("--color-chart", "#0b8a52");
   return (
     <figure aria-label={title} className="h-40 w-full">
@@ -73,7 +76,7 @@ export function PriceLine({ points, title, basis }: { points: (Point & { merchan
           <YAxis tick={AXIS} tickLine={false} axisLine={false} width={56} tickFormatter={(c: number) => formatCents(c)} domain={["auto", "auto"]} />
           <Tooltip
             content={({ active, payload }) => {
-              const p = payload?.[0]?.payload as (Point & { merchant: string }) | undefined;
+              const p = payload?.[0]?.payload as PricePoint | undefined;
               return active && p ? (
                 <TooltipBox title={`${p.label}, ${p.merchant}`}>
                   {formatCents(p.cents)} {basis}
@@ -86,7 +89,21 @@ export function PriceLine({ points, title, basis }: { points: (Point & { merchan
             dataKey="cents"
             stroke={color}
             strokeWidth={2}
-            dot={{ r: 4, fill: color, stroke: "var(--color-paper)", strokeWidth: 2 }}
+            dot={(dot: { cx?: number; cy?: number; index?: number; payload?: PricePoint }) => {
+              const p = dot.payload;
+              const hollow = p?.origin === "base";
+              return (
+                <circle
+                  key={dot.index}
+                  cx={dot.cx}
+                  cy={dot.cy}
+                  r={hollow ? 5 : 4}
+                  fill={hollow ? "var(--color-paper)" : (p?.color ?? color)}
+                  stroke={hollow ? "var(--color-ink-soft)" : "var(--color-paper)"}
+                  strokeWidth={2}
+                />
+              );
+            }}
             activeDot={{ r: 6 }}
             isAnimationActive={false}
           />

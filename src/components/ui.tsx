@@ -1,5 +1,5 @@
 import { AlertTriangle, CheckCircle2, Info, Loader2, OctagonAlert } from "lucide-react";
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, ComponentProps, ReactNode, SelectHTMLAttributes } from "react";
 import { useId } from "react";
 import { Link, type LinkProps } from "react-router";
 import { ApiError } from "../api/client";
@@ -66,7 +66,7 @@ export function Field({
   note,
   className = "",
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & { label: string; hideLabel?: boolean; error?: string | null; hint?: string; note?: ReactNode }) {
+}: ComponentProps<"input"> & { label: string; hideLabel?: boolean; error?: string | null; hint?: string; note?: ReactNode }) {
   const id = useId();
   const describedBy = [error ? `${id}-err` : null, hint ? `${id}-hint` : null].filter(Boolean).join(" ") || undefined;
   const labelEl = (
