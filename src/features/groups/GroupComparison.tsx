@@ -13,11 +13,11 @@ function verdict(c: Comparison): string {
     case "clear_difference":
       return `A diferença é de cerca de ${formatCents(c.typical_difference_cents)} numa compra típica.`;
     case "no_clear_difference":
-      return "Sem diferença clara entre os mercados.";
+      return "Sem diferença clara entre os supermercados.";
     case "single_chain":
-      return `Só comprou em ${merchantName(c.chains[0]?.merchant, c.chains[0]?.merchant_name)} neste período; sem outro mercado para comparar.`;
+      return `Só comprou em ${merchantName(c.chains[0]?.merchant, c.chains[0]?.merchant_name)} neste período; sem outro supermercado para comparar.`;
     case "not_enough_purchases":
-      return `Para comparar, cada mercado precisa de ${plural(c.needed, "compra", "compras")} neste período.`;
+      return `Para comparar, cada supermercado precisa de ${plural(c.needed, "compra", "compras")} neste período.`;
     default:
       return "Sem compras com o tamanho conhecido neste período.";
   }
@@ -32,7 +32,7 @@ export function GroupComparison({ group }: { group: Schemas["GroupRef"] }) {
   return (
     <section aria-labelledby={id} className="rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
       <h2 id={id} className="font-bold">
-        {group.name}: o que pagou em cada mercado
+        {group.name}: o que pagou em cada supermercado
       </h2>
       <Body slug={group.slug} />
     </section>
@@ -45,7 +45,7 @@ function Body({ slug }: { slug: string }) {
     queryFn: async () => unwrap(await api.GET("/v1/groups/{slug}/comparison", { params: { path: { slug } } })),
   });
   if (query.isLoading) return <Spinner />;
-  if (query.error) return <ErrorNotice what="comparar os mercados" error={query.error} onRetry={() => void query.refetch()} />;
+  if (query.error) return <ErrorNotice what="comparar os supermercados" error={query.error} onRetry={() => void query.refetch()} />;
   const c = query.data!;
   return (
     <>

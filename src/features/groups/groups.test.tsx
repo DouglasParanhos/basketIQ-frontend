@@ -4,11 +4,14 @@ import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import type { Schemas } from "../../api/client";
 import { routes } from "../../App";
-import { BANNED } from "../../test/banned";
+import { banned } from "../../test/banned";
 import { line, productAnalytics, receipt } from "../../test/fixtures";
 import { renderRoutes } from "../../test/render";
 import { nb } from "../../test/text";
 import { API, server } from "../../test/server";
+
+/** Step C texts use «supermercado» and «talão», never the old «mercado» or «nota» (the app name «Super Mercado» is fine). */
+const BANNED = banned("(?<!super )\\bmercados?\\b|\\bnotas?\\b");
 
 const GROUP = { slug: "leite-uht", name: "Leite UHT", class_slug: "laticinios-e-ovos" };
 
@@ -25,7 +28,7 @@ function confirmed(lines: Schemas["LineOut"][], ungrouped = 0) {
 const grouped = (price_check: Schemas["PriceCheckOut"] | null) =>
   line({ grouping: { status: "grouped", group: GROUP, group_source: "catalog", size: { value: "1", unit: "l", source: "description" }, price_check } });
 
-describe("Passo C na nota confirmada (D11, D13)", () => {
+describe("Passo C no talão confirmado (D11, D13)", () => {
   it("F-76: a line clearly above what the person usually pays says so in words, with the average, the window and the purchases", async () => {
     confirmed([grouped(check()), { ...grouped(check({ status: "below", price_cents: 80, effect_cents: -20 })), id: "l2", raw_description: "LEITE UHT 6X1L" }]);
     const above = await screen.findByText(/Acima do que costuma pagar/);
@@ -36,19 +39,19 @@ describe("Passo C na nota confirmada (D11, D13)", () => {
 
   it("F-76: a normal price, no average yet or a missing size add nothing to the line", async () => {
     confirmed([grouped(check({ status: "normal" })), { ...grouped(check({ status: "no_average", purchases: 1 })), id: "l2" }, { ...grouped(null), id: "l3" }]);
-    await screen.findByRole("article", { name: "Nota da compra" });
+    await screen.findByRole("article", { name: "Talão da compra" });
     expect(screen.queryByText(/costuma pagar/)).not.toBeInTheDocument();
   });
 
   it("F-77: the products left to group are said once, without blocking, with the way to complete them", async () => {
     confirmed([line()], 3);
-    expect(await screen.findByText(/3 produtos desta nota ficaram por agrupar\./)).toBeInTheDocument();
+    expect(await screen.findByText(/3 produtos deste talão ficaram por agrupar\./)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Completar" })).toHaveAttribute("href", "/por-completar");
   });
 
   it("F-77: one product is singular", async () => {
     confirmed([line()], 1);
-    expect(await screen.findByText(/1 produto desta nota ficou por agrupar\./)).toBeInTheDocument();
+    expect(await screen.findByText(/1 produto deste talão ficou por agrupar\./)).toBeInTheDocument();
   });
 });
 
@@ -81,9 +84,9 @@ function product(comp: Schemas["GroupComparisonOut"] | null) {
 }
 
 describe("Passo C no produto (D12)", () => {
-  it("F-78: the product's group shows what the person paid in each market, by name, with the window and a clear difference", async () => {
+  it("F-78: the product's group shows what the person paid in each supermarket, by name, with the window and a clear difference", async () => {
     product(comparison());
-    const section = await screen.findByRole("region", { name: "Leite UHT: o que pagou em cada mercado" });
+    const section = await screen.findByRole("region", { name: "Leite UHT: o que pagou em cada supermercado" });
     await within(section).findByText("Aldi");
     expect(within(section).getAllByRole("listitem").map((li) => li.textContent)).toEqual([nb("Aldi1,30 € /l3 compras"), nb("Lidl1,00 € /l3 compras")]);
     expect(section.textContent).toContain("nos últimos 90 dias");
@@ -91,15 +94,15 @@ describe("Passo C no produto (D12)", () => {
     expect(section.textContent).not.toMatch(BANNED);
   });
 
-  it("F-79: without enough purchases, one market or a small difference, it says why there is no conclusion", async () => {
+  it("F-79: without enough purchases, one supermarket or a small difference, it says why there is no conclusion", async () => {
     product(comparison({ status: "single_chain", chains: [comparison().chains[1]!], typical_difference_cents: null }));
-    expect(await screen.findByText("Só comprou em Lidl neste período; sem outro mercado para comparar.")).toBeInTheDocument();
+    expect(await screen.findByText("Só comprou em Lidl neste período; sem outro supermercado para comparar.")).toBeInTheDocument();
   });
 
   it("F-79: a product without a group has no comparison", async () => {
     product(null);
     expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
-    expect(screen.queryByText(/o que pagou em cada mercado/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/o que pagou em cada supermercado/)).not.toBeInTheDocument();
   });
 });
 

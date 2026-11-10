@@ -335,7 +335,7 @@ function ConfirmedReceipt({ receipt: r }: { receipt: Receipt }) {
           </LinkButton>
         }
       >
-        {plural(r.ungrouped_descriptions, "produto desta nota ficou", "produtos desta nota ficaram")} por agrupar.{" "}
+        {plural(r.ungrouped_descriptions, "produto deste talão ficou", "produtos deste talão ficaram")} por agrupar.{" "}
         Agrupá-los permite comparar o que paga por eles.
       </Notice>
     )}
