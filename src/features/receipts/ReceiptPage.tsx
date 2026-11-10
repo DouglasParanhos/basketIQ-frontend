@@ -4,10 +4,11 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { ApiError, api, unwrap, type Schemas } from "../../api/client";
 import { Button, ErrorNotice, LinkButton, Notice, Select, Spinner, StatusBadge } from "../../components/ui";
-import { formatAmount, formatCents, formatDate, formatDateTime, formatQuantity } from "../../lib/format";
+import { formatAmount, formatCents, formatDate, formatDateTime, formatQuantity, plural } from "../../lib/format";
 import { MERCHANT_OPTIONS, merchantName } from "../../lib/merchants";
 import { EDITABLE, IN_PROGRESS } from "../../lib/status";
 import { invalidateReceiptData, receiptChanged } from "./cache";
+import { PriceCheck } from "../groups/PriceCheck";
 import { DeleteReceiptNotice, useDeleteReceipt } from "./DeleteReceipt";
 import { FootQuestion } from "./FootQuestion";
 import { ReviewEditor } from "./ReviewEditor";
@@ -305,6 +306,7 @@ function ConfirmedReceipt({ receipt: r }: { receipt: Receipt }) {
                 <span>−{formatAmount(l.discount_cents)}</span>
               </div>
             )}
+            <PriceCheck check={l.grouping?.price_check} />
           </li>
         ))}
       </ul>
@@ -324,6 +326,19 @@ function ConfirmedReceipt({ receipt: r }: { receipt: Receipt }) {
         {r.confirmed_by === "AUTO" ? "Confirmada automaticamente" : "Confirmada por si"} em {formatDate(r.confirmed_at)}
       </p>
     </article>
+    {!!r.ungrouped_descriptions && (
+      <Notice
+        tone="info"
+        action={
+          <LinkButton to="/por-completar" variant="secondary">
+            Completar
+          </LinkButton>
+        }
+      >
+        {plural(r.ungrouped_descriptions, "produto desta nota ficou", "produtos desta nota ficaram")} por agrupar.{" "}
+        Agrupá-los permite comparar o que paga por eles.
+      </Notice>
+    )}
     {r.status === "CONFIRMED" && <EditValidated receipt={r} />}
     <div className="flex gap-3">
       <LinkButton to="/" variant="secondary" className="flex-1">

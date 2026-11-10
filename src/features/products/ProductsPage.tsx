@@ -84,6 +84,11 @@ export default function ProductsPage() {
           </li>
         ))}
       </ul>
+      {/* Step C (D13): a quiet way in, never a counter or a reminder. */}
+      <Link to="/por-completar" className="mt-4 flex min-h-11 items-center justify-between gap-3 border-t border-line pt-3 text-sm font-semibold text-brand">
+        Produtos por agrupar ou sem tamanho
+        <ChevronRight aria-hidden className="size-[18px] shrink-0" />
+      </Link>
     </>
   );
 }

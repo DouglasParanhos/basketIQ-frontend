@@ -6,6 +6,7 @@ import { DataTable, PriceLine } from "../../components/charts";
 import { ErrorNotice, Spinner } from "../../components/ui";
 import { formatCents, formatDate, formatQuantity } from "../../lib/format";
 import { merchantName } from "../../lib/merchants";
+import { GroupComparison } from "../groups/GroupComparison";
 
 const BASIS: Record<string, string> = { un: "por unidade", kg: "por kg", l: "por litro" };
 
@@ -100,6 +101,9 @@ export default function ProductPage() {
           ))}
         </ul>
       </section>
+
+      {/* Step C (D12): the same comparison for the whole group the product belongs to. */}
+      {a.group && <GroupComparison group={a.group} />}
     </div>
   );
 }

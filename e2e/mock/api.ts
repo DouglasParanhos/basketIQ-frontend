@@ -142,6 +142,7 @@ const PRODUCT_ANALYTICS = {
   max_price_cents: 589,
   purchases: 4,
   insufficient_data: false,
+  group: { slug: "frango-peito-e-lombinhos", name: "Frango: peito e lombinhos", class_slug: "talho" },
   history: [
     { receipt_id: "a", date: "2026-06-10", merchant: "PINGO_DOCE", quantity: "1.2", unit: "kg", unit_price_cents: 589, price_basis: "kg", net_cents: 707, raw_description: "PEITO FRANGO 1KG" },
     { receipt_id: "b", date: "2026-08-12", merchant: "LIDL", quantity: "1.1", unit: "kg", unit_price_cents: 499, price_basis: "kg", net_cents: 549, raw_description: "FRANGO PEITO" },
@@ -152,6 +153,41 @@ const PRODUCT_ANALYTICS = {
     { merchant: "LIDL", purchases: 1, avg_price_cents: 499, min_price_cents: 499, max_price_cents: 499, last_price_cents: 499, last_date: "2026-08-12" },
     { merchant: "MERCADONA", purchases: 1, avg_price_cents: 579, min_price_cents: 579, max_price_cents: 579, last_price_cents: 579, last_date: "2026-09-20" },
     { merchant: "PINGO_DOCE", purchases: 2, avg_price_cents: 569, min_price_cents: 549, max_price_cents: 589, last_price_cents: 549, last_date: "2026-10-15" },
+  ],
+};
+
+/** Step C (spec 010): the comparison of the product's group, and «Por completar». */
+const GROUP_COMPARISON = {
+  group: PRODUCT_ANALYTICS.group,
+  status: "clear_difference",
+  basis: "kg",
+  window_days: 90,
+  date_from: "2026-08-18",
+  date_to: "2026-11-15",
+  purchases: 6,
+  average_cents: 540,
+  needed: 3,
+  chains: [
+    { merchant: "LIDL", merchant_name: "Lidl", purchases: 3, average_cents: 499, missing_purchases: 0 },
+    { merchant: "PINGO_DOCE", merchant_name: "Pingo Doce", purchases: 3, average_cents: 579, missing_purchases: 0 },
+  ],
+  typical_difference_cents: 96,
+};
+
+const CATALOG = {
+  version: 2,
+  classes: [
+    { slug: "talho", name: "Talho", groups: [{ slug: "frango-peito-e-lombinhos", name: "Frango: peito e lombinhos", bases: ["kg"], comparable: true }] },
+    { slug: "charcutaria-e-queijos", name: "Charcutaria e queijos", groups: [{ slug: "queijo-fresco", name: "Queijo fresco", bases: ["kg"], comparable: true }] },
+  ],
+};
+
+const TO_COMPLETE = {
+  ungrouped: [
+    { chain: "LIDL", merchant_name: "Lidl", description: "QUEIJO FETA 200G", description_key: "QUEIJO FETA 200G", unit: "un", lines: 2, purchases: 2, spent_cents: 500, group: null, hint: { slug: "queijos", name: "Queijos" }, suggestions: [{ slug: "queijo-fresco", name: "Queijo fresco", class_slug: "charcutaria-e-queijos" }], rule_id: null },
+  ],
+  missing_size: [
+    { chain: "LIDL", merchant_name: "Lidl", description: "SALADA ICEBERGUE", description_key: "SALADA ICEBERGUE", unit: "un", lines: 3, purchases: 3, spent_cents: 297, group: { slug: "queijo-fresco", name: "Queijo fresco", class_slug: "x" }, hint: null, suggestions: [], rule_id: null },
   ],
 };
 
@@ -402,6 +438,14 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
       if (answer) return json(route, answer.body, answer.status);
     }
     if (path === "/v1/products/p1/analytics" && method === "GET") return json(route, PRODUCT_ANALYTICS);
+    if (path === "/v1/groups/frango-peito-e-lombinhos/comparison") return json(route, GROUP_COMPARISON);
+    if (path === "/v1/catalog/groups") return json(route, CATALOG);
+    if (path === "/v1/to-complete") {
+      const tab = new URL(route.request().url()).searchParams.get("tab") === "missing_size" ? "missing_size" : "ungrouped";
+      return json(route, { tab, total: TO_COMPLETE[tab].length, page_size: 10, items: TO_COMPLETE[tab] });
+    }
+    if (path === "/v1/line-rules" && method === "GET") return json(route, []);
+    if (path === "/v1/line-rules" && method === "PUT") return json(route, { rules: [], applied_lines: 2 });
     if (path === "/v1/products" && method === "GET") {
       const q = (url.searchParams.get("q") ?? "").toLowerCase();
       return json(route, PRODUCTS.filter((p) => p.name.toLowerCase().includes(q)));
