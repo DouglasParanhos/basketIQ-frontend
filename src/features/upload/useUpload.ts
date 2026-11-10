@@ -118,7 +118,7 @@ export function useUpload() {
         if (e instanceof ApiError && e.code === "upload_missing" && pending.current) {
           for (const item of pending.current.uploads) item.uploaded = false;
         }
-        setError(e instanceof Error ? e.message : "Não foi possível enviar a nota.");
+        setError(e instanceof Error ? e.message : "Não foi possível enviar o talão.");
         setPhase("failed");
         return null;
       }

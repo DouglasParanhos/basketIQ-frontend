@@ -45,7 +45,7 @@ export function groupByMonth(items: Receipt[]): MonthGroup[] {
   return groups;
 }
 
-/** The totals of the month from the endpoint of totals; none where they would mislead («Requer ação» shows what is not confirmed). */
+/** The totals of the month from the endpoint of totals; none where they would mislead («Por confirmar» shows what is not confirmed). */
 export function monthTotal(group: MonthGroup, totals: MonthTotal[] | undefined, filter: Filter): MonthTotal | undefined {
   return filter === "acao" ? undefined : totals?.find((t) => t.month === group.key);
 }
@@ -67,7 +67,7 @@ export function yearsToShow(totals: MonthTotal[] | undefined, standard: number, 
 }
 
 /** The store of a purchase, or the placeholder while it is still being read. */
-export const receiptName = (r: Receipt): string => (r.merchant ? merchantName(r.merchant, r.merchant_name) : "Nota em processamento");
+export const receiptName = (r: Receipt): string => (r.merchant ? merchantName(r.merchant, r.merchant_name) : "Talão em processamento");
 
 /** «28 out.» in Lisbon time, from the date of the purchase (or of sending while it is being read). */
 export function dayMonthOf(r: Receipt): string {

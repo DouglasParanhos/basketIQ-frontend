@@ -38,7 +38,7 @@ describe("product detail (spec 012, US3)", () => {
     const evolution = (await screen.findByRole("heading", { name: "Evolução do preço" })).closest("section")!;
     expect(within(evolution).getByText("Ver como tabela")).toBeInTheDocument();
     const table = within(evolution).getByRole("table", { name: "Histórico de compras" });
-    expect(within(table).getAllByRole("columnheader").map((h) => h.textContent)).toEqual(["Data", "Mercado", "Descrição original", "Quantidade", "Preço", "Pago"]);
+    expect(within(table).getAllByRole("columnheader").map((h) => h.textContent)).toEqual(["Data", "Supermercado", "Descrição original", "Quantidade", "Preço", "Pago"]);
     const rows = within(table).getAllByRole("row").slice(1);
     expect(rows).toHaveLength(4);
     expect(rows.map((r) => within(r).getAllByRole("cell")[2]!.textContent)).toEqual(["PEITO FRANGO 1KG", "FRANGO PEITO", "PEITO DE FRANGO", "PEITO FRANGO"]);
@@ -52,7 +52,7 @@ describe("product detail (spec 012, US3)", () => {
 
   it("F-197: «Preço médio que pagou, por mercado» shows each store's average, last price and purchases, in the order of the API, with no label and no window", async () => {
     open();
-    const block = (await screen.findByRole("heading", { name: "Preço médio que pagou, por mercado" })).closest("section")!;
+    const block = (await screen.findByRole("heading", { name: "Preço médio que pagou, por supermercado" })).closest("section")!;
     const rows = within(block).getAllByRole("listitem");
     expect(rows.map((r) => plain(r.textContent))).toEqual([
       "Lidl4,99 € · último 4,99 €1 compra",

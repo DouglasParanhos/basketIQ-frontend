@@ -38,12 +38,12 @@ describe("list of products (spec 012, US3)", () => {
     open();
     const banana = await screen.findByRole("link", { name: /Banana/ });
     expect(asked[0]).toEqual({ q: null, limit: "100" });
-    expect(plain(banana.textContent)).toContain("5 compras · 3 mercados");
+    expect(plain(banana.textContent)).toContain("5 compras · 3 supermercados");
     expect(plain(banana.textContent)).toContain("1,49 € /kg");
     expect(plain(banana.textContent)).toContain("preço médio");
-    expect(plain(screen.getByRole("link", { name: /Leite/ }).textContent)).toContain("9 compras · 1 mercado");
+    expect(plain(screen.getByRole("link", { name: /Leite/ }).textContent)).toContain("9 compras · 1 supermercado");
     expect(plain(screen.getByRole("link", { name: /Leite/ }).textContent)).toContain("0,85 € /l");
-    expect(plain(screen.getByRole("link", { name: /Ovos/ }).textContent)).toContain("1 compra · 2 mercados");
+    expect(plain(screen.getByRole("link", { name: /Ovos/ }).textContent)).toContain("1 compra · 2 supermercados");
     expect(plain(screen.getByRole("link", { name: /Ovos/ }).textContent)).toContain("0,27 € /un.");
   });
 

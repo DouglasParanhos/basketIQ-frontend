@@ -38,7 +38,7 @@ describe("list of purchases (spec 012, US1)", () => {
     expect(plain(screen.getByRole("heading", { level: 3, name: /Setembro 2026/ }).textContent)).toBe("Setembro 2026 · 5 confirmados · 322,00 €");
   });
 
-  it("F-195: a month with only purchases still to review, the filter «Requer ação» and a failing endpoint show just the month", async () => {
+  it("F-195: a month with only purchases still to review, the filter «Por confirmar» and a failing endpoint show just the month", async () => {
     serveMonths([{ month: "2026-09", confirmed_count: 1, total_cents: 1 }]);
     serveReceipts([october]);
     const view = open("/compras");
@@ -64,7 +64,7 @@ describe("list of purchases (spec 012, US1)", () => {
     const attention = await screen.findByRole("link", { name: /Mercadona/ });
     expect(plain(attention.textContent)).toContain("28 out.");
     expect(plain(attention.textContent)).toContain("11 itens");
-    expect(plain(attention.textContent)).toContain("Requer ação: rever valores");
+    expect(plain(attention.textContent)).toContain("Por confirmar: rever valores");
     expect(plain(attention.textContent)).toContain("22,75 €");
     expect(within(attention).getByText("!")).toHaveAttribute("aria-hidden", "true");
 
@@ -73,7 +73,7 @@ describe("list of purchases (spec 012, US1)", () => {
     expect(plain(progress.textContent)).toContain("—");
     expect(within(progress).getByText("…")).toHaveAttribute("aria-hidden", "true");
 
-    const failed = rowOf(/Nota em processamento/);
+    const failed = rowOf(/Talão em processamento/);
     expect(plain(failed.textContent)).toContain("Documento ilegível");
     expect(plain(failed.textContent)).not.toContain("rever valores");
     expect(failed.querySelector("svg[aria-hidden=true]")).not.toBeNull();
@@ -110,7 +110,7 @@ describe("list of purchases (spec 012, US1)", () => {
     expect(screen.getByRole("radio", { name: /Confirmadas/ })).toBeChecked();
   });
 
-  it("F-195: the chip «Requer ação» has the number of purchases that ask for it, up to 99, from a request for 100", async () => {
+  it("F-195: the chip «Por confirmar» has the number of purchases that ask for it, up to 99, from a request for 100", async () => {
     const asked: { status: string[]; limit: string | null }[] = [];
     server.use(
       http.get(`${API}/v1/receipts`, ({ request }) => {
@@ -121,11 +121,11 @@ describe("list of purchases (spec 012, US1)", () => {
       }),
     );
     open("/compras");
-    expect(await screen.findByRole("radio", { name: "Requer ação · 2" })).toBeInTheDocument();
+    expect(await screen.findByRole("radio", { name: "Por confirmar · 2" })).toBeInTheDocument();
     expect(asked.some((a) => a.limit === "100" && a.status.includes("REVIEW_REQUIRED") && a.status.includes("UNREADABLE"))).toBe(true);
   });
 
-  it("F-195: 100 purchases to act on show «99+», and none show just «Requer ação»", async () => {
+  it("F-195: 100 purchases to act on show «99+», and none show just «Por confirmar»", async () => {
     server.use(
       http.get(`${API}/v1/receipts`, ({ request }) => {
         const url = new URL(request.url);
@@ -134,15 +134,15 @@ describe("list of purchases (spec 012, US1)", () => {
       }),
     );
     const view = open("/compras");
-    expect(await screen.findByRole("radio", { name: "Requer ação · 99+" })).toBeInTheDocument();
+    expect(await screen.findByRole("radio", { name: "Por confirmar · 99+" })).toBeInTheDocument();
     view.unmount();
 
     server.use(http.get(`${API}/v1/receipts`, () => HttpResponse.json({ items: [], next_cursor: null })));
     open("/compras");
-    expect(await screen.findByRole("radio", { name: "Requer ação" })).toBeInTheDocument();
+    expect(await screen.findByRole("radio", { name: "Por confirmar" })).toBeInTheDocument();
   });
 
-  it("F-195: the list opens on the year of the purchase sent most recently and only shows that year; «Requer ação» shows every year", async () => {
+  it("F-195: the list opens on the year of the purchase sent most recently and only shows that year; «Por confirmar» shows every year", async () => {
     // Sent in January 2026 but bought in December 2025: that is the first of the list, so 2025 is the year.
     const latest = receiptItem({ id: "n", merchant: "LIDL", purchase_at: "2025-12-30T10:00:00Z", created_at: "2026-01-02T10:00:00Z" });
     const older = receiptItem({ id: "o", merchant: "ALDI", purchase_at: "2025-11-20T10:00:00Z", created_at: "2025-11-21T10:00:00Z" });
@@ -182,7 +182,7 @@ describe("list of purchases (spec 012, US1)", () => {
     serveReceipts([[]]);
     open("/compras");
     expect(await screen.findByText("Ainda não há compras")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Adicionar a primeira nota" })).toHaveAttribute("href", "/adicionar");
+    expect(screen.getByRole("link", { name: "Adicionar o primeiro talão" })).toHaveAttribute("href", "/adicionar");
   });
 
   it("F-195: the screen has a «Compras» title for assistive technology and no other first-level heading", async () => {

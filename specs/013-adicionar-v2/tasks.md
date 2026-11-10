@@ -5,6 +5,8 @@ description: "Tarefas da spec 013: Adicionar v2 (talão comprido, várias partes
 
 # Tasks: Adicionar v2 (talão comprido, várias partes)
 
+> **Atualizado a 10/11/2026.** O seletor de supermercado (`MerchantChips`, fila de chips) saiu do ecrã inicial: o ecrã inicial tem só as fontes e o supermercado escolhe-se no ecrã das partes (`MerchantField`, uma lista com «Detetar sozinho» primeiro e, em grupos, «Os seus supermercados» (do perfil) antes de «Outros supermercados»). Onde o texto abaixo fala de `MerchantChips`, vale esta nota; o histórico não se apaga.
+
 **Input**: `/specs/013-adicionar-v2/` — [spec.md](./spec.md), [plan.md](./plan.md), [research.md](./research.md), [data-model.md](./data-model.md), [contracts/](./contracts/), [quickstart.md](./quickstart.md)
 
 **Estado (2026-10-31): implementada e verificada (lint e tipos limpos, Vitest 268 testes, `e2e:mock` 90 de 90, capturas feitas); só a jornada `stack` (T026, manual) não foi corrida e a US5 (spike) segue adiada.** Sem bloqueio de contrato (sem `gen:api`: o fluxo de envio, `GET /v1/merchants` e `quality_warnings` já estão em `schema.d.ts`) e **sem decisões de produto por confirmar** (Clarifications da spec). **A US5 (spike da câmara própria) está ADIADA**: é um documento separado (T023).

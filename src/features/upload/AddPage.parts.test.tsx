@@ -190,7 +190,7 @@ describe("Adicionar: the parts of one receipt (spec 013, US2)", () => {
     await user.click(button("Apagar a parte 2"));
     server.use(http.post(`${API}/v1/receipts/r42/process`, () => HttpResponse.json({ id: "j", status: "QUEUED", attempt_count: 0, processing_route: null, created_at: "x" }, { status: 202 })));
     await user.click(button("Enviar talão"));
-    expect(await screen.findByText(/parece já ter sido importada/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Este talão parece já ter sido importado/i)).toBeInTheDocument();
     await user.click(button(/guardar nova versão/i));
     expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
     expect(inits).toEqual([false, false, true]);
@@ -234,16 +234,16 @@ describe("Adicionar: the parts of one receipt (spec 013, US2)", () => {
     expect(screen.queryByText(/^Parte 7 ·/)).not.toBeInTheDocument();
   });
 
-  it("F-200: the merchant chosen on the first screen is the one shown on the parts screen, and can be changed there", async () => {
+  it("F-200: the supermarket on the parts screen starts at «Detetar sozinho» and what is chosen there is the hint sent", async () => {
     const { bodies } = serveUpload("r44");
     const view = renderRoutes(routes, "/adicionar");
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("radio", { name: "Lidl" }));
     await pick("input-image", jpg("a.jpg"));
     await partsTitle();
     const field = await screen.findByLabelText("Supermercado (opcional)");
-    expect(field).toHaveValue("LIDL");
+    expect(field).toHaveValue("");
     await user.selectOptions(field, "ALDI");
+    expect(field).toHaveValue("ALDI");
     await user.click(button("Enviar talão"));
     expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
     expect(bodies["init:a.jpg"]!.merchant_hint).toBe("ALDI");

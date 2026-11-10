@@ -46,7 +46,7 @@ describe("profile tab (spec 014, US2)", () => {
     expect(screen.getByText("300,00 €")).toBeInTheDocument();
     expect(screen.getByText("Um objetivo seu, não um limite.")).toBeInTheDocument();
     expect(screen.getByText("Organizar as minhas finanças")).toBeInTheDocument();
-    for (const name of ["Editar pessoas na casa", "Editar mercados", "Editar meta pessoal", "Editar objetivos"]) {
+    for (const name of ["Editar pessoas na casa", "Editar supermercados", "Editar meta pessoal", "Editar objetivos"]) {
       expect(screen.getByRole("button", { name })).toBeInTheDocument();
     }
   });
@@ -54,7 +54,7 @@ describe("profile tab (spec 014, US2)", () => {
   it("F-190: an empty profile says it is not defined and offers «Definir»", async () => {
     await openProfile(emptyProfile({ onboarding_completed_at: "2026-10-31T00:00:00Z" }));
     expect(screen.getAllByText("Ainda não definiu.")).toHaveLength(4);
-    for (const name of ["Definir pessoas na casa", "Definir mercados", "Definir meta pessoal", "Definir objetivos"]) {
+    for (const name of ["Definir pessoas na casa", "Definir supermercados", "Definir meta pessoal", "Definir objetivos"]) {
       expect(screen.getByRole("button", { name })).toBeInTheDocument();
     }
     expect(screen.queryByText(/\d pessoas/)).not.toBeInTheDocument();
@@ -252,8 +252,8 @@ describe("profile tab (spec 014, US2)", () => {
     server.use(http.get(`${API}/v1/merchants`, () => HttpResponse.json(errorBody("internal_error", "x"), { status: 500 })));
     const bodies = serveSave(saved);
     const { user } = await openProfile();
-    await press(user, "Editar mercados");
-    expect(await screen.findByText("Não foi possível carregar os mercados.")).toBeInTheDocument();
+    await press(user, "Editar supermercados");
+    expect(await screen.findByText("Não foi possível carregar os supermercados.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Tentar de novo" })).toBeInTheDocument();
     await press(user, "Mais uma pessoa");
     await press(user, "Guardar alterações");
@@ -273,7 +273,7 @@ describe("profile tab (spec 014, US2)", () => {
     expect(await screen.findByText("Perfil guardado.")).toBeInTheDocument();
     expect(bodies).toEqual([{ household_size: 3 }]);
 
-    await press(user, "Editar mercados");
+    await press(user, "Editar supermercados");
     await user.click(await screen.findByRole("checkbox", { name: "Aldi" }));
     await press(user, "Guardar alterações");
     await waitFor(() => expect(bodies).toHaveLength(2));

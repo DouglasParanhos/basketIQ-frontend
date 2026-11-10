@@ -31,7 +31,7 @@ describe("Rever talão: the header, the warning and the summary card", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Rever talão" })).toBeInTheDocument();
     expect(screen.queryByText("Revisão necessária")).toBeNull();
     const card = screen.getByRole("region", { name: "Resumo da compra" });
-    expect(within(card).getByLabelText("Mercado")).toHaveValue("PINGO_DOCE");
+    expect(within(card).getByLabelText("Supermercado")).toHaveValue("PINGO_DOCE");
     expect(plain(card.textContent)).toContain("15 set. 2026, 12:30");
     expect(plain(card.textContent)).toContain("2,93 €");
   });
@@ -101,14 +101,14 @@ describe("Rever talão: the header, the warning and the summary card", () => {
     expect(screen.getByLabelText("Hora")).toBeInTheDocument();
     await user.click(date);
     expect(screen.queryByLabelText("Hora")).toBeNull();
-    await user.click(screen.getByRole("button", { name: "Editar total da nota" }));
-    expect(screen.getByLabelText("Total da nota")).toHaveValue("2,93");
+    await user.click(screen.getByRole("button", { name: "Editar total do talão" }));
+    expect(screen.getByLabelText("Total do talão")).toHaveValue("2,93");
   });
 
   it("an unknown store asks for its name inside the card", async () => {
     const user = userEvent.setup();
     open();
-    await user.selectOptions(await screen.findByLabelText("Mercado"), "UNKNOWN");
+    await user.selectOptions(await screen.findByLabelText("Supermercado"), "UNKNOWN");
     expect(screen.getByLabelText("Nome da loja")).toBeInTheDocument();
   });
 });
@@ -144,7 +144,7 @@ describe("Rever talão: the lines", () => {
     await user.click(await pencil(/editar leite meio gordo/i));
     for (const label of ["Produto", "Quantidade", "Unidade", "Preço unitário (€)", "Preço total (€)"]) expect(screen.getByLabelText(label)).toBeInTheDocument();
     expect(screen.getByLabelText("Quantidade")).toHaveValue("2");
-    for (const gone of [/^Lido:/, /^Na nota/, /Nome usado nas análises/, "Mais opções", "a editar", "Confira"]) expect(screen.queryByText(gone)).toBeNull();
+    for (const gone of [/^Lido:/, /^No talão/, /Nome usado nas análises/, "Mais opções", "a editar", "Confira"]) expect(screen.queryByText(gone)).toBeNull();
     const total = screen.getByLabelText("Preço total (€)");
     await user.clear(total);
     await user.type(total, "1,90");
@@ -269,7 +269,7 @@ describe("Rever talão: the lines", () => {
     const info = screen.getByRole("button", { name: "Saber mais sobre esta linha" });
     await user.click(info);
     const sheet = screen.getByRole("dialog", { name: "Sobre esta linha" });
-    expect(within(sheet).getByText("Na nota")).toBeInTheDocument();
+    expect(within(sheet).getByText("No talão")).toBeInTheDocument();
     expect(within(sheet).getByText("C LEITE MEIO GORDO 2 X 0,85 1,70")).toBeInTheDocument();
     expect(within(sheet).getByText("Lido: 1,70")).toBeInTheDocument();
     expect(within(sheet).getByText(/usado nas análises/)).toBeInTheDocument();

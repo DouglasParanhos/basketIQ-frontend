@@ -5,7 +5,7 @@ description: "Tarefas da spec 011: Início"
 
 # Tasks: Início
 
-> **Atualizado a 04/11/2026.** O desenho aprovado a 03/11 mudou as cores do anel (verde, dourado e dourado; vermelho só acima de 100 %), o texto acima da meta («Acima da meta · X € além da meta»), o rótulo do anel («Gasto no mês») e trocou o token laranja `--color-warn` (D-P3) pelo ouro `#b8860b`. As palavras «Tranquilo / Quase lá / Reta final» mantêm-se (o canvas `HomeG` tem-nas) e vêm da banda da API. Onde o texto abaixo diverge, vale esta nota; o histórico das decisões não se apaga.
+> **Atualizado a 04/11/2026.** O desenho aprovado a 03/11 mudou as cores do anel (verde, dourado e dourado; vermelho só acima de 100 %), o texto acima da meta («Acima da meta · X € além da meta»), o rótulo do anel («Gasto no mês») e trocou o token laranja `--color-warn` (D-P3) pelo ouro `#b8860b`. As palavras «Quase lá / Reta final» mantêm-se (o canvas `HomeG` tem-nas) e vêm da banda da API; **a 10/11 «Tranquilo» passou a «Dentro da meta · saldo: X €»** (o resto deste ficheiro ainda diz «Tranquilo»). Onde o texto abaixo diverge, vale esta nota; o histórico das decisões não se apaga.
 
 **Input**: `/specs/011-inicio/` — [spec.md](./spec.md), [plan.md](./plan.md), [research.md](./research.md), [data-model.md](./data-model.md), [contracts/](./contracts/), [quickstart.md](./quickstart.md)
 

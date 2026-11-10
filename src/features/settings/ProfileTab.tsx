@@ -111,7 +111,7 @@ function ReadBlocks({ saved, names, onEdit }: { saved: Profile; names: Schemas["
   );
   const blocks: { block: Block; title: string; short: string; empty: boolean; value: ReactNode; note?: string }[] = [
     { block: "people", title: "Pessoas na casa", short: "pessoas na casa", empty: people === null, value: people && big(people) },
-    { block: "merchants", title: "Onde faz compras", short: "mercados", empty: merchantChips.length === 0, value: marketChips },
+    { block: "merchants", title: "Onde faz compras", short: "supermercados", empty: merchantChips.length === 0, value: marketChips },
     {
       block: "goal",
       title: "Meta pessoal do mês",

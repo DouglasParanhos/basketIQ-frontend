@@ -110,18 +110,18 @@ export function ProfileEditor({ saved, focus, onDone }: { saved: Profile; focus:
           </h3>
           <div className="mt-3">
             {merchants.isLoading ? (
-              <Spinner label="A carregar os mercados…" />
+              <Spinner label="A carregar os supermercados…" />
             ) : merchants.isError || !merchants.data ? (
               <Notice
                 tone="warning"
-                title="Não foi possível carregar os mercados."
+                title="Não foi possível carregar os supermercados."
                 action={
                   <Button type="button" variant="secondary" onClick={() => merchants.refetch()}>
                     Tentar de novo
                   </Button>
                 }
               >
-                Os mercados guardados mantêm-se.
+                Os supermercados guardados mantêm-se.
               </Notice>
             ) : (
               <div className="flex flex-wrap gap-2">

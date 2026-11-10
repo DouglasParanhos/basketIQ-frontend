@@ -14,7 +14,7 @@ const FORBIDDEN = /excedeu|perdeu|negativ|limite|−|-\d/i;
 describe("the goal ring, as the API describes it (spec 011, US1)", () => {
   it("F-183: green, gold and gold say the band in words, the balance and the percentage; red is only for above the goal", () => {
     const green = ringView(overviewGreen, true);
-    expect(green).toMatchObject({ tone: "ok", text: "Tranquilo · saldo da meta: 248,00 €", percentText: "38 %", ariaLabel: "Anel verde, 38 % da meta usada", dash: "148 390" });
+    expect(green).toMatchObject({ tone: "ok", text: "Dentro da meta · saldo: 248,00 €", percentText: "38 %", ariaLabel: "Anel verde, 38 % da meta usada", dash: "148 390" });
 
     const orange = ringView(overviewOrange, true);
     expect(orange).toMatchObject({ tone: "warn", text: "Quase lá · saldo da meta: 152,00 €", ariaLabel: "Anel dourado, 62 % da meta usada", dash: "242 390" });

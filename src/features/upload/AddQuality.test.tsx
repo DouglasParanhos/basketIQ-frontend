@@ -30,7 +30,7 @@ async function openParts(...names: string[]) {
 describe("Adicionar quality (spec 013, US6)", () => {
   it("F-205: no banned word on the first screen, the parts, the editor and the discard question", async () => {
     renderRoutes(routes, "/adicionar");
-    await screen.findByRole("radio", { name: "Lidl" });
+    await screen.findByRole("button", { name: /Escolher PDF/ });
     expect(document.body.textContent).not.toMatch(BANNED);
     document.body.innerHTML = "";
 
@@ -43,25 +43,13 @@ describe("Adicionar quality (spec 013, US6)", () => {
     expect(document.body.textContent).not.toMatch(BANNED);
   });
 
-  it("F-205: the merchants and the parts use text and initials, not images", async () => {
+  it("F-205: the sources and the parts use text, not images", async () => {
     renderRoutes(routes, "/adicionar");
-    await screen.findByRole("radio", { name: "Lidl" });
+    await screen.findByRole("button", { name: /Escolher imagem/ });
     expect(screen.queryAllByRole("img")).toHaveLength(0);
     await pick("input-image", jpg("a.jpg"));
     await screen.findByText("a.jpg");
     expect(screen.queryAllByRole("img")).toHaveLength(0); // the preview is decorative: the part has its name
-  });
-
-  it("F-205: the arrow keys move between the merchant chips", async () => {
-    renderRoutes(routes, "/adicionar");
-    const user = userEvent.setup();
-    const auto = await screen.findByRole("radio", { name: "Detetar sozinho" });
-    await screen.findByRole("radio", { name: "Continente" });
-    auto.focus();
-    await user.keyboard("{ArrowDown}");
-    expect(screen.getByRole("radio", { name: "Continente" })).toBeChecked();
-    await user.keyboard("{ArrowDown}");
-    expect(screen.getByRole("radio", { name: "Pingo Doce" })).toBeChecked();
   });
 
   it("F-205: Tab follows the visual order on the parts screen", async () => {
