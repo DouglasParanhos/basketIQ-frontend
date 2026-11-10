@@ -15,7 +15,7 @@ async function signIn(page: Page, subject: string) {
   await signInWithGoogle(page, subject);
   // The empty-account message now lives in the Resumo, under Talões (spec 009).
   await page.goto("/compras/resumo");
-  await expect(page.getByRole("heading", { name: "Comece pela primeira nota" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Comece pelo primeiro talão" })).toBeVisible();
 }
 
 async function upload(page: Page, file: string, input = "input-pdf") {
@@ -41,7 +41,7 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   await page.goto("/adicionar");
   await page.getByTestId("input-pdf").setInputFiles(doc("pingo_doce_text"));
   await page.getByRole("button", { name: "Enviar talão" }).click();
-  await expect(page.getByText("Esta nota parece já ter sido importada")).toBeVisible();
+  await expect(page.getByText("Este talão parece já ter sido importado")).toBeVisible();
 
   // F-15b / F-12 / F-13: totals do not reconcile → review; fix the total and confirm.
   await upload(page, doc("pingo_doce_mismatch"));
@@ -50,9 +50,9 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   // It is the same purchase as the first one (same shop, minute and lines): keep both on purpose.
   const keep = page.getByRole("button", { name: "Manter as duas" });
   if (await keep.isVisible()) await keep.click();
-  await page.getByRole("button", { name: "Editar total da nota" }).click();
-  await page.getByRole("textbox", { name: "Total da nota" }).fill("18,17");
-  await page.getByRole("button", { name: "Editar total da nota" }).click(); // closes the field: the foot is away while it is open
+  await page.getByRole("button", { name: "Editar total do talão" }).click();
+  await page.getByRole("textbox", { name: "Total do talão" }).fill("18,17");
+  await page.getByRole("button", { name: "Editar total do talão" }).click(); // closes the field: the foot is away while it is open
   const reviewUrl = page.url();
   await page.getByRole("button", { name: "Guardar e rever depois", exact: true }).click();
   await expect(page).toHaveURL(/\/compras$/); // «rever depois» goes back to the list; the purchase is still there to confirm
@@ -72,10 +72,10 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
 
   // F-18 / F-19: September 2026 dashboard, then filtered by Lidl.
   await page.goto("/?de=2026-09-01&ate=2026-09-30");
-  await expect(page.getByRole("heading", { name: /^Gasto em mercado/ })).toBeVisible();
-  const total = page.getByRole("heading", { name: /^Gasto em mercado/ }).locator("..").locator("p").first();
+  await expect(page.getByRole("heading", { name: /^Gasto em supermercados/ })).toBeVisible();
+  const total = page.getByRole("heading", { name: /^Gasto em supermercados/ }).locator("..").locator("p").first();
   await expect(total).toHaveText("45,39 €"); // 18,17 + 18,17 (Pingo Doce) + 9,05 (Lidl photo)
-  await page.getByLabel("Mercado", { exact: true }).selectOption("PINGO_DOCE");
+  await page.getByLabel("Supermercado", { exact: true }).selectOption("PINGO_DOCE");
   await expect(total).toHaveText("36,34 €");
 
   // F-20: product history.

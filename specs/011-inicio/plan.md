@@ -1,6 +1,6 @@
 # Implementation Plan: Início
 
-> **Atualizado a 04/11/2026.** O desenho aprovado a 03/11 mudou as cores do anel (verde, dourado e dourado; vermelho só acima de 100 %), o texto acima da meta («Acima da meta · X € além da meta»), o rótulo do anel («Gasto no mês») e trocou o token laranja `--color-warn` (D-P3) pelo ouro `#b8860b`. As palavras «Tranquilo / Quase lá / Reta final» mantêm-se (o canvas `HomeG` tem-nas) e vêm da banda da API. Onde o texto abaixo diverge, vale esta nota; o histórico das decisões não se apaga.
+> **Atualizado a 04/11/2026.** O desenho aprovado a 03/11 mudou as cores do anel (verde, dourado e dourado; vermelho só acima de 100 %), o texto acima da meta («Acima da meta · X € além da meta»), o rótulo do anel («Gasto no mês») e trocou o token laranja `--color-warn` (D-P3) pelo ouro `#b8860b`. As palavras «Quase lá / Reta final» mantêm-se (o canvas `HomeG` tem-nas) e vêm da banda da API; **a 10/11 «Tranquilo» passou a «Dentro da meta · saldo: X €»** (o resto deste ficheiro ainda diz «Tranquilo»). Onde o texto abaixo diverge, vale esta nota; o histórico das decisões não se apaga.
 
 **Branch**: `011-inicio` (sem ramo git criado; o trabalho fica no ramo atual e os commits são da Liz) | **Date**: 2026-10-31 | **Spec**: [spec.md](./spec.md)
 

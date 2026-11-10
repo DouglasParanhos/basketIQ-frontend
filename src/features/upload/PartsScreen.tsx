@@ -198,7 +198,7 @@ export function PartsScreen(props: {
           {upload.phase === "duplicate" && (
             <Notice
               tone="warning"
-              title="Esta nota parece já ter sido importada"
+              title="Este talão parece já ter sido importado"
               action={
                 <>
                   <Button type="button" variant="secondary" onClick={() => props.onSubmit(true)}>

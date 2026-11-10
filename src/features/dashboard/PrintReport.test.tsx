@@ -27,11 +27,11 @@ describe("Relatório para imprimir (Passo B)", () => {
     const title = await screen.findByRole("heading", { level: 2, name: /^Resumo de compras · setembro de 2026$/ });
     const header = title.closest("header")!;
     expect(header).toHaveClass("hidden", "print:block");
-    expect(header).toHaveTextContent("Todos os mercados");
+    expect(header).toHaveTextContent("Todos os supermercados");
     expect(header).toHaveTextContent("Valores dos seus talões confirmados");
-    expect(header).toHaveTextContent("Não são preços oficiais dos mercados.");
+    expect(header).toHaveTextContent("Não são preços oficiais dos supermercados.");
     expect(header.textContent).not.toMatch(/poupa|mais barato|ranking/i);
-    expect(screen.getByLabelText("Mercado").closest(".print\\:hidden")).not.toBeNull();
+    expect(screen.getByLabelText("Supermercado").closest(".print\\:hidden")).not.toBeNull();
     expect(await screen.findByRole("button", { name: "Imprimir ou guardar em PDF" })).toHaveClass("print:hidden");
   });
 

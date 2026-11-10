@@ -72,7 +72,7 @@ describe("Talões quality (spec 012, US5)", () => {
     const at = (needle: string | RegExp) => seen.findIndex((s) => (typeof needle === "string" ? s === needle : needle.test(s)));
     const order = [at(/^Ano/), at("Compras"), at("Todas"), at(/Lidl/)];
     expect(order.every((i) => i >= 0), seen.join(" | ")).toBe(true);
-    expect(seen.some((s) => /^Requer ação|^Confirmadas/.test(s)), seen.join(" | ")).toBe(false);
+    expect(seen.some((s) => /^Por confirmar|^Confirmadas/.test(s)), seen.join(" | ")).toBe(false);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
 });

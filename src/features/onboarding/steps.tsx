@@ -21,7 +21,7 @@ import {
 export const STEP_COPY = [
   { title: "Qual é o seu objetivo com a aplicação?", hint: "Escolha quantos quiser.", blocked: "Escolha uma opção para avançar, ou salte este passo." },
   { title: "Quantas pessoas vivem em sua casa?", hint: "Pode alterar este número mais tarde, no Perfil.", blocked: "Indique quantas pessoas, ou salte este passo." },
-  { title: "Onde costuma fazer compras?", hint: "Escolha todos os mercados que usa.", blocked: "Escolha um mercado para avançar, ou salte este passo." },
+  { title: "Onde costuma fazer compras?", hint: "Escolha todos os supermercados que usa.", blocked: "Escolha um supermercado para avançar, ou salte este passo." },
   { title: "Qual é a sua meta pessoal por mês?", hint: "Por mês. Pode mudá-la quando quiser.", blocked: "Defina um valor ou toque em «Ainda não sei»." },
 ] as const;
 
@@ -79,12 +79,12 @@ export function PeopleStep({ state, dispatch }: { state: OnboardingState; dispat
 
 export function MerchantsStep({ state, dispatch }: { state: OnboardingState; dispatch: Dispatch<Action> }) {
   const merchants = useMerchants();
-  if (merchants.isLoading) return <Spinner label="A carregar os mercados…" />;
+  if (merchants.isLoading) return <Spinner label="A carregar os supermercados…" />;
   if (merchants.isError || !merchants.data) {
     return (
       <Notice
         tone="warning"
-        title="Não foi possível carregar os mercados."
+        title="Não foi possível carregar os supermercados."
         action={
           <Button variant="secondary" onClick={() => merchants.refetch()}>
             Tentar de novo
