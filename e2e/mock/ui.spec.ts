@@ -1004,7 +1004,9 @@ test.describe("talões (spec 012)", () => {
     await expect(page.getByRole("heading", { level: 3, name: /Dezembro 2025 · 2 confirmados/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Pingo Doce/ })).toHaveCount(0);
 
-    await page.getByRole("radio", { name: /Por confirmar/ }).check({ force: true });
+    // The filter lives in the URL: `check()` reads the state before the router has moved it, so click and then wait for it.
+    await page.getByRole("radio", { name: /Por confirmar/ }).click({ force: true });
+    await expect(page.getByRole("radio", { name: /Por confirmar/ })).toBeChecked();
     await expect(page).toHaveURL(/filtro=acao/);
     await expect(page.getByRole("link", { name: /Mercadona/ })).toBeVisible();
     await page.getByRole("link", { name: /Mercadona/ }).click();
