@@ -13,7 +13,7 @@ export const STATUS: Record<ReceiptStatus, { label: string; tone: Tone }> = {
   CONFIRMED: { label: "Confirmada", tone: "done" },
   INVALID_FORMAT: { label: "Formato inválido", tone: "error" },
   UNREADABLE: { label: "Documento ilegível", tone: "error" },
-  UNSUPPORTED_MERCHANT: { label: "Mercado não suportado", tone: "error" },
+  UNSUPPORTED_MERCHANT: { label: "Supermercado não suportado", tone: "error" },
   TEMPORARY_FAILURE: { label: "Falha temporária", tone: "error" },
   PERMANENT_FAILURE: { label: "Falha permanente", tone: "error" },
 };

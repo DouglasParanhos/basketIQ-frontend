@@ -190,7 +190,7 @@ describe("Adicionar: the parts of one receipt (spec 013, US2)", () => {
     await user.click(button("Apagar a parte 2"));
     server.use(http.post(`${API}/v1/receipts/r42/process`, () => HttpResponse.json({ id: "j", status: "QUEUED", attempt_count: 0, processing_route: null, created_at: "x" }, { status: 202 })));
     await user.click(button("Enviar talão"));
-    expect(await screen.findByText(/parece já ter sido importada/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Este talão parece já ter sido importado/i)).toBeInTheDocument();
     await user.click(button(/guardar nova versão/i));
     expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
     expect(inits).toEqual([false, false, true]);

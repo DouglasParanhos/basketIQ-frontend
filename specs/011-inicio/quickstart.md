@@ -1,6 +1,6 @@
 # Quickstart: validar o Início
 
-> **Atualizado a 04/11/2026.** O desenho aprovado a 03/11 mudou as cores do anel (verde, dourado e dourado; vermelho só acima de 100 %), o texto acima da meta («Acima da meta · X € além da meta»), o rótulo do anel («Gasto no mês») e trocou o token laranja `--color-warn` (D-P3) pelo ouro `#b8860b`. As palavras «Tranquilo / Quase lá / Reta final» mantêm-se (o canvas `HomeG` tem-nas) e vêm da banda da API. Onde o texto abaixo diverge, vale esta nota; o histórico das decisões não se apaga.
+> **Atualizado a 04/11/2026.** O desenho aprovado a 03/11 mudou as cores do anel (verde, dourado e dourado; vermelho só acima de 100 %), o texto acima da meta («Acima da meta · X € além da meta»), o rótulo do anel («Gasto no mês») e trocou o token laranja `--color-warn` (D-P3) pelo ouro `#b8860b`. As palavras «Quase lá / Reta final» mantêm-se (o canvas `HomeG` tem-nas) e vêm da banda da API; **a 10/11 «Tranquilo» passou a «Dentro da meta · saldo: X €»** (o resto deste ficheiro ainda diz «Tranquilo»). Onde o texto abaixo diverge, vale esta nota; o histórico das decisões não se apaga.
 
 Pré-requisitos: Node 24+, dependências instaladas, `corepack pnpm@9` (não há `pnpm` no PATH nem WSL). **O backend tem de ter `GET /v1/analytics/overview` publicado (com o `status` das últimas compras) e o `schema.d.ts` regenerado** (`corepack pnpm@9 gen:api`); sem isso não há o que validar (R1 do `research.md`).
 
@@ -21,7 +21,7 @@ Resultado esperado: tudo verde; os testes que abrem `/` passam a receber um `ove
 
 | # | Passos | Esperado |
 |---|---|---|
-| 1 | Conta com meta de 400 € e gasto de 152 € no mês | 38 %, anel verde, «Tranquilo · saldo da meta: 248,00 €», nota fixa visível |
+| 1 | Conta com meta de 400 € e gasto de 152 € no mês | 38 %, anel verde, «Dentro da meta · saldo: 248,00 €», nota fixa visível |
 | 2 | Gasto de 248 € | 62 %, dourado, «Quase lá · saldo da meta: 152,00 €» |
 | 3 | Gasto de 352 € | 88 %, dourado, «Reta final · saldo da meta: 48,00 €» |
 | 4 | Gasto de 452 € | anel cheio, vermelho, «Acima da meta · 52,00 € além da meta», sem saldo negativo |

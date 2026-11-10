@@ -75,7 +75,7 @@ export default function ProductsPage() {
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-semibold">{p.name}</span>
                 <span className="block text-xs text-ink-soft">
-                  {p.purchases} {p.purchases === 1 ? "compra" : "compras"} · {p.merchants} {p.merchants === 1 ? "mercado" : "mercados"}
+                  {p.purchases} {p.purchases === 1 ? "compra" : "compras"} · {p.merchants} {p.merchants === 1 ? "supermercado" : "supermercados"}
                 </span>
               </span>
               <Price product={p} />

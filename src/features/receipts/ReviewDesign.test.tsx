@@ -128,11 +128,11 @@ describe("Rever talão (approved design)", () => {
     it("is off while the total of the purchase is invalid", async () => {
       const user = userEvent.setup();
       open();
-      await user.click(await screen.findByRole("button", { name: "Editar total da nota" }));
-      const total = screen.getByLabelText("Total da nota");
+      await user.click(await screen.findByRole("button", { name: "Editar total do talão" }));
+      const total = screen.getByLabelText("Total do talão");
       await user.clear(total);
       await user.type(total, "abc");
-      await user.click(screen.getByRole("button", { name: "Editar total da nota" }));
+      await user.click(screen.getByRole("button", { name: "Editar total do talão" }));
       expect(screen.getByRole("button", { name: "Guardar e rever depois" })).toBeDisabled();
     });
   });
@@ -210,7 +210,7 @@ describe("Rever talão (approved design)", () => {
       await user.click(screen.getByRole("button", { name: "Desfazer" }));
       expect(screen.getByLabelText("Preço total (€)")).toHaveValue("1,70");
       expect(screen.queryByText(/Preço alterado de/)).toBeNull();
-      await user.selectOptions(screen.getByLabelText("Mercado"), "LIDL"); // something else to save, so a PATCH goes out
+      await user.selectOptions(screen.getByLabelText("Supermercado"), "LIDL"); // something else to save, so a PATCH goes out
       await saveLine(user);
       await user.click(screen.getByRole("button", { name: "Guardar e rever depois" }));
       await waitFor(() => expect(patch).not.toBeNull());
@@ -400,7 +400,7 @@ describe("Rever talão: espaço para editar", () => {
     expect(shown()).toEqual([]);
     await user.click(screen.getByRole("button", { name: "Editar data e hora" }));
     expect(shown()).toEqual(actions);
-    await user.click(screen.getByRole("button", { name: "Editar total da nota" }));
+    await user.click(screen.getByRole("button", { name: "Editar total do talão" }));
     expect(shown()).toEqual([]);
   });
 

@@ -37,7 +37,7 @@ describe("settings quality (spec 014, US6)", () => {
 
   it("F-194: a chosen merchant or goal is shown by a tick as well as by the frame", async () => {
     const { user } = await open("/definicoes/perfil", "Perfil", 2);
-    await user.click(screen.getByRole("button", { name: "Editar mercados" }));
+    await user.click(screen.getByRole("button", { name: "Editar supermercados" }));
     const lidl = (await screen.findByRole("checkbox", { name: "Lidl" })).closest("label")!;
     const aldi = screen.getByRole("checkbox", { name: "Aldi" }).closest("label")!;
     expect(lidl.querySelector("svg")).not.toBeNull();

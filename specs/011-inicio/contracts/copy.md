@@ -1,6 +1,6 @@
 # Textos do Início (português europeu)
 
-> **Atualizado a 04/11/2026.** O desenho aprovado a 03/11 mudou as cores do anel (verde, dourado e dourado; vermelho só acima de 100 %), o texto acima da meta («Acima da meta · X € além da meta»), o rótulo do anel («Gasto no mês») e trocou o token laranja `--color-warn` (D-P3) pelo ouro `#b8860b`. As palavras «Tranquilo / Quase lá / Reta final» mantêm-se (o canvas `HomeG` tem-nas) e vêm da banda da API. Onde o texto abaixo diverge, vale esta nota; o histórico das decisões não se apaga.
+> **Atualizado a 04/11/2026.** O desenho aprovado a 03/11 mudou as cores do anel (verde, dourado e dourado; vermelho só acima de 100 %), o texto acima da meta («Acima da meta · X € além da meta»), o rótulo do anel («Gasto no mês») e trocou o token laranja `--color-warn` (D-P3) pelo ouro `#b8860b`. As palavras «Quase lá / Reta final» mantêm-se (o canvas `HomeG` tem-nas) e vêm da banda da API; **a 10/11 «Tranquilo» passou a «Dentro da meta · saldo: X €»** (o resto deste ficheiro ainda diz «Tranquilo»). Onde o texto abaixo diverge, vale esta nota; o histórico das decisões não se apaga.
 
 Fonte: tabela do `Documentation/design-ux-v2/README.md` aplicada ao `HomeF` e ao `HomeG`. Valores em euros pelo `formatCents` («248,00 €»; decisão D-P4 da Liz, 2026-10-31). Os textos de produto da primeira versão foram aprovados a 2026-10-31 (D-P1, D-P2, D-P10); todos os textos estão decididos (D-P13 e D-P14 incluídos).
 
@@ -12,7 +12,7 @@ Fonte: tabela do `Documentation/design-ux-v2/README.md` aplicada ao `HomeF` e ao
 | Anel, rótulo | Gasto no mês | por cima do valor (D7, 03/11; antes «Gasto em mercado no mês») |
 | Meta | A sua meta pessoal: 400,00 € | protótipo: «Sua meta pessoal» |
 | Meta, mês passado | A sua meta pessoal: 400,00 € · **Meta atual** | só quando o mês mostrado não é o corrente: a API devolve sempre a meta de hoje (D-P7, C8) |
-| Faixa verde | Tranquilo · saldo da meta: 248,00 € | |
+| Faixa verde | Dentro da meta · saldo: 248,00 € | antes «Tranquilo» (10/11) |
 | Faixa dourada (Quase lá) | Quase lá · saldo da meta: 152,00 € | antes laranja (03/11); protótipo: «Chegando lá» |
 | Faixa dourada (Reta final) | Reta final · saldo da meta: 48,00 € | também dourada: o vermelho é só para acima da meta (03/11) |
 | Igual à meta | Reta final · saldo da meta: 0,00 € | |

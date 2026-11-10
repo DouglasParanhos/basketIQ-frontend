@@ -47,7 +47,7 @@ export function ReceiptRow({ receipt: r }: { receipt: Schemas["ReceiptSummaryOut
               <>
                 {" · "}
                 <span>
-                  <span className="sr-only">Requer ação: </span>rever valores
+                  <span className="sr-only">Por confirmar: </span>rever valores
                 </span>
               </>
             )}

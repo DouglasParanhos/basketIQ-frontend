@@ -106,7 +106,7 @@ describe("add receipt (RF-02..RF-04)", () => {
     renderRoutes(routes, "/adicionar");
     await pickFile(screen.getByTestId("input-pdf"), new File(["%PDF"], "f.pdf", { type: "application/pdf" }));
     await user.click(await screen.findByRole("button", { name: /^enviar talão$/i }));
-    expect(await screen.findByText(/parece já ter sido importada/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Este talão parece já ter sido importado/i)).toBeInTheDocument();
     expect(screen.getByText(/Lidl, .*9,05/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /guardar nova versão/i }));
     expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
@@ -402,7 +402,7 @@ describe("review (RF-07, F-11..F-15)", () => {
     expect(await screen.findByText(/confirmada por si/i)).toBeInTheDocument();
     expect(confirmed).toEqual({ version: 3 });
     expect(screen.getByRole("link", { name: /início/i })).toHaveAttribute("href", "/");
-    expect(screen.getByRole("link", { name: /adicionar outra nota/i })).toHaveAttribute("href", "/adicionar");
+    expect(screen.getByRole("link", { name: /adicionar outro talão/i })).toHaveAttribute("href", "/adicionar");
     expect(screen.getAllByText("ESTRADA DA LUZ")).toHaveLength(2);
   });
 
@@ -507,8 +507,8 @@ describe("dashboard (RF-09, RF-11)", () => {
   it("F-21: explains how to import the first receipt when there is no data", async () => {
     server.use(http.get(`${API}/v1/receipts`, () => HttpResponse.json({ items: [], next_cursor: null })));
     renderRoutes(routes, "/compras/resumo");
-    expect(await screen.findByRole("heading", { name: /comece pela primeira nota/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /adicionar a primeira nota/i })).toHaveAttribute("href", "/adicionar");
+    expect(await screen.findByRole("heading", { name: /comece pelo primeiro talão/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /adicionar o primeiro talão/i })).toHaveAttribute("href", "/adicionar");
   });
 
   it("shows totals, variation, an accessible table and empty periods", async () => {
@@ -526,23 +526,21 @@ describe("dashboard (RF-09, RF-11)", () => {
     expect(document.body.textContent).not.toMatch(/Olá/);
   });
 
-  it("F-196: the period has four options and the arrows, and the merchant filter says «Todos os mercados»", async () => {
+  it("F-196: the period has four options and the arrows, and the merchant filter says «Todos os supermercados»", async () => {
     renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
     const period = await screen.findByRole("radiogroup", { name: "Período" });
     expect(within(period).getAllByRole("radio").map((r) => r.closest("label")!.textContent)).toEqual(["Mês", "Trimestre", "Ano", "Intervalo"]);
     expect(screen.getByRole("button", { name: "Período anterior" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Período seguinte" })).toBeInTheDocument();
-    const merchant = screen.getByLabelText("Mercado");
-    expect(within(merchant).getByRole("option", { name: "Todos os mercados" })).toBeInTheDocument();
-    expect(screen.queryByLabelText("Supermercado")).not.toBeInTheDocument();
+    const merchant = screen.getByLabelText("Supermercado");
+    expect(within(merchant).getByRole("option", { name: "Todos os supermercados" })).toBeInTheDocument();
   });
 
-  it("F-196: the total is the «Gasto em mercado» card with the number of receipts, and the stores are «Por mercado»", async () => {
+  it("F-196: the total is the «Gasto em supermercados» card with the number of receipts, and the stores are «Por supermercado»", async () => {
     renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
-    expect(await screen.findByRole("heading", { name: /^Gasto em mercado · \d+ talões?$/ })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Por mercado" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /^Gasto em supermercados · \d+ talões?$/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Por supermercado" })).toBeInTheDocument();
     expect(screen.queryByText("Gasto total")).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Por supermercado" })).not.toBeInTheDocument();
   });
 
   it("F-19: the merchant filter is sent with the query", async () => {
@@ -555,7 +553,7 @@ describe("dashboard (RF-09, RF-11)", () => {
     );
     const user = userEvent.setup();
     renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
-    await user.selectOptions(await screen.findByLabelText("Mercado"), "LIDL");
+    await user.selectOptions(await screen.findByLabelText("Supermercado"), "LIDL");
     await waitFor(() => expect(seen).toContain("LIDL"));
   });
 

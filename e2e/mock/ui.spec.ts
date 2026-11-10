@@ -274,14 +274,14 @@ test.describe("flows with a fake API", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
     await page.getByRole("link", { name: "Talões" }).click();
     await page.getByRole("tab", { name: "Resumo" }).click();
-    await expect(page.getByRole("heading", { name: /^Gasto em mercado/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Gasto em supermercados/ })).toBeVisible();
   });
 
   test("F-21: empty account explains how to import the first receipt", async ({ page }) => {
     await fakeApi(page, { empty: true });
     await page.goto("/compras/resumo");
-    await expect(page.getByRole("heading", { name: "Comece pela primeira nota" })).toBeVisible();
-    await page.getByRole("link", { name: "Adicionar a primeira nota" }).click();
+    await expect(page.getByRole("heading", { name: "Comece pelo primeiro talão" })).toBeVisible();
+    await page.getByRole("link", { name: "Adicionar o primeiro talão" }).click();
     await expect(page.getByRole("button", { name: /Fotografar/ })).toBeVisible();
   });
 
@@ -752,7 +752,7 @@ test.describe("adicionar (spec 013)", () => {
     await page.goto("/adicionar");
     await choose(page, "Escolher imagem", png("a.png"));
     await page.getByRole("button", { name: "Enviar talão" }).click();
-    await expect(page.getByText(/parece já ter sido importada/)).toBeVisible();
+    await expect(page.getByText(/Este talão parece já ter sido importado/)).toBeVisible();
     await page.getByRole("button", { name: "Guardar nova versão" }).click();
     await expect(page).toHaveURL(/\/compras\/r1$/);
     expect(state.uploads.inits).toBe(1);
@@ -990,10 +990,10 @@ test.describe("talões (spec 012)", () => {
     await expect(page.getByRole("link", { name: /Mercadona.*rever valores/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Continente.*a ler o talão/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Documento ilegível/ })).toBeVisible();
-    await expect(page.getByRole("radio", { name: "Requer ação · 2" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "Por confirmar · 2" })).toBeVisible();
   });
 
-  test("F-195: the year selector shows only that year, «Requer ação» shows all years, and a row opens the purchase", async ({ page }) => {
+  test("F-195: the year selector shows only that year, «Por confirmar» shows all years, and a row opens the purchase", async ({ page }) => {
     await fakeApi(page);
     await page.goto("/compras");
     await expect(page.getByRole("combobox", { name: "Ano" })).toHaveValue("2026");
@@ -1004,7 +1004,9 @@ test.describe("talões (spec 012)", () => {
     await expect(page.getByRole("heading", { level: 3, name: /Dezembro 2025 · 2 confirmados/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Pingo Doce/ })).toHaveCount(0);
 
-    await page.getByRole("radio", { name: /Requer ação/ }).check({ force: true });
+    // The filter lives in the URL: `check()` reads the state before the router has moved it, so click and then wait for it.
+    await page.getByRole("radio", { name: /Por confirmar/ }).click({ force: true });
+    await expect(page.getByRole("radio", { name: /Por confirmar/ })).toBeChecked();
     await expect(page).toHaveURL(/filtro=acao/);
     await expect(page.getByRole("link", { name: /Mercadona/ })).toBeVisible();
     await page.getByRole("link", { name: /Mercadona/ }).click();
@@ -1029,7 +1031,7 @@ test.describe("talões (spec 012)", () => {
     await expect(page.getByRole("heading", { name: /^Resumo de compras/ })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeHidden();
     await expect(page.getByRole("button", { name: "Imprimir ou guardar em PDF" })).toBeHidden();
-    await expect(page.getByRole("combobox", { name: "Mercado" })).toBeHidden();
+    await expect(page.getByRole("combobox", { name: "Supermercado" })).toBeHidden();
     await expect(page.getByRole("tablist", { name: "Talões" })).toBeHidden();
   });
 
@@ -1037,7 +1039,7 @@ test.describe("talões (spec 012)", () => {
     await fakeApi(page);
     await page.goto("/produtos");
     const chicken = page.getByRole("link", { name: /Peito de frango/ });
-    await expect(chicken).toContainText("4 compras · 3 mercados");
+    await expect(chicken).toContainText("4 compras · 3 supermercados");
     await expect(chicken).toContainText("5,52 € /kg");
     await expect(page.getByRole("link", { name: /Água/ })).not.toContainText("€");
     await page.getByText("A–Z", { exact: true }).click();
@@ -1046,7 +1048,7 @@ test.describe("talões (spec 012)", () => {
     await chicken.click();
     await expect(page.getByRole("heading", { level: 1, name: "Peito de frango" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Preço médio por kg" })).toContainText("Média ponderada pelas quantidades que comprou");
-    await expect(page.getByRole("heading", { name: "Preço médio que pagou, por mercado" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Preço médio que pagou, por supermercado" })).toBeVisible();
     await expect(page.locator("main")).not.toContainText(/mais barato/i);
   });
 
@@ -1297,7 +1299,7 @@ test.describe("review: the foot with the three actions and the undo of a price",
       await fakeApi(page);
       await page.goto("/compras/r1");
       await page.getByRole("button", { name: "Editar data e hora" }).click();
-      await page.getByRole("button", { name: "Editar total da nota" }).click();
+      await page.getByRole("button", { name: "Editar total do talão" }).click();
       await page.getByRole("button", { name: /Editar LEITE MEIO GORDO/ }).click();
       await expect(page.getByLabel("Preço unitário (€)")).toBeVisible();
       await noHorizontalScroll(page);

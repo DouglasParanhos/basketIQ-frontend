@@ -365,11 +365,11 @@ function LinePanel({ line, errors, onField, onSave, onCancel, onSplit, onRemove,
       {info && src && (
         <BottomSheet title="Sobre esta linha" onClose={() => setInfo(false)}>
           <div>
-            <p className="text-xs text-ink-soft">Na nota</p>
+            <p className="text-xs text-ink-soft">No talão</p>
             <p className="font-receipt text-sm">{src.evidence.join(" / ") || src.raw_description}</p>
           </div>
           {src.line_total_cents !== null && <p className="text-sm">Lido: {formatAmount(src.line_total_cents)}</p>}
-          <p className="text-sm text-ink-soft">O nome que editar é o usado nas análises. O original da nota fica sempre guardado.</p>
+          <p className="text-sm text-ink-soft">O nome que editar é o usado nas análises. O original do talão fica sempre guardado.</p>
         </BottomSheet>
       )}
     </li>

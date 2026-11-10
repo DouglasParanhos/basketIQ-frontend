@@ -12,7 +12,7 @@ import { ReceiptRow } from "./ReceiptRow";
 const ACTION_STATUSES: ReceiptStatus[] = ["REVIEW_REQUIRED", "COMPLETED", "RECEIVED", "INVALID_FORMAT", "UNREADABLE", "UNSUPPORTED_MERCHANT", "TEMPORARY_FAILURE", "PERMANENT_FAILURE"];
 const FILTERS: { id: Filter; label: string; status?: ReceiptStatus[] }[] = [
   { id: "todas", label: "Todas" },
-  { id: "acao", label: "Requer ação", status: ACTION_STATUSES },
+  { id: "acao", label: "Por confirmar", status: ACTION_STATUSES },
   { id: "confirmadas", label: "Confirmadas", status: ["CONFIRMED"] },
 ];
 
@@ -42,7 +42,7 @@ export function ReceiptsPage() {
   });
   const asked = counter.data?.items.length ?? 0;
 
-  // «Requer ação» shows every year (its number is for every year); the other filters show the year chosen.
+  // «Por confirmar» shows every year (its number is for every year); the other filters show the year chosen.
   const visible = filter.id === "acao" ? items : items.filter((r) => yearOf(r) === year);
   const groups = groupByMonth(visible);
   const notReached = filter.id !== "acao" && items.length > 0 && visible.length === 0 && query.hasNextPage;
@@ -94,9 +94,9 @@ export function ReceiptsPage() {
         <Notice
           tone="info"
           title={filter.id === "todas" ? "Ainda não há compras" : "Nada nesta lista"}
-          action={filter.id === "todas" && <LinkButton to="/adicionar">Adicionar a primeira nota</LinkButton>}
+          action={filter.id === "todas" && <LinkButton to="/adicionar">Adicionar o primeiro talão</LinkButton>}
         >
-          {filter.id === "todas" ? "Fotografe uma nota ou envie o PDF da fatura para começar." : "Não há compras com este estado."}
+          {filter.id === "todas" ? "Fotografe um talão ou envie o PDF da fatura para começar." : "Não há compras com este estado."}
         </Notice>
       )}
       {notReached && <Notice tone="info">Ainda não chegou a este ano.</Notice>}

@@ -129,7 +129,7 @@ describe("accessibility of the onboarding (spec 010, US5)", () => {
     const reasons = [
       "Escolha uma opção para avançar, ou salte este passo.",
       "Indique quantas pessoas, ou salte este passo.",
-      "Escolha um mercado para avançar, ou salte este passo.",
+      "Escolha um supermercado para avançar, ou salte este passo.",
       "Defina um valor ou toque em «Ainda não sei».",
     ];
     for (const [step, reason] of reasons.entries()) {

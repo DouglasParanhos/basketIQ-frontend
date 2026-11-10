@@ -16,7 +16,7 @@ const text = () => document.body.textContent!.replace(/\u00a0/g, " ");
 describe("goal ring (spec 011, US1)", () => {
   it("F-183: each band is an image with a text alternative, and says the band and the balance in words", () => {
     for (const [overview, label, chip] of [
-      [overviewGreen, "Anel verde, 38 % da meta usada", "Tranquilo · saldo da meta: 248,00 €"],
+      [overviewGreen, "Anel verde, 38 % da meta usada", "Dentro da meta · saldo: 248,00 €"],
       [overviewOrange, "Anel dourado, 62 % da meta usada", "Quase lá · saldo da meta: 152,00 €"],
       [overviewRed, "Anel dourado, 88 % da meta usada", "Reta final · saldo da meta: 48,00 €"],
     ] as const) {

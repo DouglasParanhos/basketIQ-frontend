@@ -115,8 +115,8 @@ function Processing({ receipt: r }: { receipt: Receipt }) {
   const noJob = r.status === "RECEIVED" && !r.processing;
   if (noJob) {
     return (
-      <Notice tone="warning" title="O envio desta nota não terminou">
-        O ficheiro não chegou ao servidor. Elimine esta entrada e envie a nota novamente.
+      <Notice tone="warning" title="O envio deste talão não terminou">
+        O ficheiro não chegou ao servidor. Elimine esta entrada e envie o talão novamente.
       </Notice>
     );
   }
@@ -186,7 +186,7 @@ function Failure({ receipt: r }: { receipt: Receipt }) {
   return (
     <Notice
       tone="error"
-      title={r.error?.message ?? "Não foi possível processar a nota"}
+      title={r.error?.message ?? "Não foi possível processar o talão"}
       action={
         retryable && (
           <Button variant="secondary" busy={retry.isPending} onClick={() => retry.mutate()}>
@@ -252,7 +252,7 @@ function MerchantChoice({ receipt: r }: { receipt: Receipt }) {
   return (
     <Notice tone="info" title="Não reconhecemos a loja">
       <p>
-        Se for uma destas lojas, escolha-a para lermos a nota com as regras certas. Se não for, siga para a revisão
+        Se for uma destas lojas, escolha-a para lermos o talão com as regras certas. Se não for, siga para a revisão
         e indique o nome da loja.
       </p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -275,7 +275,7 @@ function MerchantChoice({ receipt: r }: { receipt: Receipt }) {
 function ConfirmedReceipt({ receipt: r }: { receipt: Receipt }) {
   return (
     <>
-    <article className="receipt-paper" aria-label="Nota da compra">
+    <article className="receipt-paper" aria-label="Talão da compra">
       <p className="text-center font-semibold">{merchantName(r.merchant, r.merchant_name).toUpperCase()}</p>
       {r.store_label && <p className="text-center">{r.store_label}</p>}
       <p className="text-center text-ink-soft">{formatDate(r.purchase_at)}</p>
@@ -330,7 +330,7 @@ function ConfirmedReceipt({ receipt: r }: { receipt: Receipt }) {
         <Home aria-hidden className="size-5" /> Início
       </LinkButton>
       <LinkButton to="/adicionar" className="flex-1">
-        <Plus aria-hidden className="size-5" /> Adicionar outra nota
+        <Plus aria-hidden className="size-5" /> Adicionar outro talão
       </LinkButton>
     </div>
     </>

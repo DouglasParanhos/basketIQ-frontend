@@ -7,7 +7,7 @@ import { RadioPills } from "./RadioPills";
 const OPTIONS = [
   { id: "a", label: "Todas" },
   { id: "b", label: "Confirmadas" },
-  { id: "c", label: "Requer ação" },
+  { id: "c", label: "Por confirmar" },
 ];
 
 function Harness() {

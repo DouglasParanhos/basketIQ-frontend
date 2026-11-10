@@ -37,7 +37,7 @@ describe("months of the list of purchases (spec 012)", () => {
     expect(plain(headerSummary(october!, [{ month: "2026-10", confirmed_count: 1, total_cents: 2895 }], "todas")!)).toBe("1 confirmado · 28,95 €");
   });
 
-  it("F-195: the header is only the month when there are no confirmed ones, in «Requer ação», or without totals", () => {
+  it("F-195: the header is only the month when there are no confirmed ones, in «Por confirmar», or without totals", () => {
     const [october] = groupByMonth([sent("2026-10-24T10:00:00Z", "2026-10-24T10:00:00Z")]);
     expect(headerSummary(october!, monthTotals, "acao")).toBeNull();
     expect(headerSummary(october!, [{ month: "2026-09", confirmed_count: 1, total_cents: 1 }], "todas")).toBeNull();

@@ -68,7 +68,7 @@ export default function ProductPage() {
         )}
         <DataTable
           caption="Histórico de compras"
-          head={["Data", "Mercado", "Descrição original", "Quantidade", "Preço", "Pago"]}
+          head={["Data", "Supermercado", "Descrição original", "Quantidade", "Preço", "Pago"]}
           rows={a.history.map((h) => [
             formatDate(h.date),
             merchantName(h.merchant),
@@ -82,7 +82,7 @@ export default function ProductPage() {
 
       <section aria-labelledby="mercados" className="rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
         <h2 id="mercados" className="font-bold">
-          Preço médio que pagou, por mercado
+          Preço médio que pagou, por supermercado
         </h2>
         <p className="mb-2 text-sm text-ink-soft">Nos seus talões</p>
         <ul className="flex flex-col">

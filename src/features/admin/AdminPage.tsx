@@ -18,7 +18,7 @@ export default function AdminPage() {
   return (
     <>
       <PageHeader title="Operador" />
-      <p className="-mt-2 mb-4 text-sm text-ink-soft">Dados técnicos e agregados. O conteúdo das notas não é visível aqui.</p>
+      <p className="-mt-2 mb-4 text-sm text-ink-soft">Dados técnicos e agregados. O conteúdo dos talões não é visível aqui.</p>
       <div role="tablist" aria-label="Secções do operador" className="mb-4 flex flex-wrap gap-2">
         {TABS.map((t) => (
           <button
@@ -60,7 +60,7 @@ function Metrics() {
   const uploads = (m?.uploads ?? {}) as Record<string, unknown>;
   const rows: [string, string][] = m
     ? [
-        ["Notas enviadas", String(uploads.total ?? 0)],
+        ["Talões enviados", String(uploads.total ?? 0)],
         ["Uploads concluídos (confirmados)", pct(uploads.confirmed_pct)],
         ["Confirmadas automaticamente", String(uploads.auto_confirmed ?? 0)],
         ["Tempo mediano até confirmação", m.median_seconds_to_user_confirmation ? `${Math.round(Number(m.median_seconds_to_user_confirmation) / 60)} min` : "—"],
@@ -98,7 +98,7 @@ function Metrics() {
             </dl>
           </Surface>
           <div className="grid gap-4 sm:grid-cols-3">
-            <KeyValues title="Notas por supermercado" entries={perMerchant.map(([k, v]) => [merchantName(k), String(v)])} />
+            <KeyValues title="Talões por supermercado" entries={perMerchant.map(([k, v]) => [merchantName(k), String(v)])} />
             <KeyValues title="Rotas de processamento" entries={routes.map(([k, v]) => [k, String(v)])} />
             <KeyValues title="Erros por tipo de documento" entries={errors.map(([k, v]) => [k, pct(v)])} />
           </div>
@@ -235,7 +235,7 @@ const FIELD_LABEL: Record<(typeof FIELDS)[number], string> = {
   line_total: "Total da linha",
   description: "Descrição",
   purchase_at: "Data",
-  total: "Total da nota",
+  total: "Total do talão",
 };
 
 function MerchantForm({ config }: { config: Schemas["MerchantConfigOut"] }) {

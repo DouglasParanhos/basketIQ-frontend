@@ -51,14 +51,14 @@ function points(summary: Summary): Point[] {
 
 /** Only on paper: what the page is about, since the filters are hidden there. Says the figures are the person's own, not official. */
 function PrintHeader({ period, merchant, product }: { period: Period; merchant: string | null; product?: string }) {
-  const scope = [merchant ? merchantName(merchant) : "Todos os mercados", product].filter(Boolean).join(" · ");
+  const scope = [merchant ? merchantName(merchant) : "Todos os supermercados", product].filter(Boolean).join(" · ");
   return (
     <header className="hidden print:block">
       <p className="text-sm">Super Mercado</p>
       <h2 className="font-display text-2xl font-semibold first-letter:uppercase">Resumo de compras · {describePeriod(period)}</h2>
       <p className="text-sm">{scope}</p>
       <p className="text-xs">
-        Valores dos seus talões confirmados, gerados a {dateLong.format(new Date())}. Não são preços oficiais dos mercados.
+        Valores dos seus talões confirmados, gerados a {dateLong.format(new Date())}. Não são preços oficiais dos supermercados.
       </p>
     </header>
   );
@@ -109,11 +109,11 @@ export function DashboardPage() {
 
       {anyReceipts.data && anyReceipts.data.items.length === 0 ? (
         <section className="flex flex-col items-start gap-4 rounded-surface bg-paper p-6">
-          <h2 className="text-2xl font-extrabold leading-tight">Comece pela primeira nota</h2>
+          <h2 className="text-2xl font-extrabold leading-tight">Comece pelo primeiro talão</h2>
           <p className="text-ink-soft">
-            Fotografe a nota do supermercado ou envie a fatura em PDF. Assim que for lida, aparece aqui quanto gastou, onde e em quê.
+            Fotografe o talão do supermercado ou envie a fatura em PDF. Assim que for lida, aparece aqui quanto gastou, onde e em quê.
           </p>
-          <LinkButton to="/adicionar">Adicionar a primeira nota</LinkButton>
+          <LinkButton to="/adicionar">Adicionar o primeiro talão</LinkButton>
         </section>
       ) : (
         <>
@@ -126,12 +126,12 @@ export function DashboardPage() {
           </div>
           <div className="flex flex-wrap items-end gap-3 print:hidden">
             <Select
-              label="Mercado"
+              label="Supermercado"
               value={merchant ?? ""}
               onChange={(e) => update({ mercado: e.target.value || null })}
               className="min-w-44 flex-1"
             >
-              <option value="">Todos os mercados</option>
+              <option value="">Todos os supermercados</option>
               {MERCHANT_OPTIONS.map(([code, name]) => (
                 <option key={code} value={code}>
                   {name}
@@ -210,8 +210,8 @@ function SummaryView({
   const variation = formatVariationAgainst(s.cards.variation_pct.total_spent, previousLabel);
   if (s.empty) {
     return (
-      <Notice tone="info" title="Sem compras neste período" action={<LinkButton to="/adicionar" variant="secondary">Adicionar nota</LinkButton>}>
-        Escolha outro período ou adicione uma nota desta altura.
+      <Notice tone="info" title="Sem compras neste período" action={<LinkButton to="/adicionar" variant="secondary">Adicionar talão</LinkButton>}>
+        Escolha outro período ou adicione um talão desta altura.
       </Notice>
     );
   }
@@ -220,7 +220,7 @@ function SummaryView({
     <div className={`flex flex-col gap-5 transition-opacity ${stale ? "opacity-60" : ""}`} aria-busy={stale}>
       <section aria-labelledby="gasto" className="rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
         <h2 id="gasto" className="text-[length:calc(0.6875rem_*_var(--text-scale))] font-semibold uppercase tracking-widest text-ink-soft">
-          Gasto em mercado · {s.cards.purchases} {s.cards.purchases === 1 ? "talão" : "talões"}
+          Gasto em supermercados · {s.cards.purchases} {s.cards.purchases === 1 ? "talão" : "talões"}
         </h2>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <p className="amount font-display text-[length:calc(2.375rem_*_var(--text-scale))] font-semibold leading-none">{formatCents(s.cards.total_spent_cents)}</p>
@@ -259,7 +259,7 @@ function SummaryView({
 
       <section aria-labelledby="mercados" className="rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
         <h2 id="mercados" className="mb-3 font-bold">
-          Por mercado
+          Por supermercado
         </h2>
         <ul className="flex flex-col gap-3">
           {s.by_merchant.map((m) => (

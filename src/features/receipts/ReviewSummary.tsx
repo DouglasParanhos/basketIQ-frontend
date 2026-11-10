@@ -63,11 +63,11 @@ export function ReviewSummary(p: Props) {
   return (
     <section aria-label="Resumo da compra" className="rounded-surface bg-paper px-4 py-1 ring-1 ring-inset ring-line">
       <div className={ROW}>
-        <span className={LABEL}>Mercado</span>
+        <span className={LABEL}>Supermercado</span>
         <MarketTile code={p.merchant} size={32} fontSize={14} />
         <div className="relative flex min-w-0 flex-1 items-center">
           <select
-            aria-label="Mercado"
+            aria-label="Supermercado"
             value={p.merchant}
             onChange={(e) => p.onMerchant(e.target.value)}
             className="min-h-11 w-full appearance-none bg-transparent pr-7 text-[length:calc(15px_*_var(--text-scale))] font-bold"
@@ -87,7 +87,7 @@ export function ReviewSummary(p: Props) {
             label="Nome da loja"
             value={p.storeName}
             maxLength={80}
-            hint="Como aparece na nota, por exemplo «Frutaria do Zé»."
+            hint="Como aparece no talão, por exemplo «Frutaria do Zé»."
             onChange={(e) => p.onStoreName(e.target.value)}
           />
         </Editing>
@@ -112,12 +112,12 @@ export function ReviewSummary(p: Props) {
         <span className="flex-1">
           <span className="marker px-1 font-display text-[length:calc(22px_*_var(--text-scale))] font-semibold">{p.printed !== null ? formatCents(p.printed) : "Por indicar"}</span>
         </span>
-        <EditButton what="total da nota" open={open === "total"} controls="total-field" onClick={() => toggle("total")} />
+        <EditButton what="total do talão" open={open === "total"} controls="total-field" onClick={() => toggle("total")} />
       </div>
       {open === "total" && (
         <Editing id="total-field">
           <Field
-            label="Total da nota"
+            label="Total do talão"
             inputMode="decimal"
             value={p.printedText}
             error={p.printedInvalid ? "Total inválido (ex.: 3,49)." : undefined}
