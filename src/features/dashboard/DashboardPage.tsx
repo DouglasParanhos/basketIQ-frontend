@@ -4,7 +4,7 @@ import { Link, useSearchParams } from "react-router";
 import { api, unwrap, type Merchant, type Schemas } from "../../api/client";
 import { DataTable, SpendBars, type Point } from "../../components/charts";
 import { Button, ErrorNotice, LinkButton, Notice, Select, Spinner } from "../../components/ui";
-import { formatCents, formatMonth, formatPercent, formatVariationAgainst } from "../../lib/format";
+import { formatCents, formatMonth, formatPercent, formatPurchasesAgainst, formatVariationAgainst } from "../../lib/format";
 import { MERCHANT_OPTIONS, merchantName, merchantStyle } from "../../lib/merchants";
 import { describePeriod, lisbonToday, periodFor, type Period, type PeriodKind } from "../../lib/period";
 import { usePrintInLight } from "../../lib/theme";
@@ -227,7 +227,9 @@ function SummaryView({
           {variation && <span className="rounded-full bg-brand-soft px-3 py-1 text-[length:calc(13px_*_var(--text-scale))] font-bold text-brand-deep">{variation}</span>}
         </div>
         <p className="mt-2 text-sm text-ink-soft first-letter:uppercase">
-          {variation ? `${previousLabel}: ${formatCents(s.cards.previous_period.total_spent_cents)}` : `Sem compras em ${previousLabel} para comparar.`}
+          {variation
+            ? `${previousLabel}: ${formatCents(s.cards.previous_period.total_spent_cents)} · ${formatPurchasesAgainst(s.cards.purchases, s.cards.previous_period.purchases)}`
+            : `Sem compras em ${previousLabel} para comparar.`}
         </p>
         <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-4">
           <div>
@@ -281,10 +283,7 @@ function SummaryView({
         </ul>
       </section>
 
-      <div className="grid grid-cols-2 gap-4 rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
-        <Ranking title="Mais gasto" items={s.top_products_by_value} value={(p) => formatCents(p.spent_cents)} onProduct={onProduct} />
-        <Ranking title="Mais comprados" items={s.top_products_by_quantity} value={(p) => `${p.units.replace(".", ",")} un.`} onProduct={onProduct} />
-      </div>
+      <Ranking items={s.top_products_by_value} onProduct={onProduct} />
       <Consumption data={consumption} />
       <p className="text-xs text-ink-soft">
         Só entram no resumo as compras confirmadas. Produtos vendidos ao peso contam como uma unidade.
@@ -293,22 +292,15 @@ function SummaryView({
   );
 }
 
-function Ranking({
-  title,
-  items,
-  value,
-  onProduct,
-}: {
-  title: string;
-  items: Schemas["ProductRanking"][];
-  value: (p: Schemas["ProductRanking"]) => string;
-  onProduct: (id: string, name: string) => void;
-}) {
+/** What weighed most in the period, by value: where the money went. How often a product is bought is «Consumo habitual». */
+function Ranking({ items, onProduct }: { items: Schemas["ProductRanking"][]; onProduct: (id: string, name: string) => void }) {
   return (
-    <section className="min-w-0">
-      <h2 className="mb-2 font-bold">{title}</h2>
+    <section aria-labelledby="pesou" className="rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
+      <h2 id="pesou" className="mb-2 font-bold">
+        O que mais pesou
+      </h2>
       <ol className="flex flex-col">
-        {items.slice(0, 3).map((p) => (
+        {items.slice(0, 5).map((p) => (
           <li key={p.product_id ?? p.name} className="flex flex-col gap-0.5 border-b border-line py-2 text-xs last:border-0">
             {p.product_id ? (
               <span className="flex min-w-0 flex-col">
@@ -322,7 +314,7 @@ function Ranking({
             ) : (
               <span className="truncate italic text-ink-soft">{p.name}</span>
             )}
-            <span className="amount shrink-0 font-semibold">{value(p)}</span>
+            <span className="amount shrink-0 font-semibold">{formatCents(p.spent_cents)}</span>
           </li>
         ))}
       </ol>
