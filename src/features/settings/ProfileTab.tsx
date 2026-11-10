@@ -94,7 +94,7 @@ function ReadBlocks({ saved, names, onEdit }: { saved: Profile; names: Schemas["
   const chips = (items: string[]) => (
     <ul className="mt-2 flex flex-wrap gap-2">
       {items.map((item) => (
-        <li key={item} className="rounded-[14px] bg-brand-soft px-3 py-1 text-[13px] font-bold text-brand-deep">
+        <li key={item} className="rounded-[14px] bg-brand-soft px-3 py-1 text-[length:calc(13px_*_var(--text-scale))] font-bold text-brand-deep">
           {item}
         </li>
       ))}

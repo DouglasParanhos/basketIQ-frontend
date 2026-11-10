@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 /** What the person chose: follow the system, or one of the two. */
 export type ThemePreference = "auto" | "light" | "dark";
@@ -53,4 +53,18 @@ export function startTheme() {
 
 export function useThemePreference(): [ThemePreference, (preference: ThemePreference) => void] {
   return [useSyncExternalStore(subscribeTheme, readPreference, () => "auto"), setPreference];
+}
+
+/** What goes to paper or to a PDF is always the light scheme (a dark page prints light text on white): the theme is light while the page is being printed, whatever the way of printing. */
+export function usePrintInLight() {
+  useEffect(() => {
+    const before = () => applyTheme("light");
+    const after = () => applyTheme();
+    window.addEventListener("beforeprint", before);
+    window.addEventListener("afterprint", after);
+    return () => {
+      window.removeEventListener("beforeprint", before);
+      window.removeEventListener("afterprint", after);
+    };
+  }, []);
 }

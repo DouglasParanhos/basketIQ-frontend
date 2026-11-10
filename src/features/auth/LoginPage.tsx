@@ -74,7 +74,7 @@ function GoogleMark() {
 function ReceiptColumn({ lines, side }: { lines: string[]; side: "left" | "right" }) {
   return (
     <div aria-hidden className={`pointer-events-none absolute inset-y-0 w-[110px] overflow-hidden opacity-10 ${side === "left" ? "-left-[46px]" : "-right-[46px] text-right"}`}>
-      <div data-lines={lines.join("\n")} className={`receipt-column font-receipt text-[11px] leading-[1.7] ${side === "left" ? "ticket-up" : "ticket-down"}`} />
+      <div data-lines={lines.join("\n")} className={`receipt-column font-receipt text-[length:calc(11px_*_var(--text-scale))] leading-[1.7] ${side === "left" ? "ticket-up" : "ticket-down"}`} />
     </div>
   );
 }
@@ -94,7 +94,7 @@ function PasskeyButton({ onError }: { onError: (message: string) => void }) {
       <Fingerprint aria-hidden className="size-6 shrink-0" />
       <span className="flex flex-col text-left">
         <span className="font-extrabold">Entrar com passkey</span>
-        <span className="text-[12px] font-normal text-ink-soft">Digital, rosto ou PIN do telemóvel</span>
+        <span className="text-[length:calc(12px_*_var(--text-scale))] font-normal text-ink-soft">Digital, rosto ou PIN do telemóvel</span>
       </span>
     </Button>
   );
@@ -115,7 +115,7 @@ export function LoginPage() {
   return (
     <main className="relative mx-auto flex min-h-dvh max-w-md flex-col justify-between gap-8 overflow-hidden px-6 pb-7 pt-8">
       {message && (
-        <p role="status" className="absolute inset-x-4 top-3.5 z-10 rounded-2xl bg-warn-soft dark:ring-1 dark:ring-inset dark:ring-warn-line px-3.5 py-3 text-[13px] leading-[1.45] text-warn-ink shadow-[0_6px_16px_rgb(20_20_19/0.18)]">
+        <p role="status" className="absolute inset-x-4 top-3.5 z-10 rounded-2xl bg-warn-soft dark:ring-1 dark:ring-inset dark:ring-warn-line px-3.5 py-3 text-[length:calc(13px_*_var(--text-scale))] leading-[1.45] text-warn-ink shadow-[0_6px_16px_rgb(20_20_19/0.18)]">
           {message}
         </p>
       )}
@@ -130,14 +130,14 @@ export function LoginPage() {
           <div className="ticket-reveal torn bg-paper px-[18px] pb-[30px] pt-6 text-ink shadow-[0_1px_0_#e4ded3] [--tear:8px]">
             <div className="flex flex-col items-center gap-1.5">
               <BrandMark className="h-[30px] w-auto" />
-              <h1 className="font-display text-[21px] font-semibold uppercase tracking-[0.04em]">{appName}</h1>
-              <p className="font-display text-[15px] font-semibold tracking-[0.06em]">
+              <h1 className="font-display text-[length:calc(21px_*_var(--text-scale))] font-semibold uppercase tracking-[0.04em]">{appName}</h1>
+              <p className="font-display text-[length:calc(15px_*_var(--text-scale))] font-semibold tracking-[0.06em]">
                 <span className="ticket-marker px-1.5">CADA TALÃO CONTA</span>
               </p>
             </div>
             <div aria-hidden>
               <div className="mb-2.5 mt-3.5 border-t border-dashed border-[#8a857b]" />
-              <div className="font-receipt text-[12.5px] leading-[1.7]">
+              <div className="font-receipt text-[length:calc(12.5px_*_var(--text-scale))] leading-[1.7]">
                 {STEPS.map((step) => (
                   <div key={step}>{step}</div>
                 ))}
@@ -164,10 +164,10 @@ export function LoginPage() {
           Entrar com Google
         </a>
         {passkeys && <PasskeyButton onError={setPasskeyMessage} />}
-        <p className="mt-0.5 text-center text-[13px] leading-[1.4] text-ink-soft">
+        <p className="mt-0.5 text-center text-[length:calc(13px_*_var(--text-scale))] leading-[1.4] text-ink-soft">
           Usamos apenas o seu nome e e-mail.{" "}
-          {/* The padding makes the hit area 44 px high without changing the line. */}
-          <a className="py-[13px] font-bold text-brand underline" href="/privacidade">
+          {/* The padding makes the hit area 44 px high without changing the line, whatever the size of the text (the line of text is about 17 px at full size). */}
+          <a className="py-[calc((44px_-_17px_*_var(--text-scale))_/_2)] font-bold text-brand underline" href="/privacidade">
             Política de privacidade
           </a>
         </p>

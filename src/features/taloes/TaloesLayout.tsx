@@ -20,11 +20,11 @@ export function TaloesLayout() {
     <>
       {/* The list of purchases lies on a desk, behind the whole screen: the desk comes first and the content is positioned, so it paints above it (a negative z-index would go behind the background of the shell). */}
       {path === "/compras" && <div aria-hidden className="fixed inset-0 bg-table" />}
-      <div className="relative flex items-center justify-between gap-3 pt-6">
-        <h1 className="font-display text-[1.75rem] font-semibold leading-tight">Talões</h1>
+      <div className="relative flex items-center justify-between gap-3 pt-6 print:hidden">
+        <h1 className="font-display text-[length:calc(1.75rem_*_var(--text-scale))] font-semibold leading-tight">Talões</h1>
         {path === "/compras" && <YearSelect />}
       </div>
-      <div className="relative pt-3">
+      <div className="relative pt-3 print:hidden">
         <SegmentedTabs label="Talões" tabs={TABS} value={path} onChange={navigate} />
       </div>
       {/* Produtos is a lazy chunk: only the body waits, the tabs stay. */}

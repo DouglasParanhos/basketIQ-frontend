@@ -38,7 +38,7 @@ export function ReceiptRow({ receipt: r }: { receipt: Schemas["ReceiptSummaryOut
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="truncate font-semibold">{name}</span>
           {r.store_label && <span className="truncate text-xs text-ink-soft">{r.store_label}</span>}
-          <span className={`font-receipt text-[11px] ${state === "attention" ? "font-bold text-warn-ink" : "text-ink-soft"}`}>
+          <span className={`font-receipt text-[length:calc(11px_*_var(--text-scale))] ${state === "attention" ? "font-bold text-warn-ink" : "text-ink-soft"}`}>
             <span className={state === "attention" ? "font-bold" : undefined}>{day}</span>
             {state === "progress" && " · a ler o talão…"}
             {state === "error" && <> · {STATUS[r.status].label}</>}

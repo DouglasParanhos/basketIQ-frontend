@@ -36,7 +36,7 @@ export function GoalsStep({ state, dispatch }: { state: OnboardingState; dispatc
         <ChoiceCard key={key} checked={checked} onChange={() => dispatch(action)} className="min-h-[4.5rem] items-center gap-3 px-4 py-3">
           <span className="flex-1">
             <span className="block font-bold">{title}</span>
-            <span className="block text-[0.8125rem] text-ink-soft">{hint}</span>
+            <span className="block text-[length:calc(0.8125rem_*_var(--text-scale))] text-ink-soft">{hint}</span>
           </span>
           <Tick checked={checked} />
         </ChoiceCard>
@@ -107,7 +107,7 @@ export function MerchantsStep({ state, dispatch }: { state: OnboardingState; dis
             className="min-h-[6.5rem] flex-col items-center justify-center gap-2 px-1 py-2 text-center"
           >
             <MarketTile code={id} size={44} fontSize={22} />
-            <span className="text-[0.8125rem] font-bold leading-tight [overflow-wrap:anywhere]">{name}</span>
+            <span className="text-[length:calc(0.8125rem_*_var(--text-scale))] font-bold leading-tight [overflow-wrap:anywhere]">{name}</span>
             <Tick checked={checked} small className="absolute right-1.5 top-1.5" />
           </ChoiceCard>
         );

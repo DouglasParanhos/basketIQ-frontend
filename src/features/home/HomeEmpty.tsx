@@ -68,7 +68,7 @@ export function HomeEmpty({ overview, people, stepper }: { overview: Schemas["Ov
             <p className={SMALL_CAPS}>Por pessoa no mês</p>
             <p className="text-xs text-ink-soft">{people === null ? "Indique quantas pessoas vivem em casa" : `${people} ${people === 1 ? "pessoa" : "pessoas"} em casa`}</p>
           </div>
-          <p aria-hidden className={`${GHOST_FIGURE} text-[1.625rem]`}>{NO_AMOUNT}</p>
+          <p aria-hidden className={`${GHOST_FIGURE} text-[length:calc(1.625rem_*_var(--text-scale))]`}>{NO_AMOUNT}</p>
         </section>
 
         <section aria-label="Onde gasta mais" className={`${DASHED} flex flex-col gap-1.5 p-4`}>
@@ -80,11 +80,11 @@ export function HomeEmpty({ overview, people, stepper }: { overview: Schemas["Ov
       {/* Over the content, above the navigation bar (76 px, plus the safe area); beside the rail on a wide screen. */}
       <div className="fixed inset-x-0 top-0 bottom-[calc(76px+env(safe-area-inset-bottom))] z-20 grid place-items-center bg-ground/80 p-6 md:absolute md:bottom-0">
         <section aria-labelledby="home-first" className="flex w-full max-w-md flex-col items-center gap-2.5 rounded-[24px] bg-paper px-5 py-[22px] text-center shadow-[0_12px_32px_rgb(20_20_19/0.14)] ring-1 ring-inset ring-line">
-          <h2 id="home-first" className="font-display text-[1.375rem] font-semibold">
+          <h2 id="home-first" className="font-display text-[length:calc(1.375rem_*_var(--text-scale))] font-semibold">
             A aguardar o seu primeiro talão
           </h2>
           <p className="text-sm leading-[1.45] text-ink-soft">Quanto mais talões registar, mais aprendemos sobre as suas compras.</p>
-          <LinkButton to="/adicionar" className="mt-1 min-h-[52px] w-full text-[0.9375rem] font-bold">
+          <LinkButton to="/adicionar" className="mt-1 min-h-[52px] w-full text-[length:calc(0.9375rem_*_var(--text-scale))] font-bold">
             Adicionar o meu primeiro talão
           </LinkButton>
           <LinkButton to={EXAMPLE_PATH} variant="quiet" className="min-h-12 w-full border-[1.5px] border-brand text-sm font-bold">

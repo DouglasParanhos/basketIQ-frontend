@@ -38,7 +38,7 @@ export function PerPersonCard({ spentCents, people }: { spentCents: number; peop
           {people} {people === 1 ? "pessoa" : "pessoas"} em casa
         </p>
       </div>
-      <p className="amount font-display text-[1.625rem] font-semibold">{formatCents(Math.round(spentCents / people))}</p>
+      <p className="amount font-display text-[length:calc(1.625rem_*_var(--text-scale))] font-semibold">{formatCents(Math.round(spentCents / people))}</p>
     </section>
   );
 }
@@ -70,7 +70,7 @@ function Weeks({ weeks }: { weeks: Overview["weeks"] }) {
             <span className="amount text-xs font-bold">{formatCents(w.spent_cents)}</span>
             {/* The height only draws the value, which is written above. */}
             <span aria-hidden className={`block w-full rounded-lg ${i === weeks.length - 1 ? "bg-chart" : "bg-muted-bar"}`} style={{ height: `${Math.max(4, (w.spent_cents / highest) * 100)}%` }} />
-            <span className="text-center text-[0.6875rem] leading-tight text-ink-soft">
+            <span className="text-center text-[length:calc(0.6875rem_*_var(--text-scale))] leading-tight text-ink-soft">
               <span className="block font-semibold">Sem. {w.index}</span>
               <span className="block">{weekRange(w.from, w.to)}</span>
             </span>
@@ -127,7 +127,7 @@ function Recent({ receipts, example }: { receipts: Overview["recent_receipts"]; 
           Últimas compras
         </h2>
         {!example && (
-          <Link to="/compras" className="inline-flex min-h-11 items-center px-1 text-[13px] font-bold text-brand">
+          <Link to="/compras" className="inline-flex min-h-11 items-center px-1 text-[length:calc(13px_*_var(--text-scale))] font-bold text-brand">
             Ver todas
           </Link>
         )}

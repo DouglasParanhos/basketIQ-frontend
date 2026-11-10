@@ -4,12 +4,13 @@ import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { overviewEmpty, overviewFewData, overviewGreen, overviewNoGoal, overviewNoTrend, overviewOrange, overviewOver, overviewRed, overviewZeroMonth } from "../../test/fixtures";
 import { renderRoutes } from "../../test/render";
+import { banned } from "../../test/banned";
 import { API, serveOverview, server } from "../../test/server";
 import { HomeRoute } from "./HomeRoute";
 
 const routes = [{ path: "/", element: <HomeRoute /> }];
 const BRAZILIAN = /Chegando lá|Aguardando|Sua meta|Definir minha meta/;
-const FORBIDDEN = /poupou|poupar|economizar|orçamento|você|mais barato|saldo negativo|excedeu|perdeu/i;
+const FORBIDDEN = banned("saldo negativo|excedeu|perdeu");
 
 describe("Início: quality (spec 011, US5)", () => {
   it("F-187: one single request per month shown, and none to the Resumo", async () => {

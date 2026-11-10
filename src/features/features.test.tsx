@@ -246,6 +246,7 @@ describe("review (RF-07, F-11..F-15)", () => {
       id: "l3",
       line_number: 3,
       raw_description: "QUEQUE",
+      product: null,
       quantity: "4.000",
       flags: ["quantity_pending", "low_confidence:quantity", "low_confidence:unit"],
       review_status: "NEEDS_REVIEW",
@@ -528,7 +529,7 @@ describe("dashboard (RF-09, RF-11)", () => {
   it("F-196: the period has four options and the arrows, and the merchant filter says «Todos os mercados»", async () => {
     renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
     const period = await screen.findByRole("radiogroup", { name: "Período" });
-    expect(within(period).getAllByRole("radio").map((r) => r.textContent)).toEqual(["Mês", "Trimestre", "Ano", "Intervalo"]);
+    expect(within(period).getAllByRole("radio").map((r) => r.closest("label")!.textContent)).toEqual(["Mês", "Trimestre", "Ano", "Intervalo"]);
     expect(screen.getByRole("button", { name: "Período anterior" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Período seguinte" })).toBeInTheDocument();
     const merchant = screen.getByLabelText("Mercado");

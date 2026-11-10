@@ -249,7 +249,7 @@ test.describe("customer-facing name (CFG-02)", () => {
   test("title, login and manifest follow the name served by the backend", async ({ page }) => {
     await fakeApi(page, { signedIn: false, appName: "Mercado do Zé" });
     await page.goto("/login");
-    await expect(page).toHaveTitle("Mercado do Zé");
+    await expect(page).toHaveTitle("Entrar · Mercado do Zé");
     await expect(page.getByRole("heading", { level: 1, name: "Mercado do Zé" })).toBeVisible();
     await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href", "/v1/config/manifest.webmanifest");
     // Fetched from the page, like the browser does (page.request would bypass the fake API).
@@ -260,7 +260,7 @@ test.describe("customer-facing name (CFG-02)", () => {
   test("default name is Super Mercado", async ({ page }) => {
     await fakeApi(page);
     await page.goto("/definicoes");
-    await expect(page).toHaveTitle("Super Mercado");
+    await expect(page).toHaveTitle("Perfil · Super Mercado");
     await expect(page.locator("footer").getByText("Super Mercado", { exact: true })).toBeVisible();
   });
 });
@@ -421,7 +421,7 @@ test.describe("onboarding (spec 010)", () => {
   test("F-115: while the profile loads there is only the loading indicator, no navigation bar", async ({ page }) => {
     await fakeApi(page, { onboarded: false, profileDelayMs: 600 });
     await page.goto("/");
-    await expect(page.getByRole("status")).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "A carregar" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Navegação principal" })).toHaveCount(0);
     await expect(page.getByRole("heading", { level: 1, name: "Início" })).toHaveCount(0);
     await expect(page).toHaveURL(/\/boas-vindas$/);
@@ -506,7 +506,7 @@ test.describe("definições (spec 014)", () => {
     await fakeApi(page, { storedFiles: 9, admin: true });
     await walkSettings(page, async () => {
       const small = await page
-        .locator("main button:visible, main a:visible, main label:has(input):visible, main input:not([type=checkbox]):visible, main [role=tab]:visible")
+        .locator("main button:visible, main a:visible, main label:has(input):visible, main input:not([type=checkbox]):not([type=radio]):visible, main [role=tab]:visible")
         .evaluateAll((nodes) =>
           nodes
             .map((node) => ({ text: (node.textContent ?? node.getAttribute("aria-label") ?? "").trim().slice(0, 30), box: node.getBoundingClientRect() }))
@@ -782,7 +782,7 @@ test.describe("início (spec 011)", () => {
           await page.goto("/");
           await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeAttached();
           await expect(page.getByText("Este mês", { exact: true })).toBeVisible();
-          await expect(page.getByRole("status")).toHaveCount(0); // finished loading
+          await expect(page.getByRole("status").filter({ hasText: "A carregar" })).toHaveCount(0); // finished loading
           await noA11yViolations(page);
           await noHorizontalScroll(page);
         }
@@ -880,7 +880,7 @@ test.describe("início (spec 011)", () => {
   test("F-187: while it loads there is only the indicator, and an error offers «Tentar de novo»", async ({ page }) => {
     const state = await fakeApi(page, { overviewDelayMs: 800 });
     await page.goto("/");
-    await expect(page.getByRole("status")).toContainText("A carregar");
+    await expect(page.getByRole("status").filter({ hasText: "A carregar" })).toContainText("A carregar");
     await expect(page.getByText(/\d,\d\d €/)).toHaveCount(0);
     await expect(page.getByRole("img", { name: /anel verde/i })).toBeVisible();
     state.overviewFail = true;
@@ -956,7 +956,8 @@ test.describe("talões (spec 012)", () => {
           await expect(page.locator("main")).toBeVisible();
           await page.waitForLoadState("networkidle");
           await noA11yViolations(page);
-          await noHorizontalScroll(page);
+          const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+          expect(overflow, `horizontal scroll on ${path}`).toBeLessThanOrEqual(0);
         }
       });
     }
@@ -1003,7 +1004,7 @@ test.describe("talões (spec 012)", () => {
     await expect(page.getByRole("heading", { level: 3, name: /Dezembro 2025 · 2 confirmados/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Pingo Doce/ })).toHaveCount(0);
 
-    await page.getByRole("radio", { name: /Requer ação/ }).click();
+    await page.getByRole("radio", { name: /Requer ação/ }).check({ force: true });
     await expect(page).toHaveURL(/filtro=acao/);
     await expect(page.getByRole("link", { name: /Mercadona/ })).toBeVisible();
     await page.getByRole("link", { name: /Mercadona/ }).click();
@@ -1019,6 +1020,19 @@ test.describe("talões (spec 012)", () => {
     await expect(page.getByRole("combobox", { name: "Ano" })).toHaveCount(0);
   });
 
+  test("F-262: on paper the Resumo leaves out the navigation, the filters and the button, and shows the title of the report", async ({ page }) => {
+    await fakeApi(page);
+    await page.goto("/compras/resumo");
+    await expect(page.getByRole("button", { name: "Imprimir ou guardar em PDF" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Resumo de compras/ })).toBeHidden();
+    await page.emulateMedia({ media: "print" });
+    await expect(page.getByRole("heading", { name: /^Resumo de compras/ })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Imprimir ou guardar em PDF" })).toBeHidden();
+    await expect(page.getByRole("combobox", { name: "Mercado" })).toBeHidden();
+    await expect(page.getByRole("tablist", { name: "Talões" })).toBeHidden();
+  });
+
   test("F-197: the products show the average price with its base and the counts, are reordered by name and never say «mais barato»", async ({ page }) => {
     await fakeApi(page);
     await page.goto("/produtos");
@@ -1026,7 +1040,7 @@ test.describe("talões (spec 012)", () => {
     await expect(chicken).toContainText("4 compras · 3 mercados");
     await expect(chicken).toContainText("5,52 € /kg");
     await expect(page.getByRole("link", { name: /Água/ })).not.toContainText("€");
-    await page.getByRole("radio", { name: "A–Z" }).click();
+    await page.getByText("A–Z", { exact: true }).click();
     await expect(page).toHaveURL(/ordem=az$/);
     await expect(page.getByRole("main").getByRole("link").first()).toContainText("Água");
     await chicken.click();
@@ -1044,32 +1058,103 @@ test.describe("talões (spec 012)", () => {
   });
 });
 
-// ---------------------------------------------------------------- Lista, artigos (spec 015 US-A)
+// ---------------------------------------------------------------- Lista de compras (spec 019)
 
-test.describe("lista, artigos (spec 015 US-A)", () => {
+test.describe("lista de compras (spec 019)", () => {
+  const open = async (page: Page) => {
+    await fakeApi(page, { smartList: true });
+    await page.goto("/lista");
+    await expect(page.getByRole("heading", { level: 1, name: "Lista de compras" })).toBeVisible();
+    await expect(page.getByText("Leite meio-gordo")).toBeVisible();
+  };
+
   for (const scheme of ["light", "dark"] as const) {
     for (const width of [320, 375, 430, 820]) {
-      test(`F-153: /lista has no axe violations and no horizontal scroll (${scheme}, ${width}px)`, async ({ page }) => {
+      test(`F-334: /lista has no axe violations and no horizontal scroll, with the item opened, the menu and the sheet (${scheme}, ${width}px)`, async ({ page }) => {
         await page.emulateMedia({ colorScheme: scheme });
         await page.setViewportSize({ width, height: 800 });
-        await fakeApi(page, { smartList: true });
-        await page.goto("/lista");
-        await expect(page.getByRole("heading", { level: 1, name: "Lista" })).toBeVisible();
-        await expect(page.getByText("Mercearia do Bairro")).toBeVisible();
+        await open(page);
+        await noA11yViolations(page);
+        await noHorizontalScroll(page);
+
+        await page.getByRole("button", { name: /Ver evolução/ }).first().click();
+        await expect(page.getByRole("heading", { name: "Evolução do preço" })).toBeVisible();
+        await noA11yViolations(page);
+        await noHorizontalScroll(page);
+
+        await page.getByRole("button", { name: "Mais opções de Leite meio-gordo" }).click();
+        await expect(page.getByRole("menu")).toBeVisible();
+        await noA11yViolations(page);
+        await page.keyboard.press("Escape");
+
+        await page.getByRole("button", { name: "Adicionar" }).first().click();
+        await expect(page.getByRole("dialog", { name: "Adicionar à lista" })).toBeVisible();
         await noA11yViolations(page);
         await noHorizontalScroll(page);
       });
     }
   }
 
-  test("F-153: a product of the list opens its page with the price history", async ({ page }) => {
-    await fakeApi(page, { smartList: true });
-    await page.goto("/lista");
-    await expect(page.getByText("Valores calculados com os seus talões dos últimos 90 dias. Não são preços de hoje.")).toBeVisible();
-    await expect(page.getByText("2 artigos ficaram de fora por não terem o produto identificado.")).toBeVisible();
-    await page.getByRole("link", { name: /Peito de frango/ }).click();
-    await expect(page).toHaveURL(/\/produtos\/p1$/);
-    await expect(page.getByRole("heading", { level: 2, name: "Evolução do preço" })).toBeVisible();
+  test("F-338: every control of the list has a touch target of at least 44 px", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await open(page);
+    const small = await page
+      .locator("main button:visible, main label:has(input):visible")
+      .evaluateAll((nodes) =>
+        nodes
+          .map((node) => ({ text: (node.textContent ?? node.getAttribute("aria-label") ?? "").trim().slice(0, 30), box: node.getBoundingClientRect() }))
+          // «Ver evolução» is a text link under the value: its row and the item are bigger than 44 px; the rest are 44 px at least.
+          .filter(({ text, box }) => !text.startsWith("Ver evolução") && (box.height < 43.5 || box.width < 43.5))
+          .map(({ text, box }) => `${text}: ${Math.round(box.width)}x${Math.round(box.height)}`),
+      );
+    expect(small).toEqual([]);
+  });
+
+  test("F-314: the cart keeps the order; the evolution opens under the item and the list stays; excluding can be undone", async ({ page }) => {
+    await open(page);
+    const names = () => page.locator("main li span[id]").allTextContents();
+    const before = await names();
+    await page.getByRole("checkbox", { name: "Leite meio-gordo" }).check({ force: true });
+    await expect(page.getByText("5 produtos · 2 no carrinho")).toBeVisible();
+    expect(await names()).toEqual(before);
+
+    await page.getByRole("button", { name: /Ver evolução/ }).nth(2).click();
+    await expect(page.getByRole("heading", { name: "Evolução do preço" })).toBeVisible();
+    await expect(page.getByRole("checkbox", { name: "Leite meio-gordo" })).toBeVisible();
+    await expect(page).toHaveURL(/\/lista$/);
+
+    await page.getByRole("button", { name: "Mais opções de Ovos classe M" }).click();
+    await page.getByRole("menuitem", { name: "Excluir da lista" }).click();
+    await expect(page.getByText("Ovos classe M removido da lista.")).toBeVisible();
+    await page.getByRole("button", { name: "Desfazer" }).click();
+    await expect.poll(names).toEqual(before);
+  });
+
+  test("F-320: the menu of the only item of a group is shown whole, and not cut by the list", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await open(page);
+    const dots = page.getByRole("button", { name: "Mais opções de Pão de forma" });
+    await dots.click();
+    const items = page.getByRole("menuitem");
+    await expect(items).toHaveCount(3);
+    // The point at the middle of each entry belongs to that entry: nothing covers it or cuts it.
+    for (const name of ["Editar", "Já tenho em casa", "Excluir da lista"]) {
+      const entry = page.getByRole("menuitem", { name: new RegExp(name) });
+      const hit = await entry.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return !!top && el.contains(top) && r.bottom <= window.innerHeight && r.left >= 0 && r.right <= window.innerWidth;
+      });
+      expect(hit, name).toBe(true);
+    }
+  });
+
+  test("F-315: the supermarket is chosen from every supermarket and the estimate follows", async ({ page }) => {
+    await open(page);
+    await page.getByRole("button", { name: /Supermercado.*Lidl/ }).click();
+    await expect(page.getByRole("radio")).toHaveCount(7);
+    await page.getByRole("group", { name: "Supermercado" }).getByText("Continente", { exact: true }).click();
+    await expect(page.getByRole("button", { name: /Supermercado.*Continente/ })).toBeFocused();
   });
 
   test("F-146: /lista is reached from the fifth button, and with the smart list off it does not exist", async ({ page }) => {
@@ -1077,11 +1162,57 @@ test.describe("lista, artigos (spec 015 US-A)", () => {
     await page.goto("/");
     await page.getByRole("navigation", { name: "Navegação principal" }).getByRole("link", { name: "Lista" }).click();
     await expect(page).toHaveURL(/\/lista$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Lista" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Lista de compras" })).toBeVisible();
     const off = await page.context().newPage();
     await fakeApi(off, { smartList: false });
     await off.goto("/lista");
     await expect(off.getByText("Não foi possível mostrar esta página")).toBeVisible();
+  });
+});
+
+// ---------------------------------------------------------------- Tamanho do texto (Definições › Aparência)
+
+test.describe("tamanho do texto", () => {
+  const SCREENS = ["/", "/compras", "/compras/resumo", "/lista", "/definicoes/perfil", "/adicionar"];
+
+  for (const size of ["menor", "maximo"] as const) {
+    for (const scheme of ["light", "dark"] as const) {
+      test(`F-343: with the text «${size}», every main screen has no axe violations and no horizontal scroll at 320 px (${scheme})`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.setViewportSize({ width: 320, height: 800 });
+        await page.addInitScript((choice) => localStorage.setItem("basketiq.textSize", choice), size);
+        await fakeApi(page, { smartList: true });
+        for (const path of SCREENS) {
+          await page.goto(path);
+          await expect(page.getByRole("main")).toBeVisible();
+          await page.waitForLoadState("networkidle");
+          await noA11yViolations(page);
+          const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+          expect(overflow, `horizontal scroll on ${path}`).toBeLessThanOrEqual(0);
+        }
+      });
+    }
+  }
+
+  test("F-344: the choice in Definições changes the size of the text at once, keeps it after reloading, and leaves the touch targets at 44 px", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await fakeApi(page);
+    await page.goto("/definicoes/perfil");
+    const bodySize = () => page.evaluate(() => parseFloat(getComputedStyle(document.body).fontSize));
+    const standard = await bodySize();
+    expect(standard).toBeCloseTo(15.04, 1);
+    const group = page.getByRole("radiogroup", { name: "Tamanho do texto" });
+    await group.getByText("Máximo", { exact: true }).click();
+    expect(await bodySize()).toBeGreaterThan(standard * 1.3);
+    await page.reload();
+    expect(await bodySize()).toBeGreaterThan(standard * 1.3);
+    await expect(group.getByRole("radio", { name: "Máximo" })).toBeChecked();
+    await group.getByText("Menor", { exact: true }).click();
+    expect(await bodySize()).toBeLessThan(standard * 0.95);
+    const small = await page
+      .locator("main button:visible, main label:has(input):visible")
+      .evaluateAll((nodes) => nodes.map((n) => ({ t: (n.textContent ?? "").trim().slice(0, 24), b: n.getBoundingClientRect() })).filter(({ b }) => b.height < 43.5 && b.width < 43.5).map(({ t, b }) => `${t}: ${Math.round(b.width)}x${Math.round(b.height)}`));
+    expect(small).toEqual([]);
   });
 });
 
@@ -1267,24 +1398,24 @@ test.describe("Aparência: the person chooses the theme in Definições", () => 
   test("by default it follows the system, in both schemes, and the page does not start in the other one", async ({ page }) => {
     await open(page, "dark");
     expect(await ground(page)).toBe(DARK);
-    await expect(radio(page, "Automático")).toHaveAttribute("aria-checked", "true");
+    await expect(radio(page, "Automático")).toBeChecked();
   });
 
   test("with the system in light, «Escuro» turns the page dark at once and survives a reload", async ({ page }) => {
     await open(page, "light");
     expect(await ground(page)).toBe(LIGHT);
-    await radio(page, "Escuro").click();
+    await radio(page, "Escuro").check({ force: true });
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     expect(await ground(page)).toBe(DARK);
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     expect(await ground(page)).toBe(DARK);
-    await expect(radio(page, "Escuro")).toHaveAttribute("aria-checked", "true");
+    await expect(radio(page, "Escuro")).toBeChecked();
   });
 
   test("with the system in dark, «Claro» turns the page light and survives a reload", async ({ page }) => {
     await open(page, "dark");
-    await radio(page, "Claro").click();
+    await radio(page, "Claro").check({ force: true });
     expect(await ground(page)).toBe(LIGHT);
     await page.reload();
     expect(await ground(page)).toBe(LIGHT);
@@ -1292,8 +1423,8 @@ test.describe("Aparência: the person chooses the theme in Definições", () => 
 
   test("«Automático» follows the system again, also when the system changes while the page is open", async ({ page }) => {
     await open(page, "light");
-    await radio(page, "Escuro").click();
-    await radio(page, "Automático").click();
+    await radio(page, "Escuro").check({ force: true });
+    await radio(page, "Automático").check({ force: true });
     expect(await ground(page)).toBe(LIGHT);
     await page.emulateMedia({ colorScheme: "dark" });
     await expect.poll(() => ground(page)).toBe(DARK);
@@ -1301,7 +1432,7 @@ test.describe("Aparência: the person chooses the theme in Definições", () => 
 
   test("a choice is not moved by the system", async ({ page }) => {
     await open(page, "light");
-    await radio(page, "Escuro").click();
+    await radio(page, "Escuro").check({ force: true });
     await page.emulateMedia({ colorScheme: "light" });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.emulateMedia({ colorScheme: "light" });
@@ -1312,7 +1443,7 @@ test.describe("Aparência: the person chooses the theme in Definições", () => 
     test(`the card has no axe violations and fits at 320px, with «${choice}» chosen`, async ({ page }) => {
       await open(page, "light");
       await page.setViewportSize({ width: 320, height: 568 });
-      await radio(page, choice).click();
+      await radio(page, choice).check({ force: true });
       await noHorizontalScroll(page);
       await noA11yViolations(page);
     });

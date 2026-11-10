@@ -1,7 +1,8 @@
 import { AlertTriangle, CheckCircle2, Info, Loader2, OctagonAlert } from "lucide-react";
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, ComponentProps, ReactNode, SelectHTMLAttributes } from "react";
 import { useId } from "react";
 import { Link, type LinkProps } from "react-router";
+import { ApiError } from "../api/client";
 import { STATUS, type ReceiptStatus } from "../lib/status";
 
 type Variant = "primary" | "secondary" | "quiet" | "ghost" | "outline" | "danger" | "dangerQuiet" | "dangerOutline";
@@ -21,24 +22,32 @@ const VARIANTS: Record<Variant, string> = {
 type Size = "sm" | "md" | "lg";
 
 const SIZES: Record<Size, string> = {
-  sm: "min-h-11 text-[13px] font-bold",
-  md: "min-h-12 text-[0.95rem] font-semibold",
+  sm: "min-h-11 text-[length:calc(13px_*_var(--text-scale))] font-bold",
+  md: "min-h-12 text-[length:calc(0.95rem_*_var(--text-scale))] font-semibold",
   lg: "min-h-14 text-base font-bold",
 };
 
 const BASE =
-  "inline-flex items-center justify-center gap-2 rounded-full px-4 transition-colors disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex items-center justify-center gap-2 rounded-full px-4 transition-colors disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-not-allowed aria-busy:opacity-50";
 
+/** A busy button is not `disabled`: it keeps the focus (A-05), and its click does nothing until the work is done. */
 export function Button({
   variant = "primary",
   size = "md",
   busy = false,
   className = "",
   children,
+  onClick,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size; busy?: boolean }) {
   return (
-    <button className={`${BASE} ${SIZES[size]} ${VARIANTS[variant]} ${className}`} disabled={busy || props.disabled} aria-busy={busy} {...props}>
+    <button
+      aria-busy={busy}
+      aria-disabled={busy || undefined}
+      {...props}
+      className={`${BASE} ${SIZES[size]} ${VARIANTS[variant]} ${className}`}
+      onClick={busy ? (e) => e.preventDefault() : onClick}
+    >
       {busy && <Loader2 aria-hidden className="size-4 animate-spin" />}
       {children}
     </button>
@@ -57,7 +66,7 @@ export function Field({
   note,
   className = "",
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & { label: string; hideLabel?: boolean; error?: string | null; hint?: string; note?: ReactNode }) {
+}: ComponentProps<"input"> & { label: string; hideLabel?: boolean; error?: string | null; hint?: string; note?: ReactNode }) {
   const id = useId();
   const describedBy = [error ? `${id}-err` : null, hint ? `${id}-hint` : null].filter(Boolean).join(" ") || undefined;
   const labelEl = (
@@ -146,6 +155,28 @@ export function Notice({
   );
 }
 
+const SERVER_MESSAGE = "Algo falhou do nosso lado. Tente de novo daqui a pouco.";
+
+/** The common error frame (T-17, T-18): what failed as the title, the cause below it, «Tentar de novo» when there is a way. A server fault never shows the backend's text. */
+export function ErrorNotice({ what, error, onRetry }: { what: string; error: Error; onRetry?: () => void }) {
+  const cause = error instanceof ApiError && error.status >= 500 ? SERVER_MESSAGE : error.message;
+  return (
+    <Notice
+      tone="error"
+      title={`Não foi possível ${what}.`}
+      action={
+        onRetry && (
+          <Button variant="outline" size="sm" onClick={onRetry}>
+            Tentar de novo
+          </Button>
+        )
+      }
+    >
+      {cause}
+    </Notice>
+  );
+}
+
 export function Spinner({ label = "A carregar…" }: { label?: string }) {
   return (
     <div role="status" className="flex items-center justify-center gap-2 py-10 text-ink-soft">
@@ -174,7 +205,7 @@ export function StatusBadge({ status }: { status: ReceiptStatus }) {
 export function PageHeader({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <header className="flex flex-wrap items-end justify-between gap-3 pb-4 pt-6">
-      <h1 className="font-display text-[1.75rem] font-semibold leading-tight">{title}</h1>
+      <h1 className="font-display text-[length:calc(1.75rem_*_var(--text-scale))] font-semibold leading-tight">{title}</h1>
       {children}
     </header>
   );
@@ -197,7 +228,7 @@ export function Surface({
 }
 
 /** The small label in capitals above a value. */
-export const SMALL_CAPS = "text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-soft";
+export const SMALL_CAPS = "text-[length:calc(0.6875rem_*_var(--text-scale))] font-semibold uppercase tracking-widest text-ink-soft";
 
 /** The 44 px round button (back, crop, delete, steppers): the shape, with the colours added by each use. */
 export const ROUND_BUTTON =

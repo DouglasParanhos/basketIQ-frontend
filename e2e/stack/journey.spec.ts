@@ -109,7 +109,7 @@ test("CFG-02: name, title and manifest come from the backend's config/app-config
   expect((await manifest.json()).name).toBe("Super Mercado");
 
   await page.goto("/login");
-  await expect(page).toHaveTitle("Super Mercado");
+  await expect(page).toHaveTitle("Entrar · Super Mercado");
   await expect(page.getByRole("heading", { level: 1, name: "Super Mercado" })).toBeVisible();
 });
 

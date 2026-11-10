@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link, useParams } from "react-router";
 import { api, unwrap } from "../../api/client";
 import { DataTable, PriceLine } from "../../components/charts";
-import { Notice, Spinner } from "../../components/ui";
+import { ErrorNotice, Spinner } from "../../components/ui";
 import { formatCents, formatDate, formatQuantity } from "../../lib/format";
 import { merchantName } from "../../lib/merchants";
 
@@ -16,7 +16,7 @@ export default function ProductPage() {
     queryFn: async () => unwrap(await api.GET("/v1/products/{product_id}/analytics", { params: { path: { product_id: id } } })),
   });
   if (query.isLoading) return <Spinner />;
-  if (query.error) return <Notice tone="error">{query.error.message}</Notice>;
+  if (query.error) return <ErrorNotice what="carregar o produto" error={query.error} onRetry={() => void query.refetch()} />;
   const a = query.data!;
   const basis = BASIS[a.price_basis] ?? a.price_basis;
   const priced = a.history.filter((h) => h.unit_price_cents !== null && h.price_basis === a.price_basis);
@@ -37,8 +37,8 @@ export default function ProductPage() {
       </header>
 
       <section aria-label={`Preço médio ${basis}`} className="flex flex-col gap-1.5 rounded-surface bg-paper p-4 ring-1 ring-inset ring-line">
-        <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-soft">Preço médio {basis}</p>
-        <p className="amount font-display text-[2.75rem] font-semibold leading-none">{formatCents(a.avg_price_cents)}</p>
+        <p className="text-[length:calc(0.6875rem_*_var(--text-scale))] font-semibold uppercase tracking-widest text-ink-soft">Preço médio {basis}</p>
+        <p className="amount font-display text-[length:calc(2.75rem_*_var(--text-scale))] font-semibold leading-none">{formatCents(a.avg_price_cents)}</p>
         <p className="text-sm text-ink-soft">Média ponderada pelas quantidades que comprou</p>
         <dl className="mt-2 grid grid-cols-3 gap-3 border-t border-line pt-3">
           <div>

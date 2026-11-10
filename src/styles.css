@@ -39,6 +39,16 @@
   background_color; the brand colours in scripts/make_icons.mjs and components/BrandMark.tsx.
 */
 @theme {
+  /* Every font size is multiplied by --text-scale (Definições › Aparência › Tamanho do texto): the boxes and the touch targets are not. */
+  --text-xs: calc(0.75rem * var(--text-scale, 1));
+  --text-sm: calc(0.875rem * var(--text-scale, 1));
+  --text-base: calc(1rem * var(--text-scale, 1));
+  --text-lg: calc(1.125rem * var(--text-scale, 1));
+  --text-xl: calc(1.25rem * var(--text-scale, 1));
+  --text-2xl: calc(1.5rem * var(--text-scale, 1));
+  --text-3xl: calc(1.875rem * var(--text-scale, 1));
+  --text-4xl: calc(2.25rem * var(--text-scale, 1));
+  --text-5xl: calc(3rem * var(--text-scale, 1));
   --font-sans: "Nunito Sans", system-ui, sans-serif;
   --font-display: "Fraunces Variable", Georgia, serif;
   --font-receipt: "Martian Mono", ui-monospace, monospace;
@@ -63,6 +73,8 @@
   --color-on-brand: #ffffff;
   --color-ok: #1f6f4a;
   --color-ok-soft: #e6f1ea;
+  /* The row of a product already at home on the shopping list: pastel sage (G1b). One token, easy to swap. */
+  --color-have: #e4ebdd;
   --color-alert: #b3261e;
   --color-alert-soft: #fbe3e0;
   /* >= 3:1 against paper and ground, in both schemes. */
@@ -88,6 +100,7 @@
 @layer base {
   :root {
     color-scheme: light;
+    --text-scale: 0.94;
   }
   /* No tabular figures: they can also widen the decimal comma ("16 ,75") in proportional faces.
      Columns of amounts are right-aligned instead; the receipt view uses a monospace face. */
@@ -97,6 +110,10 @@
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-tap-highlight-color: transparent;
+  }
+  /* The body only, never the root: the root sets what a rem is, and the boxes and touch targets are in rem. */
+  body {
+    font-size: calc(1rem * var(--text-scale, 1));
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
@@ -119,6 +136,8 @@
     --color-marker-line: #e8b84a;
     --color-ok: #75be9a;
     --color-ok-soft: #1d3228;
+    /* A light veil over the dark surface: a dark green could not be told from it. */
+    --color-have: rgb(255 255 255 / 0.13);
     --color-alert: #ffb4ab;
     --color-alert-soft: #4a1a17;
     --color-chart: #5fa882;
@@ -161,7 +180,7 @@
     background: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-receipt);
-    font-size: 0.78rem;
+    font-size: calc(0.78rem * var(--text-scale, 1));
     line-height: 1.55;
     padding: 1.25rem 1rem 1.75rem;
     box-shadow: 0 1px 0 var(--color-line);

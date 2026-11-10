@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { useLocation } from "react-router";
 import { api, unwrap } from "../api/client";
+import { routeTitle } from "../lib/routeTitle";
 
 /**
  * The customer-facing name comes from the backend (config/app-config.yaml, key
@@ -30,11 +32,12 @@ export function useAppName(): string {
   return useAppConfig().data?.app_name ?? FALLBACK_APP_NAME;
 }
 
-/** Keeps the browser tab title in sync with the configured name. Renders nothing. */
+/** Keeps the browser tab title as «<screen> · <configured name>», for the current path. Renders nothing. */
 export function DocumentTitle() {
   const name = useAppName();
+  const { pathname } = useLocation();
   useEffect(() => {
-    document.title = name;
-  }, [name]);
+    document.title = `${routeTitle(pathname)} · ${name}`;
+  }, [name, pathname]);
   return null;
 }

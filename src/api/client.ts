@@ -7,6 +7,9 @@ export type JobStatus = NonNullable<NonNullable<paths["/v1/admin/jobs"]["get"]["
 
 const UNSAFE = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
+/** The one text for every failure to reach the API (no connection, offline, timeout). */
+export const NETWORK_MESSAGE = "Sem ligação. Verifique a internet e tente de novo.";
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
@@ -15,7 +18,7 @@ export class ApiError extends Error {
   readonly requestId: string | null;
 
   constructor(status: number, body: Partial<Schemas["ErrorBody"]> | undefined) {
-    super(body?.message ?? "Não foi possível contactar o servidor.");
+    super(body?.message ?? NETWORK_MESSAGE);
     this.status = status;
     this.code = body?.code ?? "network_error";
     this.fieldErrors = body?.field_errors ?? [];

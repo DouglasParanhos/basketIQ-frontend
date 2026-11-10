@@ -283,7 +283,7 @@ export function ReviewEditor({ receipt }: { receipt: Receipt }) {
       <div className={`sticky z-10 flex flex-col gap-1.5 rounded-surface ${navHidden ? "bottom-0" : "bottom-20 md:bottom-0"} ${footAway ? "" : "bg-ground/95 py-3 backdrop-blur"}`}>
         <div role="status" className="absolute inset-x-0 bottom-full mb-2">
           {priceUndo && !deleting && !leavingAsked && (
-            <div className="flex items-center justify-between gap-2 rounded-2xl bg-ink py-1.5 pl-4 pr-1.5 text-[13px] text-ground">
+            <div className="flex items-center justify-between gap-2 rounded-2xl bg-ink py-1.5 pl-4 pr-1.5 text-[length:calc(13px_*_var(--text-scale))] text-ground">
               <span>
                 Preço alterado de {priceUndo.sides[0].from} para {priceUndo.to}
               </span>

@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 import { createContext, Suspense, useContext, useLayoutEffect, useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import { useSmartListEnabled } from "../config/appConfig";
+import { RouteAnnouncer } from "./RouteAnnouncer";
 import { Spinner } from "./ui";
 
 const under = (path: string, base: string) => path === base || path.startsWith(`${base}/`);
@@ -50,13 +51,13 @@ export function AppShell() {
   const items = ITEMS.filter((item) => smartList || !item.requiresSmartList);
   return (
     <div className={`min-h-dvh ${navHidden ? "" : "md:grid md:grid-cols-[5.5rem_1fr]"}`}>
-      <a href="#conteudo" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-paper focus:p-3">
+      <a href="#conteudo" className="sr-only print:hidden focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-paper focus:p-3">
         Saltar para o conteúdo
       </a>
       {!navHidden && (
         <nav
           aria-label="Navegação principal"
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-paper pb-[calc(8px+env(safe-area-inset-bottom))] md:sticky md:top-0 md:h-dvh md:border-r md:border-t-0 md:pb-0"
+          className="fixed inset-x-0 bottom-0 z-30 border-t print:hidden border-line bg-paper pb-[calc(8px+env(safe-area-inset-bottom))] md:sticky md:top-0 md:h-dvh md:border-r md:border-t-0 md:pb-0"
         >
           {/* 76 px with the border and the 8 px below (plus the iOS safe area); the items sit centred in the 67 px between. */}
           <ul className="mx-auto flex h-[67px] max-w-xl items-center md:h-full md:flex-col md:items-stretch md:justify-start md:gap-2 md:pt-6">
@@ -86,7 +87,8 @@ export function AppShell() {
           </ul>
         </nav>
       )}
-      <main id="conteudo" className={`mx-auto w-full max-w-2xl px-5 ${navHidden ? "" : "pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-12"}`}>
+      <RouteAnnouncer />
+      <main id="conteudo" tabIndex={-1} className={`mx-auto w-full max-w-2xl px-5 outline-none ${navHidden ? "" : "pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-12"}`}>
         <NavContext.Provider value={nav}>
           <Suspense fallback={<Spinner />}>
             <Outlet />

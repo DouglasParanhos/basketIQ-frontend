@@ -107,7 +107,7 @@ describe("list of purchases (spec 012, US1)", () => {
     expect(screen.queryByRole("link", { name: "Produtos" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: /Confirmadas/ }));
     await waitFor(() => expect(calls.some((c) => c.status.join() === "CONFIRMED")).toBe(true));
-    expect(screen.getByRole("radio", { name: /Confirmadas/ })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: /Confirmadas/ })).toBeChecked();
   });
 
   it("F-195: the chip «Requer ação» has the number of purchases that ask for it, up to 99, from a request for 100", async () => {

@@ -21,6 +21,16 @@
         } catch (e) {}
       })();
     </script>
+    <!-- The text size before the first paint: the same table as src/lib/textSize.ts (key "basketiq.textSize"). -->
+    <script>
+      (function () {
+        try {
+          var scales = { menor: 0.85, padrao: 0.94, maior: 1.06, "muito-maior": 1.19, maximo: 1.31 };
+          var scale = scales[localStorage.getItem("basketiq.textSize")];
+          if (scale) document.documentElement.style.setProperty("--text-scale", String(scale));
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -3,7 +3,7 @@ import { ArrowLeft, ExternalLink, Home, Pencil, Plus } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { ApiError, api, unwrap, type Schemas } from "../../api/client";
-import { Button, LinkButton, Notice, Select, Spinner, StatusBadge } from "../../components/ui";
+import { Button, ErrorNotice, LinkButton, Notice, Select, Spinner, StatusBadge } from "../../components/ui";
 import { formatAmount, formatCents, formatDate, formatDateTime, formatQuantity } from "../../lib/format";
 import { MERCHANT_OPTIONS, merchantName } from "../../lib/merchants";
 import { EDITABLE, IN_PROGRESS } from "../../lib/status";
@@ -29,9 +29,13 @@ export function ReceiptPage() {
   if (query.error) {
     return (
       <div className="pt-6">
-        <Notice tone="error" title={query.error instanceof ApiError && query.error.status === 404 ? "Compra não encontrada" : "Erro ao carregar"}>
-          {query.error.message}
-        </Notice>
+        {query.error instanceof ApiError && query.error.status === 404 ? (
+          <Notice tone="error" title="Compra não encontrada">
+            {query.error.message}
+          </Notice>
+        ) : (
+          <ErrorNotice what="carregar a compra" error={query.error} onRetry={() => void query.refetch()} />
+        )}
       </div>
     );
   }
@@ -422,22 +426,24 @@ function ManageOriginal({ receipt: r }: { receipt: Receipt }) {
         )}
       </div>
       {confirming === "original" && (
-        <Notice
-          tone="warning"
-          title="Apagar o ficheiro original?"
-          action={
-            <>
-              <Button variant="danger" busy={removeOriginal.isPending} onClick={() => removeOriginal.mutate()}>
-                Apagar ficheiro
-              </Button>
-              <Button variant="quiet" onClick={() => setConfirming(null)}>
-                Cancelar
-              </Button>
-            </>
-          }
-        >
-          Os produtos, preços e totais continuam guardados. Deixa de poder ver a imagem ou o PDF.
-        </Notice>
+        <FootQuestion>
+          <Notice
+            tone="warning"
+            title="Apagar o ficheiro original?"
+            action={
+              <>
+                <Button variant="danger" busy={removeOriginal.isPending} onClick={() => removeOriginal.mutate()}>
+                  Apagar ficheiro
+                </Button>
+                <Button variant="quiet" onClick={() => setConfirming(null)}>
+                  Cancelar
+                </Button>
+              </>
+            }
+          >
+            Os produtos, preços e totais continuam guardados. Deixa de poder ver a imagem ou o PDF.
+          </Notice>
+        </FootQuestion>
       )}
       {confirming === "receipt" && <DeleteReceiptNotice receiptId={r.id} onCancel={() => setConfirming(null)} />}
       {[view.error, removeOriginal.error].filter(Boolean).map((e, i) => (

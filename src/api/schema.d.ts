@@ -589,6 +589,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/lists/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The user's shopping list, with its estimates */
+        get: operations["current_v1_lists_current_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lists/current/merchant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Choose the supermarket of the list */
+        put: operations["choose_merchant_v1_lists_current_merchant_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lists/current/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a product to the list */
+        post: operations["add_item_v1_lists_current_items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lists/current/items/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove an item (can be undone) */
+        delete: operations["remove_item_v1_lists_current_items__item_id__delete"];
+        options?: never;
+        head?: never;
+        /** Edit, tick or mark «já tenho» */
+        patch: operations["edit_item_v1_lists_current_items__item_id__patch"];
+        trace?: never;
+    };
+    "/v1/lists/current/items/{item_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Undo the removal of an item */
+        post: operations["restore_item_v1_lists_current_items__item_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lists/current/items/{item_id}/evolution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What was paid for an item over time */
+        get: operations["evolution_v1_lists_current_items__item_id__evolution_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lists/current/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** «Para a próxima compra» */
+        get: operations["suggestions_v1_lists_current_suggestions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/jobs": {
         parameters: {
             query?: never;
@@ -762,6 +882,13 @@ export interface components {
             variation_pct: components["schemas"]["VariationOut"];
             previous_period: components["schemas"]["PreviousPeriodOut"];
         };
+        /** CategoryOut */
+        CategoryOut: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+        };
         /** ConsumptionItem */
         ConsumptionItem: {
             /** Product Id */
@@ -829,6 +956,85 @@ export interface components {
             message: string | null;
             /** Action */
             action: string | null;
+        };
+        /**
+         * EstimateOut
+         * @description The list's estimate at one supermarket. Values from other supermarkets are counted, never hidden.
+         */
+        EstimateOut: {
+            /** Merchant */
+            merchant: string;
+            /** Merchant Name */
+            merchant_name: string;
+            /** Total Cents */
+            total_cents: number;
+            /** Items With Price */
+            items_with_price: number;
+            /** Other Merchant Values */
+            other_merchant_values: number;
+        };
+        /**
+         * EvolutionOut
+         * @description The price history of a list item. `has_history` is false when there is nothing to show.
+         */
+        EvolutionOut: {
+            /** Has History */
+            has_history: boolean;
+            /** Price Basis */
+            price_basis: ("un" | "kg" | "l") | null;
+            expected: components["schemas"]["ExpectedPriceOut"] | null;
+            /** Last Cents */
+            last_cents: number | null;
+            /** Min Cents */
+            min_cents: number | null;
+            /** Max Cents */
+            max_cents: number | null;
+            /** Points */
+            points: components["schemas"]["EvolutionPointOut"][];
+        };
+        /** EvolutionPointOut */
+        EvolutionPointOut: {
+            /** Date */
+            date: string;
+            /** Price Cents */
+            price_cents: number;
+            /** Quantity */
+            quantity: string | null;
+            /** Merchant */
+            merchant: string | null;
+            /** Merchant Name */
+            merchant_name: string;
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "own" | "base";
+        };
+        /**
+         * ExpectedPriceOut
+         * @description What the person last paid for the product: at the chosen supermarket, or else at another one.
+         */
+        ExpectedPriceOut: {
+            /** Price Cents */
+            price_cents: number;
+            /**
+             * Price Basis
+             * @enum {string}
+             */
+            price_basis: "un" | "kg" | "l";
+            /** Date */
+            date: string;
+            /** Merchant */
+            merchant: string | null;
+            /** Merchant Name */
+            merchant_name: string;
+            /** Other Merchant */
+            other_merchant: boolean;
+            /**
+             * Source
+             * @constant
+             */
+            source: "own_receipts";
         };
         /** FieldError */
         FieldError: {
@@ -1612,6 +1818,88 @@ export interface components {
             /** Spent Cents */
             spent_cents: number;
         };
+        /** ShoppingItemIn */
+        ShoppingItemIn: {
+            /** Name */
+            name: string;
+            /**
+             * Quantity
+             * @default 1
+             */
+            quantity: number | string;
+            /** Unit */
+            unit?: ("un" | "kg" | "g" | "l" | "ml") | null;
+            /** Category */
+            category?: string | null;
+            /**
+             * Already Have
+             * @default false
+             */
+            already_have: boolean;
+            /** Product Id */
+            product_id?: string | null;
+        };
+        /** ShoppingItemOut */
+        ShoppingItemOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Category */
+            category: string;
+            /** Category Name */
+            category_name: string;
+            /** Quantity */
+            quantity: string;
+            /** Unit */
+            unit: string | null;
+            /** Checked */
+            checked: boolean;
+            /** Already Have */
+            already_have: boolean;
+            /** Product Id */
+            product_id: string | null;
+            expected: components["schemas"]["ExpectedPriceOut"] | null;
+        };
+        /** ShoppingItemPatch */
+        ShoppingItemPatch: {
+            /** Name */
+            name?: string | null;
+            /** Quantity */
+            quantity?: number | string | null;
+            /** Unit */
+            unit?: ("un" | "kg" | "g" | "l" | "ml") | null;
+            /** Category */
+            category?: string | null;
+            /** Checked */
+            checked?: boolean | null;
+            /** Already Have */
+            already_have?: boolean | null;
+        };
+        /** ShoppingListOut */
+        ShoppingListOut: {
+            /** Merchant */
+            merchant: string;
+            /** Categories */
+            categories: components["schemas"]["CategoryOut"][];
+            /** Items */
+            items: components["schemas"]["ShoppingItemOut"][];
+            /** Estimates */
+            estimates: components["schemas"]["EstimateOut"][];
+            /** Items Total */
+            items_total: number;
+            /** Checked Count */
+            checked_count: number;
+            /** Already Have Excluded */
+            already_have_excluded: number;
+        };
+        /** ShoppingMerchantIn */
+        ShoppingMerchantIn: {
+            merchant: components["schemas"]["Merchant"];
+        };
         /** StoredFilesDeleted */
         StoredFilesDeleted: {
             /** Files Deleted */
@@ -1625,6 +1913,20 @@ export interface components {
         StoredFilesOut: {
             /** Files */
             files: number;
+        };
+        /** SuggestionOut */
+        SuggestionOut: {
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /** Name */
+            name: string;
+            /** Category */
+            category: string;
+            /** Category Name */
+            category_name: string;
         };
         /** SummaryFilters */
         SummaryFilters: {
@@ -3445,6 +3747,242 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListArticlesOut"];
+                };
+            };
+        };
+    };
+    current_v1_lists_current_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShoppingListOut"];
+                };
+            };
+        };
+    };
+    choose_merchant_v1_lists_current_merchant_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShoppingMerchantIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShoppingListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_item_v1_lists_current_items_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShoppingItemIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShoppingListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_item_v1_lists_current_items__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShoppingListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_item_v1_lists_current_items__item_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShoppingItemPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShoppingListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_item_v1_lists_current_items__item_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShoppingListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    evolution_v1_lists_current_items__item_id__evolution_get: {
+        parameters: {
+            query?: {
+                months?: number;
+            };
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvolutionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suggestions_v1_lists_current_suggestions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionOut"][];
                 };
             };
         };

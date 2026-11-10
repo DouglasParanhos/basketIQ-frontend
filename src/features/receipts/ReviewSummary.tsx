@@ -70,7 +70,7 @@ export function ReviewSummary(p: Props) {
             aria-label="Mercado"
             value={p.merchant}
             onChange={(e) => p.onMerchant(e.target.value)}
-            className="min-h-11 w-full appearance-none bg-transparent pr-7 text-[15px] font-bold"
+            className="min-h-11 w-full appearance-none bg-transparent pr-7 text-[length:calc(15px_*_var(--text-scale))] font-bold"
           >
             {MERCHANT_CHOICES.map(([code, name]) => (
               <option key={code} value={code}>
@@ -95,7 +95,7 @@ export function ReviewSummary(p: Props) {
 
       <div className={ROW}>
         <span className={LABEL}>Data</span>
-        <span className="flex-1 text-[15px] font-bold">{when ?? <span className="marker px-1">Por indicar</span>}</span>
+        <span className="flex-1 text-[length:calc(15px_*_var(--text-scale))] font-bold">{when ?? <span className="marker px-1">Por indicar</span>}</span>
         <EditButton what="data e hora" open={open === "date"} controls="date-fields" onClick={() => toggle("date")} />
       </div>
       {open === "date" && (
@@ -110,7 +110,7 @@ export function ReviewSummary(p: Props) {
       <div className={ROW}>
         <span className={LABEL}>Total</span>
         <span className="flex-1">
-          <span className="marker px-1 font-display text-[22px] font-semibold">{p.printed !== null ? formatCents(p.printed) : "Por indicar"}</span>
+          <span className="marker px-1 font-display text-[length:calc(22px_*_var(--text-scale))] font-semibold">{p.printed !== null ? formatCents(p.printed) : "Por indicar"}</span>
         </span>
         <EditButton what="total da nota" open={open === "total"} controls="total-field" onClick={() => toggle("total")} />
       </div>

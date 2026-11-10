@@ -193,7 +193,7 @@ describe("Conta › Entrar com passkey (spec 016)", () => {
     await waitFor(() => expect(add).toBeEnabled());
     await user.click(add);
     await waitFor(() => expect(screen.queryByText("Este telemóvel já tem uma passkey desta conta.")).not.toBeInTheDocument());
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryAllByRole("alert").filter((el) => el.textContent)).toHaveLength(0); // the global live region exists, empty
   });
 
   it("F-217: a device without passkeys still lists them, says it cannot create one and asks for no options", async () => {

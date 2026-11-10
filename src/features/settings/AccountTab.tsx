@@ -14,8 +14,8 @@ export function AccountTab() {
     <>
       <Surface>
         <h2 className={SMALL_CAPS}>Entrou com</h2>
-        <p className="mt-1 text-[15px] font-bold">Google · {me.email}</p>
-        <p className="mt-1 text-[13px] text-ink-soft">Conta criada a {formatDate(me.created_at)}.</p>
+        <p className="mt-1 text-[length:calc(15px_*_var(--text-scale))] font-bold">Google · {me.email}</p>
+        <p className="mt-1 text-[length:calc(13px_*_var(--text-scale))] text-ink-soft">Conta criada a {formatDate(me.created_at)}.</p>
         <Button variant="outline" className="mt-4 w-full" busy={logout.isPending} onClick={() => logout.mutate()}>
           Terminar sessão
         </Button>
@@ -34,8 +34,8 @@ export function AccountTab() {
       )}
 
       <Surface tone="alert">
-        <h2 className="text-[15px] font-bold text-alert">Eliminar conta</h2>
-        <p className="mt-1 text-[13px] text-ink">Apaga a sua conta e todos os seus dados. Não é possível desfazer.</p>
+        <h2 className="text-[length:calc(15px_*_var(--text-scale))] font-bold text-alert">Eliminar conta</h2>
+        <p className="mt-1 text-[length:calc(13px_*_var(--text-scale))] text-ink">Apaga a sua conta e todos os seus dados. Não é possível desfazer.</p>
         <LinkButton to="/definicoes/conta/eliminar" variant="dangerOutline" className="mt-3 w-full">
           Eliminar conta…
         </LinkButton>

@@ -67,6 +67,9 @@ export function centsToInput(cents: number | null | undefined): string {
 }
 
 /** Quantities arrive as decimal strings ("0.513"); shown with a comma. */
+/** «1 compra», «2 compras»: the figure in the Portuguese convention and the word in the right number (T-47). */
+export const plural = (n: number | string, one: string, many: string) => `${formatQuantity(String(n))} ${Number(n) === 1 ? one : many}`;
+
 export function formatQuantity(quantity: string | null | undefined, unit?: string | null): string {
   if (quantity === null || quantity === undefined) return "?";
   const [i = "0", d = ""] = quantity.split(".");

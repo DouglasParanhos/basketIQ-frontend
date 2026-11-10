@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router";
 import { Button, Notice, Spinner, Surface } from "../../components/ui";
 import { formatDate } from "../../lib/format";
+import { useConfirmFocus } from "../../lib/useConfirmFocus";
 import { useMe } from "../auth/session";
 import { DeleteIncomplete, useDeleteStoredFiles, useStoredFiles } from "./useStoredFiles";
 
@@ -11,10 +12,7 @@ export function PrivacyTab() {
   const files = useStoredFiles();
   const remove = useDeleteStoredFiles();
   const [confirming, setConfirming] = useState(false);
-  const confirmTitle = useRef<HTMLHeadingElement>(null);
-  useEffect(() => {
-    if (confirming) confirmTitle.current?.focus();
-  }, [confirming]);
+  const confirmTitle = useConfirmFocus<HTMLHeadingElement>(confirming);
   if (!me) return null;
 
   const count = files.data?.files;
@@ -23,8 +21,8 @@ export function PrivacyTab() {
   return (
     <>
       <Surface>
-        <h2 className="text-[15px] font-bold">Política de privacidade</h2>
-        <p className="mt-1 text-[13px] text-ink-soft">
+        <h2 className="text-[length:calc(15px_*_var(--text-scale))] font-bold">Política de privacidade</h2>
+        <p className="mt-1 text-[length:calc(13px_*_var(--text-scale))] text-ink-soft">
           Aceite a {formatDate(me.privacy_accepted_at)} · versão {me.privacy_version}
         </p>
         <Link to="/privacidade" className="mt-2 inline-flex min-h-11 items-center font-bold text-brand">
@@ -33,8 +31,8 @@ export function PrivacyTab() {
       </Surface>
 
       <Surface>
-        <h2 className="text-[15px] font-bold">Originais dos talões</h2>
-        <p className="mt-1 text-[13px] text-ink-soft">
+        <h2 className="text-[length:calc(15px_*_var(--text-scale))] font-bold">Originais dos talões</h2>
+        <p className="mt-1 text-[length:calc(13px_*_var(--text-scale))] text-ink-soft">
           Os ficheiros (fotos e PDF) são apagados automaticamente 30 dias depois de confirmar a compra. Os valores ficam nas suas contas.
         </p>
         <div className="mt-3">
@@ -52,7 +50,7 @@ export function PrivacyTab() {
             />
           ) : (
             <div className="flex items-center justify-between gap-3">
-              <p className="text-[13px] font-semibold">{count === 0 ? "Nenhum ficheiro guardado" : `${count} ${count === 1 ? "ficheiro guardado" : "ficheiros guardados"} agora`}</p>
+              <p className="text-[length:calc(13px_*_var(--text-scale))] font-semibold">{count === 0 ? "Nenhum ficheiro guardado" : `${count} ${count === 1 ? "ficheiro guardado" : "ficheiros guardados"} agora`}</p>
               {!confirming && (
                 <Button variant="outline" size="sm" className="shrink-0" disabled={!count || remove.isPending} onClick={() => setConfirming(true)}>
                   Apagar agora
@@ -99,8 +97,8 @@ export function PrivacyTab() {
       </Surface>
 
       <Surface>
-        <h2 className="text-[15px] font-bold">Os seus direitos</h2>
-        <p className="mt-1 text-[13px] text-ink-soft">
+        <h2 className="text-[length:calc(15px_*_var(--text-scale))] font-bold">Os seus direitos</h2>
+        <p className="mt-1 text-[length:calc(13px_*_var(--text-scale))] text-ink-soft">
           Pode ver e apagar compras uma a uma, apagar só o ficheiro original ou eliminar a conta inteira quando quiser.
         </p>
       </Surface>

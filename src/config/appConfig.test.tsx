@@ -25,11 +25,11 @@ describe("customer-facing name comes from the backend (CFG-02)", () => {
     expect(screen.queryByText(/Super Mercado/i)).not.toBeInTheDocument();
   });
 
-  it("the browser tab title follows the configured name", async () => {
+  it("F-246: the browser tab title is «screen · configured name»", async () => {
     anonymous();
     serveName("Mercado do Zé");
     renderRoutes(login, "/login");
-    await waitFor(() => expect(document.title).toBe("Mercado do Zé"));
+    await waitFor(() => expect(document.title).toBe("Entrar · Mercado do Zé"));
   });
 
   it("settings footer shows the configured name", async () => {
@@ -42,7 +42,7 @@ describe("customer-facing name comes from the backend (CFG-02)", () => {
     anonymous();
     renderRoutes(login, "/login");
     expect(await screen.findByText("Super Mercado")).toBeInTheDocument();
-    await waitFor(() => expect(document.title).toBe("Super Mercado"));
+    await waitFor(() => expect(document.title).toBe("Entrar · Super Mercado"));
   });
 
   it("falls back to the built-in name only if the request fails", async () => {

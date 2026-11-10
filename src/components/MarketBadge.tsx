@@ -45,7 +45,7 @@ export function MarketPill({ code, name, selected = true, checkmark = false }: {
   const style = merchantStyle(code);
   return (
     <span
-      className={`inline-flex h-10 items-center gap-2 rounded-full border-[1.5px] px-3.5 text-[13px] font-bold ${selected ? "" : "bg-paper text-ink"}`}
+      className={`inline-flex h-10 items-center gap-2 rounded-full border-[1.5px] px-3.5 text-[length:calc(13px_*_var(--text-scale))] font-bold ${selected ? "" : "bg-paper text-ink"}`}
       style={selected ? colours(style) : { borderColor: style.border }}
     >
       {selected && checkmark && <Check aria-hidden className="size-4" strokeWidth={3} />}
