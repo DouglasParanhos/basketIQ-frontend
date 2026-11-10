@@ -619,7 +619,7 @@ async function walkAdd(page: Page, check: () => Promise<void>) {
   await noCamera(page); // «Adicionar outra parte» opens the native picker (the in-app camera: camera.spec.ts)
   await page.goto("/adicionar");
   await expect(page.getByRole("heading", { level: 1, name: "Adicionar talão" })).toBeVisible();
-  await expect(page.getByRole("radio", { name: "Lidl" })).toBeAttached();
+  await expect(page.getByRole("button", { name: /Escolher PDF/ })).toBeVisible();
   await check();
   await choose(page, "Escolher imagem", png("a.png"));
   await expect(page.getByRole("heading", { level: 1, name: "Confirme as partes" })).toBeVisible();
@@ -669,8 +669,8 @@ test.describe("adicionar (spec 013)", () => {
   test("F-200: one photo goes from the first screen to the receipt in two taps and is sent once", async ({ page }) => {
     const state = await fakeApi(page);
     await page.goto("/adicionar");
-    await page.getByRole("radio", { name: "Lidl" }).check({ force: true });
     await choose(page, "Escolher imagem", png("a.png")); // tap 1
+    await page.getByLabel("Supermercado (opcional)").selectOption("LIDL"); // optional, on the parts screen
     await page.getByRole("button", { name: "Enviar talão" }).click(); // tap 2
     await expect(page).toHaveURL(/\/compras\/r1$/);
     expect(state.uploads).toMatchObject({ inits: 1, photos: 0, stored: 1, processed: 1, names: ["a.png"], hints: ["LIDL"] });

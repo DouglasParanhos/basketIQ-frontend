@@ -1,5 +1,7 @@
 # Feature Specification: Adicionar v2 (talão comprido, várias partes)
 
+> **Atualizado a 10/11/2026.** O seletor de supermercado (`MerchantChips`, fila de chips) saiu do ecrã inicial: o ecrã inicial tem só as fontes e o supermercado escolhe-se no ecrã das partes (`MerchantField`, uma lista com «Detetar sozinho» primeiro e, em grupos, «Os seus supermercados» (do perfil) antes de «Outros supermercados»). Onde o texto abaixo fala de `MerchantChips`, vale esta nota; o histórico não se apaga.
+
 **Feature Branch**: `013-adicionar-v2`
 
 **Created**: 2026-10-30

@@ -2,7 +2,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
-import { merchants } from "../../test/fixtures";
+import { emptyProfile, merchants } from "../../test/fixtures";
 import { renderRoutes } from "../../test/render";
 import { API, server } from "../../test/server";
 import { pdf, serveUpload } from "../../test/upload";
@@ -30,38 +30,62 @@ describe("Adicionar: the first screen (spec 013, US1)", () => {
     expect(screen.getByText(/Tire mais de uma foto, uma parte de cada vez\. Juntamos tudo num só talão\./)).toBeInTheDocument();
   });
 
-  it("F-200: the merchants come from the API, with «Detetar sozinho» first and chosen", async () => {
+  it("F-200: the first screen has only the sources: the supermarket is chosen on the parts screen", async () => {
+    renderRoutes(routes, "/adicionar");
+    expect(screen.queryByLabelText("Supermercado (opcional)")).toBeNull();
+    expect(screen.queryAllByRole("radio")).toHaveLength(0);
+    await pick("input-pdf", pdf("fatura.pdf"));
+    expect(await screen.findByLabelText("Supermercado (opcional)")).toHaveValue("");
+  });
+
+  it("F-200: the supermarkets come from the API, with «Detetar sozinho» first and chosen, and the usual ones in a group before the others", async () => {
     server.use(http.get(`${API}/v1/merchants`, () => HttpResponse.json([...merchants, { id: "INTERMARCHE", name: "Intermarché" }])));
     renderRoutes(routes, "/adicionar");
-    const group = await screen.findByRole("radiogroup", { name: "Supermercado (opcional)" });
-    expect(await within(group).findByRole("radio", { name: "Intermarché" })).toBeInTheDocument();
-    const radios = within(group).getAllByRole("radio");
-    expect(radios[0]).toHaveAccessibleName("Detetar sozinho");
-    expect(radios[0]).toBeChecked();
-    expect(radios).toHaveLength(9);
-    expect(within(group).getByRole("radio", { name: "Auchan" })).toBeInTheDocument();
-    expect(within(group).getByRole("radio", { name: "Aldi" })).toBeInTheDocument();
+    await pick("input-pdf", pdf("fatura.pdf"));
+    const field = await screen.findByLabelText("Supermercado (opcional)");
+    expect(await within(field).findByRole("option", { name: "Intermarché" })).toBeInTheDocument();
+    const options = within(field).getAllByRole("option");
+    expect(options[0]).toHaveAccessibleName("Detetar sozinho");
+    expect(options).toHaveLength(9);
+    // The profile of the tests has only Lidl: it is alone in the first group, and the other seven follow.
+    const groups = within(field).getAllByRole("group");
+    expect(groups.map((g) => g.getAttribute("label"))).toEqual(["Os seus supermercados", "Outros supermercados"]);
+    expect(within(groups[0]!).getAllByRole("option").map((o) => o.textContent)).toEqual(["Lidl"]);
+    expect(within(groups[1]!).getAllByRole("option")).toHaveLength(7);
+  });
+
+  it("F-200: with no usual supermarket, or all of them, the list is flat", async () => {
+    for (const usual of [[], merchants.map((m) => m.id)]) {
+      server.use(http.get(`${API}/v1/me/profile`, () => HttpResponse.json(emptyProfile({ merchants: usual }))));
+      const view = renderRoutes(routes, "/adicionar");
+      await pick("input-pdf", pdf("fatura.pdf"));
+      const field = await screen.findByLabelText("Supermercado (opcional)");
+      expect(await within(field).findByRole("option", { name: "Lidl" })).toBeInTheDocument();
+      expect(within(field).queryAllByRole("group")).toHaveLength(0);
+      expect(within(field).getAllByRole("option")).toHaveLength(merchants.length + 1);
+      view.unmount();
+    }
   });
 
   it("F-200: the chosen merchant is sent as the hint", async () => {
     const { bodies } = serveUpload("r30");
     const user = userEvent.setup();
     renderRoutes(routes, "/adicionar");
-    await user.click(await screen.findByRole("radio", { name: "Lidl" }));
     await pick("input-pdf", pdf("fatura.pdf"));
+    await user.selectOptions(await screen.findByLabelText("Supermercado (opcional)"), "ALDI");
     await user.click(await screen.findByRole("button", { name: /^enviar talão$/i }));
     expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
-    expect(bodies["init:fatura.pdf"]!.merchant_hint).toBe("LIDL");
+    expect(bodies["init:fatura.pdf"]!.merchant_hint).toBe("ALDI");
   });
 
-  it("F-200: when the merchants fail only «Detetar sozinho» is offered, with a note, and the upload still works", async () => {
+  it("F-200: when the supermarkets fail only «Detetar sozinho» is offered, with a note, and the upload still works", async () => {
     server.use(http.get(`${API}/v1/merchants`, () => HttpResponse.json({ code: "x", message: "x" }, { status: 500 })));
     const { bodies, calls } = serveUpload("r31");
     const user = userEvent.setup();
     renderRoutes(routes, "/adicionar");
-    expect(await screen.findByText("Não foi possível carregar os supermercados. Pode enviar na mesma.")).toBeInTheDocument();
-    expect(screen.getAllByRole("radio")).toHaveLength(1);
     await pick("input-pdf", pdf("fatura.pdf"));
+    expect(await screen.findByText("Não foi possível carregar os supermercados. Pode enviar na mesma.")).toBeInTheDocument();
+    expect(within(screen.getByLabelText("Supermercado (opcional)")).getAllByRole("option")).toHaveLength(1);
     await user.click(await screen.findByRole("button", { name: /^enviar talão$/i }));
     expect(await screen.findByText("detalhe da compra")).toBeInTheDocument();
     expect(bodies["init:fatura.pdf"]!.merchant_hint).toBeNull();
