@@ -6,7 +6,6 @@ import { analyzeStill } from "../capture/analyzeStill";
 import { CameraCapture } from "../capture/CameraCapture";
 import { cameraSupported } from "../capture/useCamera";
 import type { Edit } from "./edit";
-import { MerchantChips } from "./MerchantPicker";
 import { PartsScreen, type FocusTarget } from "./PartsScreen";
 import { add, canAdd, move, newPart, remove, replace, setCheck, setEdit, toUploadFiles, type Part } from "./photos";
 import { previewFor } from "./preview";
@@ -14,7 +13,7 @@ import { renderEdit } from "./renderEdit";
 import { SOURCES, SourceButtons, type Source } from "./SourceButtons";
 import { useUpload } from "./useUpload";
 
-/** Adicionar talão: the first screen (sources and store) until there is a part, then «Confirme as partes». */
+/** Adicionar talão: the first screen (the sources) until there is a part, then «Confirme as partes». */
 export function AddPage() {
   const navigate = useNavigate();
   const inputs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -150,7 +149,6 @@ export function AddPage() {
             <h1 className="font-display text-[length:calc(1.875rem_*_var(--text-scale))] font-semibold leading-[1.1]">Adicionar talão</h1>
             <p className="mt-1.5 text-ink-soft">Lemos o talão e confirma os valores.</p>
           </header>
-          <MerchantChips value={merchant} onChange={setMerchant} />
           <SourceButtons onPick={(id: Source) => (id === "camera" ? openCamera() : inputs.current[id]?.click())} />
           {fileError && <Notice tone="error">{fileError}</Notice>}
           <p className="pt-2 text-sm text-ink-soft">Para uma boa leitura: talão inteiro na imagem, sobre um fundo escuro, sem sombras nem reflexos.</p>

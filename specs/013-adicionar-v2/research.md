@@ -1,5 +1,7 @@
 # Research: Adicionar v2 (013)
 
+> **Atualizado a 10/11/2026.** O seletor de supermercado (`MerchantChips`, fila de chips) saiu do ecrã inicial: o ecrã inicial tem só as fontes e o supermercado escolhe-se no ecrã das partes (`MerchantField`, uma lista com «Detetar sozinho» primeiro e, em grupos, «Os seus supermercados» (do perfil) antes de «Outros supermercados»). Onde o texto abaixo fala de `MerchantChips`, vale esta nota; o histórico não se apaga.
+
 Fontes: `Documentation/design-ux-v2/AdicionarV2.dc.html` e `README.md`, plano UX v2 Fase 5, Plano do Passo A (§3, A5), `specs/013-adicionar-v2/spec.md` (Clarifications), `../basketIQ-backend/openapi.json` (commit `4e327d4`) e o código do backend e do frontend (só leitura). Nada foi alterado fora de `specs/013-adicionar-v2`.
 
 ## R1. Estrutura: dividir o `AddPage`
