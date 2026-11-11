@@ -29,7 +29,7 @@ export function formatPercent(value: number): string {
   return `${percent.format(value)}${NBSP}%`;
 }
 
-const UNIT_BASE: Record<string, string> = { kg: "/kg", l: "/l", un: "/un." };
+const UNIT_BASE: Record<string, string> = { kg: "/kg", l: "/l", un: "/un.", rolo: "/rolo", dose: "/dose" };
 
 /** A price in its base unit ("1,59 € /un."); "—" when there is none, so no base is shown without a price. */
 export function formatUnitPrice(cents: number | null | undefined, basis: string): string {

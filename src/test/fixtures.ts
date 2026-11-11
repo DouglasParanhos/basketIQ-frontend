@@ -98,6 +98,7 @@ export function receipt(overrides: Partial<Receipt> = {}): Receipt {
     original_expires_at: null,
     original_deleted_at: null,
     processing: { job_id: "j1", status: "SUCCEEDED", route: "LOCAL_OCR", attempts: 1 },
+    ungrouped_descriptions: 0,
     version: 3,
     created_at: "2026-09-15T12:40:00Z",
     updated_at: "2026-09-15T12:41:00Z",

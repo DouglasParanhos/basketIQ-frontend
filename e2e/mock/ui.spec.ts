@@ -1461,3 +1461,44 @@ test.describe("Aparência: the person chooses the theme in Definições", () => 
     expect(await ground(page)).toBe(DARK);
   });
 });
+
+
+// ---------------------------------------------------------------- Passo C (spec 020)
+
+test.describe("passo C: Por completar (spec 020)", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    for (const width of [320, 375, 430, 820]) {
+      test(`F-85: /por-completar has no axe violations and no horizontal scroll, with «Outro grupo» and the size form open (${scheme}, ${width}px)`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.setViewportSize({ width, height: 800 });
+        await fakeApi(page);
+        await page.goto("/por-completar");
+        await expect(page.getByRole("heading", { level: 1, name: "Por completar" })).toBeVisible();
+        await expect(page.getByText("QUEIJO FETA 200G")).toBeVisible();
+        await page.getByRole("button", { name: "Outro grupo" }).click();
+        await noA11yViolations(page);
+        await noHorizontalScroll(page);
+        await page.getByRole("tab", { name: "Tamanho em falta" }).click();
+        await page.getByRole("button", { name: "Indicar tamanho" }).click();
+        await expect(page.getByRole("textbox", { name: "Tamanho de uma embalagem" })).toBeVisible();
+        await noA11yViolations(page);
+        await noHorizontalScroll(page);
+      });
+    }
+  }
+
+  test("F-85: every control of «Por completar» has a touch target of at least 44 px", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await fakeApi(page);
+    await page.goto("/por-completar");
+    await expect(page.getByText("QUEIJO FETA 200G")).toBeVisible();
+    const small = await page
+      .locator("main button:visible, main a:visible, main select:visible, main [role=tab]:visible, main label:has(input[type=checkbox]):visible")
+      .evaluateAll((nodes) =>
+        nodes
+          .map((n) => ({ text: n.textContent?.trim() || n.getAttribute("aria-label"), h: n.getBoundingClientRect().height, w: n.getBoundingClientRect().width }))
+          .filter((n) => n.h < 44 || n.w < 44),
+      );
+    expect(small).toEqual([]);
+  });
+});

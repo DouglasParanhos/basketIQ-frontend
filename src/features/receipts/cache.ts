@@ -17,3 +17,9 @@ export function receiptChanged(qc: QueryClient, updated?: Schemas["ReceiptOut"])
   void qc.invalidateQueries({ queryKey: ["summary"] });
   return invalidateReceiptData(qc);
 }
+
+/** A step C rule changed (a group, a size or «não comparável»): the receipts, the products and the comparisons that show groups are old. */
+export function groupingChanged(qc: QueryClient): Promise<unknown> {
+  const keys = [["to-complete"], ["line-rules"], ["receipt"], ["product"], ["products"], ["group-comparison"]];
+  return Promise.all(keys.map((queryKey) => qc.invalidateQueries({ queryKey })));
+}

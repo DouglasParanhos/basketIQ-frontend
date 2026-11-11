@@ -709,6 +709,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/catalog/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Product classes and their groups */
+        get: operations["catalog_v1_catalog_groups_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/groups/{slug}/comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What the user paid for one group in each chain, in the comparison window (D12) */
+        get: operations["comparison_v1_groups__slug__comparison_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/to-complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** «Por completar»: descriptions to group or size */
+        get: operations["to_complete_v1_to_complete_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/line-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** «Atribuídos por si»: the user's own rules */
+        get: operations["line_rules_v1_line_rules_get"];
+        /** Group, size or «não comparável» for descriptions; applies to past and future purchases */
+        put: operations["put_line_rules_v1_line_rules_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/line-rules/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove one rule */
+        delete: operations["delete_line_rule_v1_line_rules__rule_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/jobs": {
         parameters: {
             query?: never;
@@ -882,12 +968,52 @@ export interface components {
             variation_pct: components["schemas"]["VariationOut"];
             previous_period: components["schemas"]["PreviousPeriodOut"];
         };
+        /** CatalogClassOut */
+        CatalogClassOut: {
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Groups */
+            groups: components["schemas"]["CatalogGroupOut"][];
+        };
+        /** CatalogGroupOut */
+        CatalogGroupOut: {
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Bases */
+            bases: string[];
+            /** Comparable */
+            comparable: boolean;
+        };
+        /** CatalogOut */
+        CatalogOut: {
+            /** Version */
+            version: number;
+            /** Classes */
+            classes: components["schemas"]["CatalogClassOut"][];
+        };
         /** CategoryOut */
         CategoryOut: {
             /** Id */
             id: string;
             /** Name */
             name: string;
+        };
+        /** ChainPriceOut */
+        ChainPriceOut: {
+            /** Merchant */
+            merchant: string | null;
+            /** Merchant Name */
+            merchant_name: string;
+            /** Purchases */
+            purchases: number;
+            /** Average Cents */
+            average_cents: number;
+            /** Missing Purchases */
+            missing_purchases: number;
         };
         /** ConsumptionItem */
         ConsumptionItem: {
@@ -1060,6 +1186,51 @@ export interface components {
          * @enum {string}
          */
         Goal: "finances" | "shopping_list" | "savings";
+        /**
+         * GroupComparisonOut
+         * @description D12: what the user paid for one group in each chain, sorted by name (never by price).
+         */
+        GroupComparisonOut: {
+            group: components["schemas"]["GroupRef"];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "no_purchases" | "single_chain" | "not_enough_purchases" | "no_clear_difference" | "clear_difference";
+            /** Basis */
+            basis: string | null;
+            /** Window Days */
+            window_days: number;
+            /**
+             * Date From
+             * Format: date
+             */
+            date_from: string;
+            /**
+             * Date To
+             * Format: date
+             */
+            date_to: string;
+            /** Purchases */
+            purchases: number;
+            /** Average Cents */
+            average_cents: number | null;
+            /** Needed */
+            needed: number;
+            /** Chains */
+            chains: components["schemas"]["ChainPriceOut"][];
+            /** Typical Difference Cents */
+            typical_difference_cents: number | null;
+        };
+        /** GroupRef */
+        GroupRef: {
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Class Slug */
+            class_slug: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1089,6 +1260,22 @@ export interface components {
          * @enum {string}
          */
         JobStatus: "QUEUED" | "RUNNING" | "RETRY" | "SUCCEEDED" | "FAILED";
+        /**
+         * LineGroupingOut
+         * @description Step C for one line of a confirmed receipt (spec 010).
+         */
+        LineGroupingOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "grouped" | "ungrouped" | "not_comparable";
+            group: components["schemas"]["GroupRef"] | null;
+            /** Group Source */
+            group_source: ("catalog" | "user") | null;
+            size: components["schemas"]["SizeOut"] | null;
+            price_check: components["schemas"]["PriceCheckOut"] | null;
+        };
         /** LineOut */
         LineOut: {
             /**
@@ -1133,6 +1320,7 @@ export interface components {
             edited_fields: string[];
             /** Evidence */
             evidence: string[];
+            grouping?: components["schemas"]["LineGroupingOut"] | null;
         };
         /** LinePatchIn */
         LinePatchIn: {
@@ -1154,6 +1342,48 @@ export interface components {
             line_total_cents?: number | null;
             /** Discount Cents */
             discount_cents?: number | null;
+        };
+        /** LineRuleOut */
+        LineRuleOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Chain */
+            chain: string | null;
+            /** Description Key */
+            description_key: string;
+            /** Description */
+            description: string | null;
+            group: components["schemas"]["GroupRef"] | null;
+            /** Not Comparable */
+            not_comparable: boolean;
+            size: components["schemas"]["SizeOut"] | null;
+            /** Applied Lines */
+            applied_lines: number;
+            /** Updated At */
+            updated_at: string | null;
+        };
+        /**
+         * LineRulesIn
+         * @description Fields left out keep their value; ``group: null`` or ``size: null`` clears one (to undo, D13).
+         */
+        LineRulesIn: {
+            /** Targets */
+            targets: components["schemas"]["RuleTargetIn"][];
+            /** Group */
+            group?: string | null;
+            /** Not Comparable */
+            not_comparable?: boolean | null;
+            size?: components["schemas"]["RuleSizeIn"] | null;
+        };
+        /** LineRulesOut */
+        LineRulesOut: {
+            /** Rules */
+            rules: components["schemas"]["LineRuleOut"][];
+            /** Applied Lines */
+            applied_lines: number;
         };
         /**
          * ListArticle
@@ -1337,6 +1567,13 @@ export interface components {
             /** Total Cents */
             total_cents: number;
         };
+        /** NodeRef */
+        NodeRef: {
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+        };
         /** OriginalUrlOut */
         OriginalUrlOut: {
             /** Url */
@@ -1437,6 +1674,31 @@ export interface components {
             /** Units */
             units: string;
         };
+        /**
+         * PriceCheckOut
+         * @description D11: this line's price against what the user usually pays for the group (earlier, in the window).
+         */
+        PriceCheckOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "above" | "below" | "normal" | "no_average" | "missing_size";
+            /** Basis */
+            basis: string | null;
+            /** Purchases */
+            purchases: number;
+            /** Needed */
+            needed: number;
+            /** Window Days */
+            window_days: number;
+            /** Price Cents */
+            price_cents?: number | null;
+            /** Average Cents */
+            average_cents?: number | null;
+            /** Effect Cents */
+            effect_cents?: number | null;
+        };
         /** PricePoint */
         PricePoint: {
             /** Receipt Id */
@@ -1506,6 +1768,7 @@ export interface components {
             by_merchant: components["schemas"]["MerchantPrice"][];
             /** Insufficient Data */
             insufficient_data: boolean;
+            group?: components["schemas"]["GroupRef"] | null;
         };
         /**
          * ProductConfigOut
@@ -1520,6 +1783,16 @@ export interface components {
             smart_list_enabled: boolean;
             /** Comparison Window Days */
             comparison_window_days: number;
+            /** Comparison Min Purchases */
+            comparison_min_purchases: number;
+            /** Comparison Difference Pct */
+            comparison_difference_pct: number;
+            /** Comparison Min Effect Cents */
+            comparison_min_effect_cents: number;
+            /** Comparison Min Chains */
+            comparison_min_chains: number;
+            /** To Complete Page Size */
+            to_complete_page_size: number;
             /** Goal Ring Green Up To Pct */
             goal_ring_green_up_to_pct: number;
             /** Goal Ring Orange Up To Pct */
@@ -1695,6 +1968,11 @@ export interface components {
             /** Original Deleted At */
             original_deleted_at: string | null;
             processing: components["schemas"]["ProcessingInfo"] | null;
+            /**
+             * Ungrouped Descriptions
+             * @default 0
+             */
+            ungrouped_descriptions: number;
             /** Version */
             version: number;
             /**
@@ -1799,6 +2077,19 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** RuleSizeIn */
+        RuleSizeIn: {
+            /** Value */
+            value: number | string;
+            /** Unit */
+            unit: string;
+        };
+        /** RuleTargetIn */
+        RuleTargetIn: {
+            chain?: components["schemas"]["Merchant"] | null;
+            /** Description */
+            description: string;
+        };
         /** SeriesOut */
         SeriesOut: {
             /**
@@ -1900,6 +2191,15 @@ export interface components {
         ShoppingMerchantIn: {
             merchant: components["schemas"]["Merchant"];
         };
+        /** SizeOut */
+        SizeOut: {
+            /** Value */
+            value: string;
+            /** Unit */
+            unit: string;
+            /** Source */
+            source: ("description" | "user" | "receipt") | null;
+        };
         /** StoredFilesDeleted */
         StoredFilesDeleted: {
             /** Files Deleted */
@@ -1952,6 +2252,45 @@ export interface components {
             top_products_by_quantity: components["schemas"]["ProductRanking"][];
             /** Empty */
             empty: boolean;
+        };
+        /** ToCompleteItemOut */
+        ToCompleteItemOut: {
+            /** Chain */
+            chain: string | null;
+            /** Merchant Name */
+            merchant_name: string;
+            /** Description */
+            description: string;
+            /** Description Key */
+            description_key: string;
+            /** Unit */
+            unit: string | null;
+            /** Lines */
+            lines: number;
+            /** Purchases */
+            purchases: number;
+            /** Spent Cents */
+            spent_cents: number;
+            group: components["schemas"]["GroupRef"] | null;
+            hint: components["schemas"]["NodeRef"] | null;
+            /** Suggestions */
+            suggestions: components["schemas"]["GroupRef"][];
+            /** Rule Id */
+            rule_id: string | null;
+        };
+        /** ToCompleteOut */
+        ToCompleteOut: {
+            /**
+             * Tab
+             * @enum {string}
+             */
+            tab: "ungrouped" | "missing_size";
+            /** Total */
+            total: number;
+            /** Page Size */
+            page_size: number;
+            /** Items */
+            items: components["schemas"]["ToCompleteItemOut"][];
         };
         /** Totals */
         Totals: {
@@ -3983,6 +4322,170 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuggestionOut"][];
+                };
+            };
+        };
+    };
+    catalog_v1_catalog_groups_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogOut"];
+                };
+            };
+        };
+    };
+    comparison_v1_groups__slug__comparison_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupComparisonOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    to_complete_v1_to_complete_get: {
+        parameters: {
+            query?: {
+                tab?: "ungrouped" | "missing_size";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ToCompleteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    line_rules_v1_line_rules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineRuleOut"][];
+                };
+            };
+        };
+    };
+    put_line_rules_v1_line_rules_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LineRulesIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineRulesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_line_rule_v1_line_rules__rule_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

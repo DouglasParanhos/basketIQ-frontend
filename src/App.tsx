@@ -28,6 +28,7 @@ const ProductsPage = lazy(() => import("./features/products/ProductsPage"));
 const ProductPage = lazy(() => import("./features/products/ProductPage"));
 const AdminPage = lazy(() => import("./features/admin/AdminPage"));
 const OnboardingPage = lazy(() => import("./features/onboarding/OnboardingPage"));
+const ToCompletePage = lazy(() => import("./features/groups/ToCompletePage"));
 
 function RouteError() {
   const error = useRouteError();
@@ -106,6 +107,7 @@ export const routes: RouteObject[] = [
                   { path: "/adicionar", element: <AddPage /> },
                   { path: "/lista", element: <ListaRoute /> },
                   { path: "/produtos/:id", element: <ProductPage /> },
+                  { path: "/por-completar", element: <ToCompletePage /> },
                   {
                     path: "/definicoes",
                     element: <SettingsLayout />,
