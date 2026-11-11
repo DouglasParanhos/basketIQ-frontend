@@ -100,6 +100,13 @@ export function formatMonth(period: string): string {
   return monthFmt.format(new Date(Date.UTC(y ?? 2000, (m ?? 1) - 1, 1)));
 }
 
+/** «2 compras a mais», «1 compra a menos» or «o mesmo número de compras» against the period before: the count behind a change of spending. */
+export function formatPurchasesAgainst(current: number, previous: number): string {
+  const diff = current - previous;
+  if (diff === 0) return "o mesmo número de compras";
+  return `${plural(Math.abs(diff), "compra", "compras")} ${diff > 0 ? "a mais" : "a menos"}`;
+}
+
 /** «23 % abaixo de setembro»: the direction is in words, never only a sign. Null when there is nothing to compare. */
 export function formatVariationAgainst(value: number | null | undefined, label: string): string | null {
   if (value === null || value === undefined) return null;

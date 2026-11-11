@@ -543,6 +543,34 @@ describe("dashboard (RF-09, RF-11)", () => {
     expect(screen.queryByText("Gasto total")).not.toBeInTheDocument();
   });
 
+  it("«O que mais pesou» lists up to five products by value, with the value, and there is no «Mais comprados»", async () => {
+    const top = Array.from({ length: 7 }, (_, i) => ({ product_id: `p${i}`, name: `PRODUTO ${i}`, spent_cents: 10000 - i * 100, units: "1", lines: 1 }));
+    server.use(http.get(`${API}/v1/analytics/summary`, () => HttpResponse.json(summary({ top_products_by_value: top }))));
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
+    const section = (await screen.findByRole("heading", { name: "O que mais pesou" })).closest("section")!;
+    expect(within(section).getAllByRole("link").map((a) => a.textContent)).toEqual(["PRODUTO 0", "PRODUTO 1", "PRODUTO 2", "PRODUTO 3", "PRODUTO 4"]);
+    expect(within(section).getByText("100,00 €")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /mais comprados|mais gasto/i })).not.toBeInTheDocument();
+  });
+
+  it("the variation says how many purchases more or fewer than the period before", async () => {
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
+    // 3 purchases now against 2 before (the fixture).
+    expect(await screen.findByText(/404,44 € · 1 compra a mais/)).toBeInTheDocument();
+  });
+
+  it("with nothing to compare it says so, and says nothing about the purchases of the period before", async () => {
+    const base = summary();
+    server.use(
+      http.get(`${API}/v1/analytics/summary`, () =>
+        HttpResponse.json(summary({ cards: { ...base.cards, variation_pct: { total_spent: null, purchases: null, units: null }, previous_period: { ...base.cards.previous_period, total_spent_cents: 0, purchases: 0, units: "0" } } })),
+      ),
+    );
+    renderRoutes(routes, "/compras/resumo?de=2026-09-01&ate=2026-09-30");
+    expect(await screen.findByText(/Sem compras em .* para comparar\./)).toBeInTheDocument();
+    expect(screen.queryByText(/compras? a (mais|menos)|o mesmo número de compras/)).not.toBeInTheDocument();
+  });
+
   it("F-19: the merchant filter is sent with the query", async () => {
     const seen: (string | null)[] = [];
     server.use(

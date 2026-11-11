@@ -6,6 +6,7 @@ import {
   formatAmount,
   formatCents,
   formatPercent,
+  formatPurchasesAgainst,
   formatQuantity,
   formatVariationAgainst,
   formatWholeEuros,
@@ -67,6 +68,14 @@ describe("percentages and amounts: the space before «%» and «€» does not b
     expect(formatVariationAgainst(0, "setembro")).toBe("igual a setembro");
     expect(formatVariationAgainst(-0.04, "setembro")).toBe("igual a setembro"); // rounds to zero: no «0 % abaixo»
     expect(formatVariationAgainst(null, "setembro")).toBeNull();
+  });
+
+  it("the purchases behind a variation say the difference in words, in the right number", () => {
+    expect(formatPurchasesAgainst(5, 3)).toBe("2 compras a mais");
+    expect(formatPurchasesAgainst(3, 2)).toBe("1 compra a mais");
+    expect(formatPurchasesAgainst(1, 4)).toBe("3 compras a menos");
+    expect(formatPurchasesAgainst(2, 3)).toBe("1 compra a menos");
+    expect(formatPurchasesAgainst(4, 4)).toBe("o mesmo número de compras");
   });
 
   it("the figure of an unknown amount is the same «— €»", () => {
