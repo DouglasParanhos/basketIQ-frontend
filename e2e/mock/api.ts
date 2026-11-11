@@ -303,6 +303,12 @@ export const reviewReceipt = {
 
 /** `reviewReceipt` once confirmed. */
 const validatedReceipt = { ...reviewReceipt, id: "v1", status: "CONFIRMED", review_reasons: [], confirmed_at: "2026-09-15T13:00:00Z", confirmed_by: "USER", version: 4 };
+/** A photo whose products were not read well (F-231): the page asks for another photo and, since spec 021, also offers «Eliminar talão». */
+const illegibleReceipt = {
+  ...reviewReceipt,
+  id: "u1",
+  review_reasons: [{ code: "illegible", message: "Não conseguimos ler bem os produtos deste talão.", field: null, line_index: null, details: {} }],
+};
 const reopenedReceipt = { ...reviewReceipt, id: "v1", version: validatedReceipt.version + 1 };
 
 const summary = {
@@ -486,6 +492,7 @@ export async function fakeApi(page: Page, overrides: Partial<FakeState> = {}): P
       return json(route, { id: "j1", status: "QUEUED", attempt_count: 0, processing_route: null, created_at: "2026-10-31T10:00:00Z" }, 202);
     }
     if (path === "/v1/receipts/r1" && method === "GET") return json(route, reviewReceipt);
+    if (path === "/v1/receipts/u1" && method === "GET") return json(route, illegibleReceipt);
     // A validated receipt (spec 018): «Editar talão» reopens it for review.
     if (path === "/v1/receipts/v1" && method === "GET") return json(route, reopened ? reopenedReceipt : validatedReceipt);
     if (path === "/v1/receipts/v1/reopen" && method === "POST") {

@@ -9,7 +9,7 @@ import { MERCHANT_OPTIONS, merchantName } from "../../lib/merchants";
 import { EDITABLE, IN_PROGRESS } from "../../lib/status";
 import { invalidateReceiptData, receiptChanged } from "./cache";
 import { PriceCheck } from "../groups/PriceCheck";
-import { DeleteReceiptNotice, useDeleteReceipt } from "./DeleteReceipt";
+import { DeleteConfirmedNotice, DeleteReceiptNotice, useDeleteReceipt } from "./DeleteReceipt";
 import { FootQuestion } from "./FootQuestion";
 import { ReviewEditor } from "./ReviewEditor";
 import { useOriginalViewer } from "./useOriginalViewer";
@@ -148,27 +148,34 @@ function Processing({ receipt: r }: { receipt: Receipt }) {
   );
 }
 
-/** «Tirar outra foto» drops this reading (the receipt is still in hand) and opens the camera again. */
+/** «Tirar outra foto» drops this reading (the receipt is still in hand) and opens the camera again; «Eliminar talão» drops it and goes to the list (spec 021). */
 function AnotherPhoto({ receipt: r, onFixByHand }: { receipt: Receipt; onFixByHand: () => void }) {
   const retake = useDeleteReceipt(r.id, "/adicionar");
+  const [deleting, setDeleting] = useState(false);
   return (
-    <Notice
-      tone="warning"
-      title="Não conseguimos ler bem este talão"
-      action={
-        <>
-          <Button busy={retake.isPending} onClick={() => retake.mutate()}>
-            Tirar outra foto
-          </Button>
-          <Button variant="quiet" disabled={retake.isPending} onClick={onFixByHand}>
-            Corrigir à mão
-          </Button>
-        </>
-      }
-    >
-      Faltam produtos ou o total. Fotografe-o de novo: o talão inteiro, bem iluminado e sobre um fundo escuro.
-      {retake.error && <p className="mt-2">{retake.error.message}</p>}
-    </Notice>
+    <>
+      <Notice
+        tone="warning"
+        title="Não conseguimos ler bem este talão"
+        action={
+          <>
+            <Button busy={retake.isPending} onClick={() => retake.mutate()}>
+              Tirar outra foto
+            </Button>
+            <Button variant="quiet" disabled={retake.isPending} onClick={onFixByHand}>
+              Corrigir à mão
+            </Button>
+            <Button variant="dangerQuiet" disabled={retake.isPending} onClick={() => setDeleting(true)}>
+              Eliminar talão
+            </Button>
+          </>
+        }
+      >
+        Faltam produtos ou o total. Fotografe-o de novo: o talão inteiro, bem iluminado e sobre um fundo escuro.
+        {retake.error && <p className="mt-2">{retake.error.message}</p>}
+      </Notice>
+      {deleting && <DeleteReceiptNotice receiptId={r.id} onCancel={() => setDeleting(false)} />}
+    </>
   );
 }
 
@@ -460,7 +467,12 @@ function ManageOriginal({ receipt: r }: { receipt: Receipt }) {
           </Notice>
         </FootQuestion>
       )}
-      {confirming === "receipt" && <DeleteReceiptNotice receiptId={r.id} onCancel={() => setConfirming(null)} />}
+      {confirming === "receipt" &&
+        (r.status === "CONFIRMED" ? (
+          <DeleteConfirmedNotice receipt={r} onCancel={() => setConfirming(null)} />
+        ) : (
+          <DeleteReceiptNotice receiptId={r.id} onCancel={() => setConfirming(null)} />
+        ))}
       {[view.error, removeOriginal.error].filter(Boolean).map((e, i) => (
         <Notice key={i} tone="error">
           {e!.message}

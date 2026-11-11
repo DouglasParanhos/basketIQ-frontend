@@ -25,7 +25,8 @@ describe("the cache of the Início and of the totals by month after a purchase c
     const spy = vi.spyOn(client, "invalidateQueries");
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Eliminar compra" }));
-    const confirm = screen.getByText("Eliminar esta compra?").closest("[role=status]") as HTMLElement;
+    const confirm = screen.getByText("Eliminar esta compra confirmada?").closest("[role=status]") as HTMLElement;
+    await user.click(within(confirm).getByRole("checkbox")); // a confirmed purchase takes the box too (spec 021)
     await user.click(within(confirm).getByRole("button", { name: "Eliminar compra" }));
     expect(await screen.findByText("lista")).toBeInTheDocument();
     expect(spy).toHaveBeenCalledWith({ queryKey: ["overview"] });

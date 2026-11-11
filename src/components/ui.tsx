@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Info, Loader2, OctagonAlert } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, Info, Loader2, OctagonAlert } from "lucide-react";
 import type { ButtonHTMLAttributes, ComponentProps, ReactNode, SelectHTMLAttributes } from "react";
 import { useId } from "react";
 import { Link, type LinkProps } from "react-router";
@@ -152,6 +152,24 @@ export function Notice({
         {action && <div className="mt-2 flex flex-wrap gap-2">{action}</div>}
       </div>
     </div>
+  );
+}
+
+/** A box to tick before a button that cannot be undone turns on («Compreendo…»): the same on every screen that eliminates something for good. */
+export function AcknowledgeBox({ checked, onChange, children }: { checked: boolean; onChange: (checked: boolean) => void; children: ReactNode }) {
+  return (
+    <label className="flex min-h-14 cursor-pointer items-center gap-3 text-sm font-medium">
+      <input type="checkbox" className="peer sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span
+        aria-hidden
+        className={`grid size-[26px] shrink-0 place-items-center rounded-lg border-2 peer-focus-visible:ring-2 peer-focus-visible:ring-brand peer-focus-visible:ring-offset-2 ${
+          checked ? "border-alert bg-alert text-on-brand" : "border-line bg-paper"
+        }`}
+      >
+        {checked && <Check className="size-4" strokeWidth={3} />}
+      </span>
+      {children}
+    </label>
   );
 }
 

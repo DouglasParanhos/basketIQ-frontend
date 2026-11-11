@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronLeft, X } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
 import { api, unwrap } from "../../api/client";
 import { FullScreen } from "../../components/FullScreen";
-import { Button, LinkButton, Notice, ROUND_NEUTRAL, Surface } from "../../components/ui";
+import { AcknowledgeBox, Button, LinkButton, Notice, ROUND_NEUTRAL, Surface } from "../../components/ui";
 
 const LOST = [
   "Todas as compras e talões lidos",
@@ -59,18 +59,9 @@ export function DeleteAccountPage() {
           ))}
         </ul>
       </Surface>
-      <label className="flex min-h-14 cursor-pointer items-center gap-3 text-sm font-medium">
-        <input type="checkbox" className="peer sr-only" checked={understood} onChange={(e) => setUnderstood(e.target.checked)} />
-        <span
-          aria-hidden
-          className={`grid size-[26px] shrink-0 place-items-center rounded-lg border-2 peer-focus-visible:ring-2 peer-focus-visible:ring-brand peer-focus-visible:ring-offset-2 ${
-            understood ? "border-alert bg-alert text-on-brand" : "border-line bg-paper"
-          }`}
-        >
-          {understood && <Check className="size-4" strokeWidth={3} />}
-        </span>
+      <AcknowledgeBox checked={understood} onChange={setUnderstood}>
         Compreendo que os meus dados serão eliminados e que não é possível recuperá-los.
-      </label>
+      </AcknowledgeBox>
       {remove.error && <Notice tone="error">{remove.error.message}</Notice>}
     </FullScreen>
   );
