@@ -1293,6 +1293,40 @@ test.describe("review: the foot with the three actions and the undo of a price",
       await noA11yViolations(page);
     });
 
+    test(`F-357: a reading that failed offers «Eliminar talão» with one question, without axe violations (${scheme}, 320px)`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.setViewportSize({ width: 320, height: 568 });
+      await fakeApi(page);
+      await page.goto("/compras/u1");
+      await expect(page.getByText("Não conseguimos ler bem este talão")).toBeVisible();
+      await expectReachable(page, ["Tirar outra foto", "Corrigir à mão", "Eliminar talão"]);
+      await page.getByRole("button", { name: "Eliminar talão" }).click();
+      await expect(page.getByText("Eliminar esta compra?")).toBeVisible();
+      await expectReachable(page, ["Cancelar"]);
+      await noHorizontalScroll(page);
+      await noA11yViolations(page);
+    });
+
+    test(`F-358: a confirmed purchase asks with a summary and a box before «Eliminar compra» turns on, without axe violations (${scheme}, 320px)`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.setViewportSize({ width: 320, height: 568 });
+      await fakeApi(page);
+      await page.goto("/compras/v1");
+      await page.getByRole("button", { name: "Eliminar compra" }).click();
+      const question = page.getByText("Eliminar esta compra confirmada?").locator("xpath=ancestor::*[@role='status'][1]");
+      await expect(question).toBeVisible();
+      await expect(question.getByText(/2 produtos/)).toBeVisible();
+      const final = question.getByRole("button", { name: "Eliminar compra" });
+      await expect(final).toBeDisabled();
+      await noHorizontalScroll(page);
+      await noA11yViolations(page);
+      await question.getByRole("checkbox").check({ force: true }); // the real box is hidden for the drawn one
+      await expect(final).toBeEnabled();
+      await final.scrollIntoViewIfNeeded();
+      expect(await final.evaluate((el) => { const r = el.getBoundingClientRect(); return el.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)); })).toBe(true);
+      await noA11yViolations(page);
+    });
+
     test(`the card and the panel of a line, with the date and the total open, have no axe violations (${scheme}, 320px)`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme });
       await page.setViewportSize({ width: 320, height: 568 });
