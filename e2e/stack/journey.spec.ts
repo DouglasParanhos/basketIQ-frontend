@@ -88,6 +88,7 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   await page.goto("/compras?filtro=confirmadas");
   await page.getByRole("link", { name: /Pingo Doce/ }).first().click();
   await page.getByRole("button", { name: "Eliminar compra" }).click();
+  await page.getByRole("checkbox").check({ force: true }); // a confirmed purchase asks for the box «Compreendo…» first (spec 021)
   await page.getByRole("button", { name: "Eliminar compra" }).last().click();
   await expect(page).toHaveURL(/\/compras$/);
   await page.goto("/?de=2026-09-01&ate=2026-09-30&mercado=PINGO_DOCE");
