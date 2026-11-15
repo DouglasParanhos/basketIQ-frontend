@@ -1116,7 +1116,8 @@ test.describe("lista de compras (spec 019)", () => {
     await open(page);
     const names = () => page.locator("main li span[id]").allTextContents();
     const before = await names();
-    await page.getByRole("checkbox", { name: "Leite meio-gordo" }).check({ force: true });
+    // click(), not check(): the box is controlled and only flips after the async update.
+    await page.getByRole("checkbox", { name: "Leite meio-gordo" }).click({ force: true });
     await expect(page.getByText("5 produtos · 2 no carrinho")).toBeVisible();
     expect(await names()).toEqual(before);
 
@@ -1127,7 +1128,7 @@ test.describe("lista de compras (spec 019)", () => {
 
     await page.getByRole("button", { name: "Mais opções de Ovos classe M" }).click();
     await page.getByRole("menuitem", { name: "Excluir da lista" }).click();
-    await expect(page.getByText("Ovos classe M removido da lista.")).toBeVisible();
+    await expect(page.getByRole("main").getByText("Ovos classe M removido da lista.")).toBeVisible();
     await page.getByRole("button", { name: "Desfazer" }).click();
     await expect.poll(names).toEqual(before);
   });
