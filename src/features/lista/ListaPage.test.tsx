@@ -208,7 +208,7 @@ describe("Lista de compras: «Já tenho», os três pontinhos, excluir e desfaze
     await user.click(screen.getByRole("button", { name: "Mais opções de Ovos classe M" }));
     await user.click(screen.getByRole("menuitem", { name: "Excluir da lista" }));
     await waitFor(() => expect(screen.queryByText("Ovos classe M", { selector: "span" })).toBeNull());
-    const notice = screen.getByRole("button", { name: "Desfazer" }).closest<HTMLElement>("[role=status]")!;
+    const notice = screen.getByRole("button", { name: "Desfazer" }).parentElement!;
     expect(notice).toHaveTextContent("Ovos classe M removido da lista.");
     expect(notice).not.toContainElement(document.activeElement as HTMLElement);
     await waitFor(() => expect(fake.calls).toContainEqual({ method: "DELETE", path: "i2", body: null }));
@@ -408,7 +408,8 @@ describe("Lista de compras: qualidade", () => {
     await waitFor(() => expect(document.querySelector('[aria-live="polite"]')).toHaveTextContent("Leite meio-gordo no carrinho."));
     await user.click(screen.getByRole("button", { name: "Mais opções de Leite meio-gordo" }));
     await user.click(screen.getByRole("menuitem", { name: "Excluir da lista" }));
-    await waitFor(() => expect(document.querySelector('[aria-live="polite"]')).toHaveTextContent("Leite meio-gordo removido da lista."));
+    // getByRole throws on a second status region: the words are said once.
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Leite meio-gordo removido da lista."));
   });
 
   it("F-339: the screen says «supermercado» wherever it names a shop, never «mercado»", async () => {
