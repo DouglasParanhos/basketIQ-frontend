@@ -13,3 +13,7 @@ Containers and Docker: use Docker Desktop on the Windows host (PowerShell or Git
 
 - Before any commit, run `/simplify` in the repository the commit is for (Backend and Frontend are separate repositories). No exceptions, including small changes.
 - Apply the fixes it finds, re-run the repository's checks, and only then commit.
+
+# Testing on the device
+
+- To test behaviour on the device (camera, file picker, back button, keyboard, WebView, sign-in), use the Android emulator with the Capacitor app (`pnpm android:run`, `pnpm e2e:android`; see README, "Android emulator"), not the PWA in the browser. The Playwright projects `mock` and `stack` are for CI, axe and quick flows.
