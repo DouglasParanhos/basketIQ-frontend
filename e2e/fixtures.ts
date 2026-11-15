@@ -39,6 +39,10 @@ const onDevice = base.extend<object, { device: AndroidDevice }>({
       .toString()
       .trim();
     const page = await (await device.webView({ pkg: APP_ID, socketName: `webview_devtools_remote_${pid}` })).page();
+    // The desktop projects' `serviceWorkers: "block"`, which a persistent context ignores: without it the preview build
+    // registers the PWA's service worker and later loads come from its precache. The app skips registering when
+    // `navigator.serviceWorker` is missing (virtual:pwa-register). Applies from the test's first `goto`.
+    await page.addInitScript(() => Reflect.deleteProperty(Navigator.prototype, "serviceWorker"));
     // Playwright did not create the WebView's context, so it has no baseURL: `goto("/x")` resolves against the project's.
     const goto = page.goto.bind(page);
     page.goto = (url, options) => goto(new URL(url, baseURL).href, options);
