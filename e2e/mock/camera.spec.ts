@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "../fixtures";
 import { noA11yViolations } from "./a11y";
 import { fakeApi } from "./api";
 import { fakeCamera, type SceneName } from "./fakeCamera";

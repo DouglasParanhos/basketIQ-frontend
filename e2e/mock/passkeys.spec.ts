@@ -1,7 +1,9 @@
-import { expect, test } from "@playwright/test";
-import { phoneWithPasskeys } from "../webauthn";
+import { expect, ON_DEVICE, test } from "../fixtures";
+import { NO_PASSKEYS_ON_DEVICE, phoneWithPasskeys } from "../webauthn";
 import { noA11yViolations } from "./a11y";
 import { fakeApi } from "./api";
+
+test.skip(ON_DEVICE, NO_PASSKEYS_ON_DEVICE);
 
 // The passkey screens of spec 016 in both colour schemes at the narrowest width of the plan (§10, §11).
 for (const scheme of ["light", "dark"] as const) {

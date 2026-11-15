@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, ON_DEVICE, test, tick, type Page } from "../fixtures";
 import { noA11yViolations } from "./a11y";
 import { fakeApi } from "./api";
 import { noCamera } from "./fakeCamera";
@@ -104,20 +104,22 @@ test.describe("bottom navigation: the approved design (canvas NavBar)", () => {
       const nav = page.getByRole("navigation", { name: "Navegação principal" });
       await expect(nav.getByRole("link")).toHaveCount(smartList ? 5 : 4);
       const bar = (await nav.boundingBox())!;
-      expect(bar.height).toBe(76);
-      expect(bar.y + bar.height).toBe(844);
+      // Within half a pixel: on a phone a 1 px border is whole device pixels (0.76 px at the emulator's ratio, 2.625).
+      expect(bar.height).toBeCloseTo(76, 0);
+      expect(bar.y + bar.height).toBeCloseTo(844, 0);
       // The slots are contiguous and as wide as each other: no hole where Lista is missing.
       const slots = await nav.locator("li").evaluateAll((els) => els.map((e) => {
         const { left, right, width } = e.getBoundingClientRect();
         return { left, right, width };
       }));
       expect(slots[0]!.left).toBe(0);
-      expect(slots.at(-1)!.right).toBe(390);
+      expect(slots.at(-1)!.right).toBeCloseTo(390, 0);
       slots.slice(1).forEach((slot, i) => expect(Math.abs(slot.left - slots[i]!.right)).toBeLessThan(0.5));
       slots.forEach((slot) => expect(Math.abs(slot.width - slots[0]!.width)).toBeLessThan(0.5));
       const add = nav.getByRole("link", { name: "Adicionar talão" }).locator("span").first();
       const box = (await add.boundingBox())!;
-      expect([box.width, box.height]).toEqual([56, 56]);
+      expect(box.width).toBeCloseTo(56, 0);
+      expect(box.height).toBeCloseTo(56, 0);
       expect(box.y).toBeLessThan(bar.y); // it rises above the bar, as in the canvas
       await expect(add).toHaveCSS("background-color", "rgb(31, 111, 74)");
     });
@@ -236,8 +238,8 @@ test.describe("login and privacy policy: the approved design", () => {
       expect((await accept.boundingBox())!.height).toBe(56);
       expect((await leave.boundingBox())!.height).toBe(48);
       const footer = await page.locator("main > div.fixed").boundingBox();
-      expect(footer!.height).toBe(164);
-      expect(footer!.y + footer!.height).toBe(height);
+      expect(footer!.height).toBeCloseTo(164, 0); // within half a pixel, as the bottom bar's
+      expect(footer!.y + footer!.height).toBeCloseTo(height, 0);
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
       const last = await page.getByRole("button", { name: "Os seus direitos" }).boundingBox();
       expect(last!.y + last!.height).toBeLessThanOrEqual(footer!.y);
@@ -472,7 +474,7 @@ async function walkSettings(page: Page, check: () => Promise<void>) {
   await check();
   await page.getByRole("link", { name: "Eliminar conta…" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Eliminar conta" })).toBeVisible();
-  await page.getByRole("checkbox").check({ force: true });
+  await tick(page);
   await check();
 }
 
@@ -588,7 +590,7 @@ test.describe("definições (spec 014)", () => {
     await expect(page).toHaveURL(/\/definicoes\/conta\/eliminar$/);
     const confirm = page.getByRole("button", { name: "Eliminar a minha conta" });
     await expect(confirm).toBeDisabled();
-    await page.getByRole("checkbox").check({ force: true });
+    await tick(page);
     await confirm.click();
     await expect(page).toHaveURL(/\/login/);
   });
@@ -1160,6 +1162,7 @@ test.describe("lista de compras (spec 019)", () => {
   });
 
   test("F-146: /lista is reached from the fifth button, and with the smart list off it does not exist", async ({ page }) => {
+    test.skip(ON_DEVICE, "Opens a second page with another fake API: the app's WebView cannot open one");
     await fakeApi(page, { smartList: true });
     await page.goto("/");
     await page.getByRole("navigation", { name: "Navegação principal" }).getByRole("link", { name: "Lista" }).click();
@@ -1320,7 +1323,7 @@ test.describe("review: the foot with the three actions and the undo of a price",
       await expect(final).toBeDisabled();
       await noHorizontalScroll(page);
       await noA11yViolations(page);
-      await question.getByRole("checkbox").check({ force: true }); // the real box is hidden for the drawn one
+      await tick(question);
       await expect(final).toBeEnabled();
       await final.scrollIntoViewIfNeeded();
       expect(await final.evaluate((el) => { const r = el.getBoundingClientRect(); return el.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)); })).toBe(true);
