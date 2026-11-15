@@ -16,5 +16,6 @@ blob-report/
 /Receipts/
 /patches/
 /Documentation/
+/CLAUDE.md
 *.dump
 *.sql
