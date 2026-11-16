@@ -71,6 +71,25 @@ The stack journey uses the backend's synthetic golden documents; it needs `make 
 and `pnpm dev` running. In CI it runs only on pull requests (job `e2e-stack`), against the backend's
 `main` branch.
 
+### Android emulator (spec 022)
+
+The app runs in a Capacitor debug shell (`android/`) that loads the Vite dev server, on a real Android
+emulator. Not the store build. `adb reverse` keeps the origin at `http://localhost` (ports 5173, 8080 and
+9000), so sign-in, cookies and uploads behave as in the browser.
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts/android/setup.ps1   # what is missing (JDK 21, SDK, AVD); changes nothing
+pnpm android:emulator             # boots the basketiq-pixel7 AVD without a window
+pnpm dev                          # Vite on 127.0.0.1:5173 (IPv4: adb reverse reaches nothing else)
+pnpm android:run                  # cap sync + installDebug + adb reverse + open the app
+pnpm e2e:android                  # Playwright _android: sign in, add a receipt, reach the review
+adb exec-out screencap -p > screen.png   # see the screen
+```
+
+Also needs the backend stack (`make up` in `../basketIQ-backend`; with Docker in WSL, keep a WSL session
+open or the containers stop). The `appId` `app.basketiq.dev` is provisional. Passkeys are not tested in
+the WebView, and the emulator's camera shows a 3D scene: receipts go in as files.
+
 ## Notes
 
 - Session: HttpOnly cookies set by the API (BFF). The client sends the CSRF header and refreshes the

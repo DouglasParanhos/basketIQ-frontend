@@ -3,26 +3,14 @@
  * Uses the backend's synthetic golden-set documents (no personal data).
  */
 import { expect, test, type Page } from "@playwright/test";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { doc, upload } from "./receipts";
 import { signInWithGoogle } from "./signIn";
-
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const SYNTHETIC = process.env.BASKETIQ_SYNTHETIC_DIR ?? path.resolve(HERE, "../../../basketIQ-backend/tests/golden/synthetic");
-const doc = (name: string, file = "document.pdf") => path.join(SYNTHETIC, name, file);
 
 async function signIn(page: Page, subject: string) {
   await signInWithGoogle(page, subject);
   // The empty-account message now lives in the Resumo, under Talões (spec 009).
   await page.goto("/compras/resumo");
   await expect(page.getByRole("heading", { name: "Comece pelo primeiro talão" })).toBeVisible();
-}
-
-async function upload(page: Page, file: string, input = "input-pdf") {
-  await page.goto("/adicionar");
-  await page.getByTestId(input).setInputFiles(file);
-  await page.getByRole("button", { name: "Enviar talão" }).click();
-  await expect(page).toHaveURL(/\/compras\/[0-9a-f-]{36}$/);
 }
 
 test.describe.configure({ mode: "serial" });

@@ -17,9 +17,14 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "e2e:mock": "playwright test --project=mock",
+    "e2e:android": "playwright test -c playwright.android.config.ts",
+    "android:emulator": "node scripts/android/android.mjs emulator",
+    "android:run": "node scripts/android/android.mjs run",
     "gen:api": "openapi-typescript ../basketIQ-backend/openapi.json -o src/api/schema.d.ts"
   },
   "dependencies": {
+    "@capacitor/android": "8.6.2",
+    "@capacitor/core": "8.6.2",
     "@fontsource-variable/fraunces": "5.3.0",
     "@fontsource/martian-mono": "5.3.0",
     "@fontsource/nunito-sans": "5.3.0",
@@ -35,6 +40,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
+    "@capacitor/cli": "8.6.2",
     "@eslint/js": "9.39.5",
     "@playwright/test": "1.64.1",
     "@tailwindcss/vite": "4.3.3",
