@@ -58,6 +58,18 @@ Sign in locally through the mock OIDC server: type any user name (`admin` gets t
 
 ## Test
 
+Two test plans (spec 023). Both run every test and need the backend stack (`make up` in
+`../basketIQ-backend`); they stop at once with a message if it is down. Playwright starts `pnpm dev` and
+the preview itself.
+
+```bash
+pnpm test:pwa       # after every change: lint, typecheck, vitest, e2e mock + stack in desktop Chromium
+pnpm test:android   # before calling a feature ready for the phone: the same checks, then every e2e test
+                    # (mock, stack, smoke) inside the app's WebView on the Android emulator
+```
+
+The steps one by one:
+
 ```bash
 pnpm lint && pnpm typecheck
 pnpm test                         # vitest + Testing Library + MSW (45 tests)
@@ -74,21 +86,29 @@ and `pnpm dev` running. In CI it runs only on pull requests (job `e2e-stack`), a
 ### Android emulator (spec 022)
 
 The app runs in a Capacitor debug shell (`android/`) that loads the Vite dev server, on a real Android
-emulator. Not the store build. `adb reverse` keeps the origin at `http://localhost` (ports 5173, 8080 and
-9000), so sign-in, cookies and uploads behave as in the browser.
+emulator. Not the store build. `adb reverse` keeps the origin at `http://localhost` (ports 5173, 8080,
+9000 and 4173), so sign-in, cookies and uploads behave as in the browser.
 
 ```bash
 powershell -ExecutionPolicy Bypass -File scripts/android/setup.ps1   # what is missing (JDK 21, SDK, AVD); changes nothing
 pnpm android:emulator             # boots the basketiq-pixel7 AVD without a window
 pnpm dev                          # Vite on 127.0.0.1:5173 (IPv4: adb reverse reaches nothing else)
 pnpm android:run                  # cap sync + installDebug + adb reverse + open the app
-pnpm e2e:android                  # Playwright _android: sign in, add a receipt, reach the review
+pnpm e2e:android                  # every e2e test in the app's WebView (projects android-mock,
+                                  # android-stack, android-smoke)
 adb exec-out screencap -p > screen.png   # see the screen
 ```
 
 Also needs the backend stack (`make up` in `../basketIQ-backend`; with Docker in WSL, keep a WSL session
-open or the containers stop). The `appId` `app.basketiq.dev` is provisional. Passkeys are not tested in
-the WebView, and the emulator's camera shows a 3D scene: receipts go in as files.
+open or the containers stop). The `appId` `app.basketiq.dev` is provisional.
+
+`pnpm e2e:android` runs the specs of `e2e/mock` and `e2e/stack` unchanged: `e2e/fixtures.ts` gives them the
+WebView's page, with the app's data cleared before each test (`pm clear`), the camera permission refused
+(a test that needs a camera fakes one) and `setViewportSize` done through CDP. On a failure the report has
+the device's screenshot and logcat. Skipped on the device, with the reason in the report: the passkey specs
+(the WebView has no WebAuthn), «SEC: another account cannot open my receipt» and F-146 (both need a second
+page). The emulator runs with a software GPU (`-gpu swiftshader_indirect`): with the host GPU, axe over the
+in-app camera dropped the adb connection.
 
 ## Notes
 

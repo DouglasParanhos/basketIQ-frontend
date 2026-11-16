@@ -1,11 +1,8 @@
 import { expect, type Page } from "@playwright/test";
 
-/**
- * A new account through the local mock OIDC server (Google in staging/production): consent, skipped onboarding, Início.
- * `origin` is for pages without a baseURL (the Android WebView, e2e/android).
- */
-export async function signInWithGoogle(page: Page, subject: string, origin = "") {
-  await page.goto(`${origin}/login`);
+/** A new account through the local mock OIDC server (Google in staging/production): consent, skipped onboarding, Início. */
+export async function signInWithGoogle(page: Page, subject: string) {
+  await page.goto("/login");
   await page.getByRole("link", { name: "Entrar com Google" }).click();
   await page.getByPlaceholder("Enter any user/subject").fill(subject);
   await page.getByRole("button", { name: "Sign-in" }).click();

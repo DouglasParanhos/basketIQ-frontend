@@ -12,8 +12,9 @@ import { fileURLToPath } from "node:url";
 import { APP_ID, DEV_URL } from "../../capacitor.config.ts";
 
 const AVD = "basketiq-pixel7";
-// Vite (app and /v1 proxy), mock OIDC (sign-in redirect), storage (presigned uploads from the browser).
-const REVERSE_PORTS = [5173, 8080, 9000];
+// Vite (app and /v1 proxy), mock OIDC (sign-in redirect), storage (presigned uploads from the browser),
+// Vite preview (the built app with a fake API: the android-mock tests).
+const REVERSE_PORTS = [5173, 8080, 9000, 4173];
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const WIN = process.platform === "win32";
@@ -52,7 +53,10 @@ async function emulator() {
     console.log("An emulator is already running.");
     return;
   }
-  spawn(EMULATOR, ["-avd", AVD, "-no-window", "-no-audio", "-no-snapshot-save", "-no-boot-anim"], {
+  // Software GPU: with the default (host GPU over a pipe) an axe run over the in-app camera stalled the emulator long
+  // enough to drop its adb connection, and with it the `adb reverse` ports (spec 023).
+  const args = ["-avd", AVD, "-no-window", "-no-audio", "-no-snapshot-save", "-no-boot-anim", "-gpu", "swiftshader_indirect"];
+  spawn(EMULATOR, args, {
     detached: true,
     stdio: "ignore",
     env,

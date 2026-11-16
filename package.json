@@ -18,6 +18,8 @@
     "e2e": "playwright test",
     "e2e:mock": "playwright test --project=mock",
     "e2e:android": "playwright test -c playwright.android.config.ts",
+    "test:pwa": "node scripts/test-plan.mjs pwa",
+    "test:android": "node scripts/test-plan.mjs android",
     "android:emulator": "node scripts/android/android.mjs emulator",
     "android:run": "node scripts/android/android.mjs run",
     "gen:api": "openapi-typescript ../basketIQ-backend/openapi.json -o src/api/schema.d.ts"

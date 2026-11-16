@@ -2,9 +2,11 @@
  * Passkeys end to end (spec 016) against the real backend and `pnpm dev`, with Chromium's virtual authenticator standing in
  * for the phone's lock. The RP ID is `localhost` (BASKETIQ_FRONTEND_BASE_URL=http://localhost:5173).
  */
-import { expect, test } from "@playwright/test";
-import { phoneWithPasskeys } from "../webauthn";
+import { expect, ON_DEVICE, test } from "../fixtures";
+import { NO_PASSKEYS_ON_DEVICE, phoneWithPasskeys } from "../webauthn";
 import { signInWithGoogle } from "./signIn";
+
+test.skip(ON_DEVICE, NO_PASSKEYS_ON_DEVICE);
 
 test("F-220: a Google account adds a passkey, signs out and signs in again with it", async ({ page }) => {
   await phoneWithPasskeys(page);

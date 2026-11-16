@@ -35,5 +35,7 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,
     },
+    // `pnpm dev` for stack (and the Android app): started here unless already running. CI starts its own (ci.yml).
+    ...(process.env.CI ? [] : [{ command: "pnpm dev", url: "http://localhost:5173", reuseExistingServer: true }]),
   ],
 });

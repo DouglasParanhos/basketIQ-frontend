@@ -4,6 +4,9 @@ import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 const API_TARGET = process.env.BASKETIQ_API_URL ?? "http://localhost:8000";
+// IPv4, not whatever `localhost` resolves to (::1 on Windows): `adb reverse` (Android emulator) reaches IPv4 only.
+// Both servers: the Android app loads the dev server, the android-mock tests the preview.
+const HOST = "127.0.0.1";
 
 export default defineConfig({
   define: { __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? "dev") },
@@ -30,8 +33,7 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
-    // IPv4, not whatever `localhost` resolves to (::1 on Windows): `adb reverse` (Android emulator) reaches IPv4 only.
-    host: "127.0.0.1",
+    host: HOST,
     // Gradle writes copies of the app into android/ on every build: not part of the dev server.
     watch: { ignored: ["**/android/**"] },
     proxy: {
@@ -41,6 +43,7 @@ export default defineConfig({
   },
   preview: {
     port: 4173,
+    host: HOST,
     proxy: { "/v1": { target: API_TARGET, changeOrigin: false } },
   },
   build: {

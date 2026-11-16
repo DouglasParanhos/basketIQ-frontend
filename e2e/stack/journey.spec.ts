@@ -2,7 +2,7 @@
  * End-to-end against the real backend (cd ../basketIQ-backend && make up) and `pnpm dev`.
  * Uses the backend's synthetic golden-set documents (no personal data).
  */
-import { expect, test, type Page } from "@playwright/test";
+import { expect, ON_DEVICE, test, tick, type Page } from "../fixtures";
 import { doc, upload } from "./receipts";
 import { signInWithGoogle } from "./signIn";
 
@@ -76,7 +76,7 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   await page.goto("/compras?filtro=confirmadas");
   await page.getByRole("link", { name: /Pingo Doce/ }).first().click();
   await page.getByRole("button", { name: "Eliminar compra" }).click();
-  await page.getByRole("checkbox").check({ force: true }); // a confirmed purchase asks for the box «Compreendo…» first (spec 021)
+  await tick(page); // a confirmed purchase asks for the box «Compreendo…» first (spec 021)
   await page.getByRole("button", { name: "Eliminar compra" }).last().click();
   await expect(page).toHaveURL(/\/compras$/);
   await page.goto("/?de=2026-09-01&ate=2026-09-30&mercado=PINGO_DOCE");
@@ -85,7 +85,7 @@ test("journey: import, review, confirm, analyse, delete", async ({ page }) => {
   // F-23: account deletion.
   await page.goto("/definicoes/conta");
   await page.getByRole("link", { name: "Eliminar conta…" }).click();
-  await page.getByRole("checkbox").check({ force: true });
+  await tick(page);
   await page.getByRole("button", { name: "Eliminar a minha conta" }).click();
   await expect(page).toHaveURL(/\/login/);
 });
@@ -109,6 +109,7 @@ test("F-03: cancelling at the identity provider returns to sign-in with a messag
 });
 
 test("SEC: another account cannot open my receipt", async ({ browser }) => {
+  test.skip(ON_DEVICE, "Needs two signed-in sessions at once: the app's WebView has one cookie jar and cannot open a second page");
   const alice = await browser.newPage();
   await signIn(alice, `alice-${Date.now()}`);
   await upload(alice, doc("lidl_text"));
