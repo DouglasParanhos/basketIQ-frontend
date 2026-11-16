@@ -30,6 +30,10 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    // IPv4, not whatever `localhost` resolves to (::1 on Windows): `adb reverse` (Android emulator) reaches IPv4 only.
+    host: "127.0.0.1",
+    // Gradle writes copies of the app into android/ on every build: not part of the dev server.
+    watch: { ignored: ["**/android/**"] },
     proxy: {
       // Same origin for the API so session cookies are first-party (BFF pattern).
       "/v1": { target: API_TARGET, changeOrigin: false },
